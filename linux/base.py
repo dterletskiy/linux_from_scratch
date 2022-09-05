@@ -59,8 +59,8 @@ class Configuration:
       return self.__compiler
    # def arch
 
-   def compiler_path( self ):
-      return self.__compiler_path
+   def compiler_path( self, sub_path ):
+      return os.path.join( self.__compiler_path, sub_path )
    # def arch
 
    def machine( self ):

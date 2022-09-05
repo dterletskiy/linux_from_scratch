@@ -166,7 +166,6 @@ class BuildRoot:
       pfw.shell.run_and_wait_with_status( "mkdir", "-p", deploy_path )
 
       files_list: list = [
-            os.path.join( self.__directories.product( ), "Image" ),
             os.path.join( self.__directories.product( ), "zImage" ),
             os.path.join( self.__directories.product( ), "rootfs.ext2" ),
             os.path.join( self.__directories.product( ), "rootfs.tar" ),

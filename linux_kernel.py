@@ -268,8 +268,8 @@ def main( app_data: ApplicationData ):
 
          sys.exit( )
       elif "start" == action:
-         dt_path = "/mnt/dev/linux/configuration/dtb/aarch64_virt_cortex-a53/"
-         dtb_name = "dtc_export_fixed"
+         dt_path = "/mnt/dev/linux/configuration/"
+         dtb_name = "dtb"
          dtb = f"{dt_path}/{dtb_name}.dtb"
          dts = f"{dt_path}/{dtb_name}.dts"
 
@@ -284,7 +284,7 @@ def main( app_data: ApplicationData ):
                # dtb = dtb,
                drive = LINUX_IMAGE_DRIVE.file( ),
                # dump_dtb = True, dump_dtb_path = dtb,
-               gdb = True
+               # gdb = True
             )
 
          sys.exit( )

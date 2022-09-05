@@ -196,7 +196,7 @@ class BusyBox:
 
       for directory in directories_list:
          pfw.console.debug.trace( "directory: '%s' ->\n     '%s'" % ( directory, rootfs_path ) )
-         pfw.shell.run_and_wait_with_status( f"cp -r {directory}, {rootfs_path}" )
+         pfw.shell.run_and_wait_with_status( f"cp -r {directory} {rootfs_path}" )
 
       pfw.shell.run_and_wait_with_status( f"mkdir -p " + os.path.join( rootfs_path, "lib" ) )
       pfw.shell.run_and_wait_with_status(

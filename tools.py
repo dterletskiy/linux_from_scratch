@@ -170,18 +170,18 @@ def mkbootimg( projects_map: dict, root_dir: str ):
          header_version = 2,
          kernel = projects_map["kernel"].dirs( ).deploy( "Image" ),
          ramdisk = projects_map["buildroot"].dirs( ).deploy( "rootfs.cpio" ),
-         dtb = os.path.join( root_dir, "configuration/dtb/aarch64_virt_cortex-a53/dtc_export_fixed.dtb" ),
+         dtb = os.path.join( root_dir, "configuration/dtb.dtb" ),
          cmdline = cmdline,
-         out = "/mnt/dev/tmp/images/boot_linux.img"
+         out = os.path.join( root_dir, "images/boot_linux.img" )
       )
 
    mkbootimg_tool(
          header_version = 2,
          kernel = projects_map["aosp"].dirs( ).product( "kernel"),
          ramdisk = projects_map["aosp"].dirs( ).experimental( "ramdisk"),
-         dtb = os.path.join( root_dir, "configuration/dtb/aarch64_virt_cortex-a53/dtc_export_fixed.dtb" ),
+         dtb = os.path.join( root_dir, "configuration/dtb.dtb" ),
          cmdline = cmdline,
-         out = "/mnt/dev/tmp/images/boot_aosp.img"
+         out = os.path.join( root_dir, "images/boot_aosp.img" )
       )
 # def mkbootimg
 
@@ -204,7 +204,7 @@ def deploy( projects_map: dict, mount_point: str, root_dir: str, pause: bool = F
             "dest": os.path.join( mount_point, "boot/zImage.uimg" )
          },
          {
-            "src": os.path.join( root_dir, "configuration/dtb/aarch64_virt_cortex-a53/dtc_export_fixed.dtb" ),
+            "src": os.path.join( root_dir, "configuration/dtb.dtb" ),
             "dest": os.path.join( mount_point, "boot/dtb.dtb" )
          },
          {
@@ -216,11 +216,11 @@ def deploy( projects_map: dict, mount_point: str, root_dir: str, pause: bool = F
             "dest": os.path.join( mount_point, "boot/initramfs.cpio.uimg" )
          },
          {
-            "src": "/mnt/dev/tmp/images/boot_linux.img",
+            "src": os.path.join( root_dir, "images/boot_linux.img" ),
             "dest": os.path.join( mount_point, "boot/boot_linux.img" )
          },
          {
-            "src": "/mnt/dev/tmp/images/boot_aosp.img",
+            "src": os.path.join( root_dir, "images/boot_aosp.img" ),
             "dest": os.path.join( mount_point, "boot/boot_aosp.img" )
          },
       ]
