@@ -32,10 +32,10 @@ class Kernel:
       all = 6
    # class eTarget
 
-   def __init__( self, config: linux.base.Configuration, root_dir: str, version: str, **kwargs ):
+   def __init__( self, config: linux.base.Configuration, root_dir: str, **kwargs ):
       self.reset( )
       self.__config = config
-      self.__version = version
+      self.__version = kwargs.get( "version", "master" )
       self.__name = KERNEL_NAME_PATTERN.replace( "VERSION", self.__version )
       self.__url = KERNEL_LINK_PATTERN.replace( "EPOCH", self.__version[0] ).replace( "VERSION", self.__version )
       self.__url_git = KERNEL_GIT_REPO
@@ -127,7 +127,7 @@ class Kernel:
       config: str = None
       if "arm" == self.__config.arch( ):
          config = "vexpress_defconfig"
-      elif "arm64" == self.__config.arch( ):
+      elif "arm64" == self.__config.arch( ) or "aarch64" == self.__config.arch( ):
          config = "defconfig"
       else:
          config = "defconfig"
@@ -177,7 +177,11 @@ class Kernel:
    # def configure
 
    def build( self, **kwargs ):
-      target = kwargs.get( "build_target", "all" )
+      kw_targets = kwargs.get( "targets", ["all"] )
+
+      targets: str = ""
+      for target in kw_targets:
+         targets += f"{target} "
 
       command = "make"
       command += f" O={self.__directories.build( )}"
@@ -185,17 +189,22 @@ class Kernel:
       command += f" ARCH={self.__config.arch( )}"
       command += f" CROSS_COMPILE={self.__config.compiler( )}"
       command += f" -j{self.__config.cores( )}"
-      if "modules_install" == target:
+
+      if "modules_install" in targets:
          # https://www.kernel.org/doc/Documentation/kbuild/modules.txt
          command += f" INSTALL_MOD_PATH={self.__directories.product( )}"
-      elif "uImage" == target:
+      elif "uImage" in targets:
          command += f" LOADADDR=0x10000"
 
-      pfw.shell.run_and_wait_with_status( command, target, output = pfw.shell.eOutput.PTY )
+      pfw.shell.run_and_wait_with_status( command, targets, output = pfw.shell.eOutput.PTY )
    # def build
 
    def clean( self, **kwargs ):
-      target = kwargs.get( "clean_target", "distclean" )
+      kw_targets = kwargs.get( "targets", ["distclean"] )
+
+      targets: str = ""
+      for target in kw_targets:
+         targets += f"{target} "
 
       command = "make"
       command += f" O={self.__directories.build( )}"
@@ -203,7 +212,7 @@ class Kernel:
       command += f" ARCH={self.__config.arch( )}"
       command += f" CROSS_COMPILE={self.__config.compiler( )}"
 
-      pfw.shell.run_and_wait_with_status( command, target, output = pfw.shell.eOutput.PTY )
+      pfw.shell.run_and_wait_with_status( command, targets, output = pfw.shell.eOutput.PTY )
    # def clean
 
    def deploy( self, **kwargs ):
@@ -255,7 +264,7 @@ class Kernel:
          command += f" -cpu cortex-a15"
          dtb = self.__directories.product( "dts/vexpress-v2p-ca9.dtb" )
          kernel = self.__directories.product( "zImage" )
-      elif "arm64" == self.__config.arch( ):
+      elif "arm64" == self.__config.arch( ) or "aarch64" == self.__config.arch( ):
          command += f" -machine virt"
          command += f" -cpu cortex-a53"
          kernel = self.__directories.product( "Image" )

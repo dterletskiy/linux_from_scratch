@@ -90,7 +90,7 @@ class UBoot:
       if "arm" == self.__config.arch( ):
          config = "qemu_arm_defconfig"
          # config = "vexpress_ca9x4_defconfig"
-      elif "arm64" == self.__config.arch( ):
+      elif "arm64" == self.__config.arch( ) or "aarch64" == self.__config.arch( ):
          config = "qemu_arm64_defconfig"
          # config = "rpi_arm64_defconfig"
       else:
@@ -119,7 +119,12 @@ class UBoot:
    # def configure
 
    def build( self, **kwargs ):
-      target = kwargs.get( "build_target", "all" )
+      kw_targets = kwargs.get( "targets", ["all"] )
+
+      targets: str = ""
+      for target in kw_targets:
+         targets += f"{target} "
+
 
       command = "make"
       command += f" O={self.__directories.build( )}"
@@ -130,17 +135,25 @@ class UBoot:
       command += f" -j{self.__config.cores( )}"
       # command += f" NO_SDL=1"
 
-      pfw.shell.run_and_wait_with_status( command, target, output = pfw.shell.eOutput.PTY )
+      pfw.shell.run_and_wait_with_status( command, targets, output = pfw.shell.eOutput.PTY )
    # def build
 
    def clean( self, **kwargs ):
-      target = kwargs.get( "clean_target", "distclean" )
+      kw_targets = kwargs.get( "targets", ["distclean"] )
+
+      targets: str = ""
+      for target in kw_targets:
+         targets += f"{target} "
+
 
       command = "make"
       command += f" O={self.__directories.build( )}"
       command += f" -C {self.__directories.source( )}"
+      command += f" V=1"
+      command += f" ARCH={self.__config.arch( )}"
+      command += f" CROSS_COMPILE={self.__config.compiler( )}"
 
-      pfw.shell.run_and_wait_with_status( command, target, output = pfw.shell.eOutput.PTY )
+      pfw.shell.run_and_wait_with_status( command, targets, output = pfw.shell.eOutput.PTY )
    # def clean
 
    def deploy( self, **kwargs ):
@@ -183,7 +196,7 @@ class UBoot:
       if "arm" == self.__config.arch( ):
          command += f" -machine virt"
          command += f" -cpu cortex-a15"
-      elif "arm64" == self.__config.arch( ):
+      elif "arm64" == self.__config.arch( ) or "aarch64" == self.__config.arch( ):
          command += f" -machine virt"
          command += f" -cpu cortex-a53"
 

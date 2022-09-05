@@ -22,10 +22,10 @@ BUSYBOX_ARCHIVE_PATTERN = "busybox-VERSION.tar.bz2"
 
 
 class BusyBox:
-   def __init__( self, config: linux.base.Configuration, root_dir: str, version: str, **kwargs ):
+   def __init__( self, config: linux.base.Configuration, root_dir: str, **kwargs ):
       self.reset( )
       self.__config = config
-      self.__version = version
+      self.__version = kwargs.get( "version", "master" )
       self.__name = BUSYBOX_NAME_PATTERN.replace( "VERSION", self.__version )
       self.__url = BUSYBOX_LINK_PATTERN.replace( "VERSION", self.__version )
       self.__archive_name = BUSYBOX_ARCHIVE_PATTERN.replace( "VERSION", self.__version )
@@ -89,7 +89,7 @@ class BusyBox:
       config: str = None
       if "arm" == self.__config.arch( ):
          config = "defconfig"
-      elif "arm64" == self.__config.arch( ):
+      elif "arm64" == self.__config.arch( ) or "aarch64" == self.__config.arch( ):
          config = "defconfig"
       else:
          config = "defconfig"
@@ -116,7 +116,11 @@ class BusyBox:
    # def configure
 
    def build( self, **kwargs ):
-      target = kwargs.get( "build_target", "all" )
+      kw_targets = kwargs.get( "targets", ["all"] )
+
+      targets: str = ""
+      for target in kw_targets:
+         targets += f"{target} "
 
       command = "make"
       command += f" O={self.__directories.build( )}"
@@ -125,7 +129,7 @@ class BusyBox:
       command += f" CROSS_COMPILE={self.__config.compiler( )}"
       command += f" -j{self.__config.cores( )}"
 
-      pfw.shell.run_and_wait_with_status( command, target, output = pfw.shell.eOutput.PTY )
+      pfw.shell.run_and_wait_with_status( command, targets, output = pfw.shell.eOutput.PTY )
 
       self.install( )
    # def build
@@ -142,7 +146,11 @@ class BusyBox:
    # def build
 
    def clean( self, **kwargs ):
-      target = kwargs.get( "clean_target", "distclean" )
+      kw_targets = kwargs.get( "targets", ["distclean"] )
+
+      targets: str = ""
+      for target in kw_targets:
+         targets += f"{target} "
 
       command = "make"
       command += f" O={self.__directories.build( )}"
@@ -150,7 +158,7 @@ class BusyBox:
       command += f" ARCH={self.__config.arch( )}"
       command += f" CROSS_COMPILE={self.__config.compiler( )}"
 
-      pfw.shell.run_and_wait_with_status( command, target, output = pfw.shell.eOutput.PTY )
+      pfw.shell.run_and_wait_with_status( command, targets, output = pfw.shell.eOutput.PTY )
    # def clean
 
    def deploy( self, **kwargs ):
@@ -224,7 +232,7 @@ class BusyBox:
       if "arm" == self.__config.arch( ):
          command += f" -machine virt"
          command += f" -cpu cortex-a15"
-      elif "arm64" == self.__config.arch( ):
+      elif "arm64" == self.__config.arch( ) or "aarch64" == self.__config.arch( ):
          command += f" -machine virt"
          command += f" -cpu cortex-a53"
 

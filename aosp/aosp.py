@@ -143,9 +143,9 @@ class Repo:
 
 
 class AOSP:
-   def __init__( self, configuration: aosp.base.Configuration, root_dir: str, tag: str ):
+   def __init__( self, configuration: aosp.base.Configuration, root_dir: str, **kwargs ):
       self.reset( )
-      self.__tag = tag
+      self.__tag = kwargs.get( "tag", None )
       self.__name = self.__tag
       self.__config = configuration
       self.__directories = aosp.base.Directories( root_dir, self.__name, self.__config )

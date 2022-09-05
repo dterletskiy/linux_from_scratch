@@ -237,6 +237,19 @@ def deploy( projects_map: dict, mount_point: str, root_dir: str, pause: bool = F
    pfw.console.debug.promt( )
 # def deploy
 
+def mkpartition( projects_map: dict, image_description: pfw.image.Description, root_dir: str ):
+   mmc: pfw.image.Partition = pfw.image.Partition( image_description.file( ) )
+   mmc.create( image_description.size( ), force = True )
+   mmc.format( image_description.fs( ) )
+   mmc.mount( image_description.mount_point( ) )
+
+   mkimage( projects_map, root_dir )
+   deploy( projects_map, image_description.mount_point( ), root_dir, pause = True )
+
+   mmc.info( )
+   mmc.umount( )
+# def mkpartition
+
 def mkdrive( projects_map: dict, image_description: pfw.image.Description, root_dir: str ):
    partitions = [
       pfw.image.Drive.Partition( size = pfw.size.Size( 512, pfw.size.Size.eGran.M ), fs = image_description.fs( ) ),

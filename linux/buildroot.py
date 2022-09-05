@@ -24,7 +24,8 @@ class BuildRoot:
    def __init__( self, config: linux.base.Configuration, root_dir: str, **kwargs ):
       self.reset( )
       self.__config = config
-      self.__name = "buildroot"
+      self.__version = kwargs.get( "version", "master" )
+      self.__name = kwargs.get( "name", "buildroot-" + self.__version )
       self.__url_git = BUILDROOT_GIT_REPO
       self.__directories = linux.base.Directories( self.__config, root_dir, self.__name, product_subdir = "images" )
    # def __init__
@@ -55,6 +56,7 @@ class BuildRoot:
       pfw.console.debug.info( self.__class__.__name__, ":", tabs = ( tabulations + 0 ) )
       pfw.console.debug.info( "name:            \'", self.__name, "\'", tabs = ( tabulations + 1 ) )
       pfw.console.debug.info( "git repo:        \'", self.__url_git, "\'", tabs = ( tabulations + 1 ) )
+      pfw.console.debug.info( "version:         \'", self.__version, "\'", tabs = ( tabulations + 1 ) )
       self.__directories.info( tabulations + 1 )
    # def info
 
@@ -71,7 +73,8 @@ class BuildRoot:
 
       # repo = git.Repo.clone_from(
       #            self.__url_git
-      #          , os.path.join( self.__directories.source( ) )
+      #          , self.__directories.source( )
+      #          , branch = self.__version
       #          , progress = pfw.git.CloneProgress( )
       #       )
    # def clone
@@ -84,7 +87,7 @@ class BuildRoot:
       config: str = None
       if "arm" == self.__config.arch( ):
          config = "qemu_arm_vexpress_defconfig"
-      elif "arm64" == self.__config.arch( ):
+      elif "arm64" == self.__config.arch( ) or "aarch64" == self.__config.arch( ):
          config = "qemu_aarch64_virt_defconfig"
       else:
          config = "defconfig"
@@ -111,7 +114,11 @@ class BuildRoot:
    # def configure
 
    def build( self, **kwargs ):
-      target = kwargs.get( "build_target", "all" )
+      kw_targets = kwargs.get( "targets", ["all"] )
+
+      targets: str = ""
+      for target in kw_targets:
+         targets += f"{target} "
 
       command = "make"
       command += f" O={self.__directories.build( )}"
@@ -120,18 +127,24 @@ class BuildRoot:
       command += f" CROSS_COMPILE={self.__config.compiler( )}"
       command += f" -j{self.__config.cores( )}"
 
-      pfw.shell.run_and_wait_with_status( command, target, output = pfw.shell.eOutput.PTY )
+      pfw.shell.run_and_wait_with_status( command, targets, output = pfw.shell.eOutput.PTY )
    # def build
 
    def clean( self, **kwargs ):
-      target = kwargs.get( "clean_target", "distclean" )
+      kw_targets = kwargs.get( "targets", ["distclean"] )
 
-      pfw.shell.run_and_wait_with_status(
-              "make"
-            , "O=" + self.__directories.build( )
-            , "-C", self.__directories.source( )
-            , target
-         )
+      targets: str = ""
+      for target in kw_targets:
+         targets += f"{target} "
+
+      command = "make"
+      command += f" O={self.__directories.build( )}"
+      command += f" -C {self.__directories.source( )}"
+      command += f" ARCH={self.__config.arch( )}"
+      command += f" CROSS_COMPILE={self.__config.compiler( )}"
+      command += f" -j{self.__config.cores( )}"
+
+      pfw.shell.run_and_wait_with_status( command, targets, output = pfw.shell.eOutput.PTY )
    # def clean
 
    def deploy( self, **kwargs ):
@@ -180,7 +193,7 @@ class BuildRoot:
       if "arm" == self.__config.arch( ):
          command += f" -machine virt"
          command += f" -cpu cortex-a15"
-      elif "arm64" == self.__config.arch( ):
+      elif "arm64" == self.__config.arch( ) or "aarch64" == self.__config.arch( ):
          command += f" -machine virt"
          command += f" -cpu cortex-a53"
 
@@ -242,6 +255,7 @@ class BuildRoot:
 
    __name: str = None
    __url_git: str = None
+   __version: str = None
    __directories: linux.base.Directories = None
    __config: linux.base.Configuration = None
 # class BuildRoot

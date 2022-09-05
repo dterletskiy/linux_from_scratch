@@ -93,6 +93,13 @@ config: dict = {
          , machine = "vexpress"
          , cores = "8"
       ),
+   "aarch64": Configuration(
+           arch = "aarch64"
+         , compiler = "aarch64-linux-gnu-"
+         , compiler_path = "/usr/arm-linux-gnueabi"
+         , machine = "vexpress"
+         , cores = "8"
+      ),
    "x86": Configuration(
            arch = "x86"
          , compiler = "to_do"

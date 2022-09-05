@@ -1,7 +1,5 @@
 #!/usr/bin/python3
 
-# ./linux_kernel.py --include=/mnt/dev/TDA/python_fw --arch=arm64 --project=u-boot --action=config --target=makemenu
-
 import os
 import sys
 import getopt
@@ -131,18 +129,18 @@ import aosp.tools
 
 
 ENVIRONMENT = dict( os.environ )
-ENVIRONMENT["TDA"] = str(1234)
-pfw.shell.run_and_wait_with_status( "/bin/echo $TDA", env = ENVIRONMENT, shell = True )
+ENVIRONMENT["LFS_VERSION"] = str(1.0)
+pfw.shell.run_and_wait_with_status( "/bin/echo ${LFS_VERSION}", env = ENVIRONMENT, shell = True )
 
 
 
-LINUX_ROOT_DIR: str = "/mnt/dev/linux/"
-KERNEL_VERSION: str = "5.14.13"
-BUSYBOX_VERSION: str = "1.34.1"
-AOSP_VERSION: str = "android-12.0.0_r13"
-UBOOT_VERSION: str = "v2021.10"
+LINUX_ROOT_DIR: str = "/mnt/dev/linux_from_scratch/"
+KERNEL_VERSION: str = "5.19"
+BUSYBOX_VERSION: str = "1.35.0"
+BUILDROOT_VERSION: str = "2022.05.2"
+UBOOT_VERSION: str = "v2022.07"
 
-ANDROID_ROOT_DIR = "/mnt/dev/android"
+ANDROID_ROOT_DIR = "/mnt/dev/android/"
 ANDROID_VERSION="android-12.1.0_r8"
 
 
@@ -183,10 +181,10 @@ def init_projects( arch: str ):
 
    projects_map: dict = {
       "u-boot"       : linux.uboot.UBoot( linux_configuration, LINUX_ROOT_DIR, version = UBOOT_VERSION, url = linux.uboot.UBOOT_GITHUB_REPO ),
-      "buildroot"    : linux.buildroot.BuildRoot( linux_configuration, LINUX_ROOT_DIR ),
-      "busybox"      : linux.busybox.BusyBox( linux_configuration, LINUX_ROOT_DIR, BUSYBOX_VERSION ),
-      "kernel"       : linux.kernel.Kernel( linux_configuration, LINUX_ROOT_DIR, KERNEL_VERSION ),
-      "aosp"         : aosp.aosp.AOSP( aosp_configuration, ANDROID_ROOT_DIR, ANDROID_VERSION ),
+      "buildroot"    : linux.buildroot.BuildRoot( linux_configuration, LINUX_ROOT_DIR, version = BUILDROOT_VERSION ),
+      "busybox"      : linux.busybox.BusyBox( linux_configuration, LINUX_ROOT_DIR, version = BUSYBOX_VERSION ),
+      "kernel"       : linux.kernel.Kernel( linux_configuration, LINUX_ROOT_DIR, version = KERNEL_VERSION ),
+      "aosp"         : aosp.aosp.AOSP( aosp_configuration, ANDROID_ROOT_DIR, tag = ANDROID_VERSION ),
       "u-boot-aosp"  : linux.uboot.UBoot( linux_configuration, ANDROID_ROOT_DIR, version = "master", url = linux.uboot.UBOOT_ANDROID_GOOGLESOURCE_REPO ),
    }
 
@@ -310,9 +308,10 @@ def main( app_data: ApplicationData ):
                # "CONFIG_INITRAMFS_SOURCE": "\"" + projects["buildroot"].dirs( ).product( "rootfs.cpio" ) + "\"",
             }
       elif type( project ) == type( projects_map["buildroot"] ) or type( project ) == type( projects_map["busybox"] ):
+         # kernel_file: str = ""
          if "arm" == project.config( ).arch( ):
             kernel_file = "zImage"
-         elif "arm64" == project.config( ).arch( ):
+         elif "arm64" == project.config( ).arch( ) or "aarch64" == project.config( ).arch( ):
             kernel_file = "Image"
          kw["kernel"] = os.path.join( projects_map["kernel"].dirs( ).product( ), kernel_file )
       elif type( project ) == type( projects_map["aosp"] ):
