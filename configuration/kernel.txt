@@ -1,0 +1,8 @@
+kernel 5.14.13:
+/mnt/dev/linux/source/linux-5.14.13/arch/arm64/include/asm/assembler.h
+/mnt/dev/linux/source/linux-5.14.13/arch/arm64/mm/cache.S
+/mnt/dev/linux/source/linux-5.14.13/include/linux/init.h
+/mnt/dev/linux/source/linux-5.14.13/arch/arm64/kernel/head.S
+/mnt/dev/linux/source/linux-5.14.13/arch/arm64/kernel/efi-header.S
+/mnt/dev/linux/source/linux-5.14.13/init/main.c
+/mnt/dev/linux/source/linux-5.14.13/kernel/sched/idle.c

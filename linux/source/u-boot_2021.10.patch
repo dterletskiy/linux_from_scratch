@@ -1,0 +1,163 @@
+diff --git a/arch/arm/lib/bootm.c b/arch/arm/lib/bootm.c
+index a59a5e6c0e..9f195a999d 100644
+--- a/arch/arm/lib/bootm.c
++++ b/arch/arm/lib/bootm.c
+@@ -292,6 +292,7 @@ static void switch_to_el1(void)
+ /* Subcommand: GO */
+ static void boot_jump_linux(bootm_headers_t *images, int flag)
+ {
++	printf( "@TDA: boot_jump_linux\n" );
+ #ifdef CONFIG_ARM64
+ 	void (*kernel_entry)(void *fdt_addr, void *res0, void *res1,
+ 			void *res2);
+@@ -369,6 +370,7 @@ static void boot_jump_linux(bootm_headers_t *images, int flag)
+ 							  0, machid, r2);
+ 		} else
+ #endif
++			printf( "@TDA: kernel_entry = %p / machid = 0x%lx / r2 = 0x%lx\n", kernel_entry, machid, r2 );
+ 			kernel_entry(0, machid, r2);
+ 	}
+ #endif
+diff --git a/cmd/sysboot.c b/cmd/sysboot.c
+index af6a2f1b7f..07e626da17 100644
+--- a/cmd/sysboot.c
++++ b/cmd/sysboot.c
+@@ -58,6 +58,16 @@ static int do_get_any(struct cmd_tbl *cmdtp, const char *file_path,
+ static int do_sysboot(struct cmd_tbl *cmdtp, int flag, int argc,
+ 		      char *const argv[])
+ {
++	// @TDA: debug begin
++	printf( "@TDA: do_sysboot\n" );
++	int i;
++	printf( "@TDA: Arguments (%d): argc\n", argc );
++	for( i = 0; i < argc; i++ )
++	{
++		printf( "@TDA:    %d - %s\n", i, argv[i] );
++	}
++	// @TDA: debug end
++
+ 	unsigned long pxefile_addr_r;
+ 	struct pxe_menu *cfg;
+ 	char *pxefile_addr_str;
+diff --git a/common/bootm.c b/common/bootm.c
+index 4482f84b40..2c5924721a 100644
+--- a/common/bootm.c
++++ b/common/bootm.c
+@@ -375,6 +375,8 @@ static int handle_decomp_error(int comp_type, size_t uncomp_size, int ret)
+ #ifndef USE_HOSTCC
+ static int bootm_load_os(bootm_headers_t *images, int boot_progress)
+ {
++	printf( "@TDA: bootm_load_os\n" );
++	printf( "@TDA: CONFIG_SYS_BOOTM_LEN = %#zu\n", CONFIG_SYS_BOOTM_LEN );
+ 	image_info_t os = images->os;
+ 	ulong load = os.load;
+ 	ulong load_end;
+diff --git a/common/image-board.c b/common/image-board.c
+index e7660352e9..32e3e254e9 100644
+--- a/common/image-board.c
++++ b/common/image-board.c
+@@ -273,6 +273,10 @@ ulong genimg_get_kernel_addr(char * const img_addr)
+  */
+ int genimg_get_format(const void *img_addr)
+ {
++	// @TDA: debug begin
++	printf( "@TDA: genimg_get_format\n" );
++	printf( "@TDA: img_addr = %p\n" );
++	// @TDA: debug end
+ 	if (CONFIG_IS_ENABLED(LEGACY_IMAGE_FORMAT)) {
+ 		const image_header_t *hdr;
+ 
+@@ -286,7 +290,9 @@ int genimg_get_format(const void *img_addr)
+ 	}
+ 	if (IS_ENABLED(CONFIG_ANDROID_BOOT_IMAGE) &&
+ 	    !android_image_check_header(img_addr))
++	{
+ 		return IMAGE_FORMAT_ANDROID;
++	}
+ 
+ 	return IMAGE_FORMAT_INVALID;
+ }
+@@ -324,6 +330,8 @@ int genimg_has_config(bootm_headers_t *images)
+ static int select_ramdisk(bootm_headers_t *images, const char *select, u8 arch,
+ 			  ulong *rd_datap, ulong *rd_lenp)
+ {
++	printf( "@TDA: select_ramdisk\n" );
++	printf( "@TDA: select = %s\n", select );
+ 	ulong rd_addr = 0;
+ 	char *buf;
+ 	const char *fit_uname_config = images->fit_uname_cfg;
+@@ -349,12 +357,12 @@ static int select_ramdisk(bootm_headers_t *images, const char *select, u8 arch,
+ 
+ 			if (fit_parse_conf(select, default_addr, &rd_addr,
+ 					   &fit_uname_config)) {
+-				debug("*  ramdisk: config '%s' from image at 0x%08lx\n",
++				printf("*  ramdisk: config '%s' from image at 0x%08lx\n",
+ 				      fit_uname_config, rd_addr);
+ 			} else if (fit_parse_subimage(select, default_addr,
+ 						      &rd_addr,
+ 						      &fit_uname_ramdisk)) {
+-				debug("*  ramdisk: subimage '%s' from image at 0x%08lx\n",
++				printf("*  ramdisk: subimage '%s' from image at 0x%08lx\n",
+ 				      fit_uname_ramdisk, rd_addr);
+ 			} else {
+ 				done = false;
+@@ -362,7 +370,7 @@ static int select_ramdisk(bootm_headers_t *images, const char *select, u8 arch,
+ 		}
+ 		if (!done) {
+ 			rd_addr = hextoul(select, NULL);
+-			debug("*  ramdisk: cmdline image address = 0x%08lx\n",
++			printf("*  ramdisk: cmdline image address = 0x%08lx\n",
+ 			      rd_addr);
+ 		}
+ 	} else if (CONFIG_IS_ENABLED(FIT)) {
+@@ -386,7 +394,11 @@ static int select_ramdisk(bootm_headers_t *images, const char *select, u8 arch,
+ 	 */
+ 	buf = map_sysmem(rd_addr, 0);
+ 	processed = false;
+-	switch (genimg_get_format(buf)) {
++	int image_format = genimg_get_format(buf);
++	printf( "@TDA: rd_addr: %0x%08lx\n", rd_addr );
++	printf( "@TDA: buf: %p\n", buf );
++	printf( "@TDA: image format: %d\n", image_format );
++	switch (image_format) {
+ 	case IMAGE_FORMAT_LEGACY:
+ 		if (CONFIG_IS_ENABLED(LEGACY_IMAGE_FORMAT)) {
+ 			const image_header_t *rd_hdr;
+diff --git a/common/image.c b/common/image.c
+index 3fa60b5827..21136864f4 100644
+--- a/common/image.c
++++ b/common/image.c
+@@ -444,6 +444,17 @@ int image_decomp(int comp, ulong load, ulong image_start, int type,
+ 	*load_end = load;
+ 	print_decomp_msg(comp, type, load == image_start);
+ 
++	// @TDA: debug begin
++	printf( "@TDA: image_decomp\n" );
++	printf( "@TDA: --------------------------------------------\n" );
++	printf( "@TDA: comp: %d\n", comp );
++	printf( "@TDA: image_len: %lu\n", image_len );
++	printf( "@TDA: unc_len: %u\n", unc_len );
++	printf( "@TDA: load_buf: %p\n", load_buf );
++	printf( "@TDA: image_buf: %p\n", image_buf );
++	printf( "@TDA: --------------------------------------------\n" );
++	// @TDA: debug ewn
++
+ 	/*
+ 	 * Load the image to the right place, decompressing if needed. After
+ 	 * this, image_len will be set to the number of uncompressed bytes
+diff --git a/include/configs/vexpress_common.h b/include/configs/vexpress_common.h
+index 990f5ed547..41c5663f11 100644
+--- a/include/configs/vexpress_common.h
++++ b/include/configs/vexpress_common.h
+@@ -158,8 +158,10 @@
+ #include <config_distro_bootcmd.h>
+ 
+ #define CONFIG_EXTRA_ENV_SETTINGS \
+-                "kernel_addr_r=0x60100000\0" \
+                 "fdt_addr_r=0x60000000\0" \
++                "scriptaddr=0x60003000\0" \
++                "kernel_addr_r=0x60100000\0" \
++                "ramdisk_addr_r=0x61000000\0" \
+                 "bootargs=console=tty0 console=ttyAMA0,38400n8\0" \
+                 BOOTENV \
+ 		"console=ttyAMA0,38400n8\0" \
