@@ -1,9 +1,36 @@
 #!/usr/bin/python3
 
+
+
+# Examples:
+# 
+# CONFIG=./configuration.cfg 
+# PROJECT=u-boot
+# ARCH=arm64
+# PFW=/mnt/dev/TDA/python_fw
+# 
+# ./linux_kernel.py --config=${CONFIG} --include=${PFW} --arch=${ARCH} --project=${PROJECT} --action=info
+# ./linux_kernel.py --config=${CONFIG} --include=${PFW} --arch=${ARCH} --project=${PROJECT} --action=sync
+# ./linux_kernel.py --config=${CONFIG} --include=${PFW} --arch=${ARCH} --project=${PROJECT} --action=clean
+# ./linux_kernel.py --config=${CONFIG} --include=${PFW} --arch=${ARCH} --project=${PROJECT} --action=config
+# ./linux_kernel.py --config=${CONFIG} --include=${PFW} --arch=${ARCH} --project=${PROJECT} --action=config --target=menuconfig
+# ./linux_kernel.py --config=${CONFIG} --include=${PFW} --arch=${ARCH} --project=${PROJECT} --action=build
+# ./linux_kernel.py --config=${CONFIG} --include=${PFW} --arch=${ARCH} --project=${PROJECT} --action=deploy
+# 
+# ./linux_kernel.py --config=${CONFIG} --include=${PFW} --arch=${ARCH} --action=mkimage
+# ./linux_kernel.py --config=${CONFIG} --include=${PFW} --arch=${ARCH} --action=start
+# ./linux_kernel.py --config=${CONFIG} --include=${PFW} --arch=${ARCH} --action=gdb
+# 
+# In case if variable "INCLUDE" defined with path to "pfw" "--include" option could be omitted.
+# If "INCLUDE" variable defined several times in configuration file all mentioned values will be used.
+
+
+
 import os
 import sys
 import getopt
 import argparse
+import re
 
 
 
@@ -18,6 +45,7 @@ if sys.version_info < MIN_PYTHON:
 class ApplicationData:
    def info( self, **kwargs ):
       print( self.__class__.__name__, ":" )
+      print( "   config:      \'", self.config, "\'" )
       print( "   includes:    \'", self.includes, "\'" )
       print( "   arch:        \'", self.arch, "\'" )
       print( "   actions:     \'", self.actions, "\'" )
@@ -25,6 +53,7 @@ class ApplicationData:
       print( "   targets:     \'", self.targets, "\'" )
    # def info
 
+   config: str = None
    includes: list = [ ]
    arch: str = None
    actions: list = [ ]
@@ -37,6 +66,7 @@ class ApplicationData:
 
 class Description:
    help = "Show this help menu."
+   config = "Configuration"
    include = "Additional directory to search import packages"
    arch = "Architecture"
    action = "Action"
@@ -57,6 +87,8 @@ def cmdline_argparse( argv ):
 
    parser.add_argument( "--version", action = "version", version = '%(prog)s 2.0' )
 
+   parser.add_argument( "--config", dest = "config", type = str, action = "store", required = False, help = g_description.config )
+
    parser.add_argument( "--include", dest = "include", type = str, action = "append", help = g_description.include )
 
    parser.add_argument( "--arch", dest = "arch", type = str, action = "store", required = False, help = g_description.arch )
@@ -69,6 +101,10 @@ def cmdline_argparse( argv ):
       argument = parser.parse_args( )
    except argparse.ArgumentError:
       print( 'Catching an ArgumentError' )
+
+   if argument.config:
+      print( "config: ", argument.config )
+      application_data.config = argument.config
 
    if argument.include:
       print( "include: ", argument.include )
@@ -99,6 +135,24 @@ g_app_data.info( )
 
 
 def configure( app_data ):
+   if None != app_data.config:
+      global_variables = globals( )
+
+      pattern: str = r"^\s*(.*)\s*:\s*(.*)\s*$"
+      config_file = open( app_data.config, "r" )
+      for line in config_file:
+         match = re.match( pattern, line )
+         if match:
+            var_name = match.group( 1 )
+            var_value = match.group( 2 )
+            if "INCLUDE" == var_name:
+               app_data.includes.append( var_value )
+            else:
+               global_variables.__setitem__( var_name, var_value )
+      config_file.close( )
+
+
+
    include_count: int = 0
    for path in app_data.includes:
       include_count += 1
@@ -114,6 +168,7 @@ import pfw.size
 import pfw.image
 
 import base
+import configuration
 import dt
 import tools
 import linux.base
@@ -134,44 +189,24 @@ pfw.shell.run_and_wait_with_status( "/bin/echo ${LFS_VERSION}", env = ENVIRONMEN
 
 
 
-LINUX_ROOT_DIR: str = "/mnt/dev/linux_from_scratch/"
-KERNEL_VERSION: str = "5.19"
-BUSYBOX_VERSION: str = "1.35.0"
-BUILDROOT_VERSION: str = "2022.05.2"
-UBOOT_VERSION: str = "v2022.07"
-
-ANDROID_ROOT_DIR = "/mnt/dev/android/"
-ANDROID_VERSION="android-12.1.0_r8"
-
-
-
-
-
-
-
-LINUX_IMAGE_DIR: str = os.path.join( LINUX_ROOT_DIR, "images" )
-LINUX_IMAGE_PARTITION: pfw.image.Description = pfw.image.Description(
-        os.path.join( LINUX_IMAGE_DIR, "partition.img" )
-      , os.path.join( LINUX_IMAGE_DIR, "partition" )
-      , pfw.size.Size( 256, pfw.size.Size.eGran.M )
-      , "ext2"
-   )
-LINUX_IMAGE_DRIVE: pfw.image.Description = pfw.image.Description(
-        os.path.join( LINUX_IMAGE_DIR, "drive.img" )
-      , os.path.join( LINUX_IMAGE_DIR, "drive" )
-      , pfw.size.Size( 256, pfw.size.Size.eGran.M )
-      , "ext2"
-   )
+# Next variables must be defined in configuration file:
+configuration.LINUX_ROOT_DIR: str = LINUX_ROOT_DIR
+configuration.KERNEL_VERSION: str = KERNEL_VERSION
+configuration.BUSYBOX_VERSION: str = BUSYBOX_VERSION
+configuration.BUILDROOT_VERSION: str = BUILDROOT_VERSION
+configuration.UBOOT_VERSION: str = UBOOT_VERSION
+configuration.ANDROID_ROOT_DIR: str = ANDROID_ROOT_DIR
+configuration.ANDROID_VERSION: str = ANDROID_VERSION
+configuration.UBOOT_SCRIPT: str = UBOOT_SCRIPT
+configuration.SYSLINUX_SCRIPT: str = SYSLINUX_SCRIPT
+configuration.DTB_PATH: str = DTB_PATH
+configuration.TMP_PATH: str = TMP_PATH
+configuration.init( )
+configuration.print( )
 
 
 
-ANDROID_IMAGE_DIR: str = os.path.join( ANDROID_ROOT_DIR, "images" )
-ANDROID_IMAGE_DRIVE: pfw.image.Description = pfw.image.Description(
-        os.path.join( ANDROID_IMAGE_DIR, "drive.img" )
-      , os.path.join( ANDROID_IMAGE_DIR, "drive" )
-      , pfw.size.Size( 256, pfw.size.Size.eGran.M )
-      , "fat32"
-   )
+
 
 
 
@@ -180,12 +215,31 @@ def init_projects( arch: str ):
    aosp_configuration: aosp.base.Configuration = aosp.base.config[ arch ]
 
    projects_map: dict = {
-      "u-boot"       : linux.uboot.UBoot( linux_configuration, LINUX_ROOT_DIR, version = UBOOT_VERSION, url = linux.uboot.UBOOT_GITHUB_REPO ),
-      "buildroot"    : linux.buildroot.BuildRoot( linux_configuration, LINUX_ROOT_DIR, version = BUILDROOT_VERSION ),
-      "busybox"      : linux.busybox.BusyBox( linux_configuration, LINUX_ROOT_DIR, version = BUSYBOX_VERSION ),
-      "kernel"       : linux.kernel.Kernel( linux_configuration, LINUX_ROOT_DIR, version = KERNEL_VERSION ),
-      "aosp"         : aosp.aosp.AOSP( aosp_configuration, ANDROID_ROOT_DIR, tag = ANDROID_VERSION ),
-      "u-boot-aosp"  : linux.uboot.UBoot( linux_configuration, ANDROID_ROOT_DIR, version = "master", url = linux.uboot.UBOOT_ANDROID_GOOGLESOURCE_REPO ),
+      "u-boot"       : linux.uboot.UBoot(
+                           linux_configuration,
+                           LINUX_ROOT_DIR,
+                           version = UBOOT_VERSION,
+                        ),
+      "buildroot"    : linux.buildroot.BuildRoot(
+                           linux_configuration,
+                           LINUX_ROOT_DIR,
+                           version = BUILDROOT_VERSION
+                        ),
+      "busybox"      : linux.busybox.BusyBox(
+                           linux_configuration,
+                           LINUX_ROOT_DIR,
+                           version = BUSYBOX_VERSION
+                        ),
+      "kernel"       : linux.kernel.Kernel(
+                           linux_configuration,
+                           LINUX_ROOT_DIR,
+                           version = KERNEL_VERSION
+                        ),
+      "aosp"         : aosp.aosp.AOSP(
+                           aosp_configuration,
+                           ANDROID_ROOT_DIR,
+                           tag = ANDROID_VERSION
+                        ),
    }
 
    return projects_map
@@ -223,74 +277,13 @@ def main( app_data: ApplicationData ):
    for action in app_data.actions:
       # Processing extended actions
       if "gdb" == action:
-         debug: str = "u-boot"
-         if "u-boot" == debug:
-            project = projects_map["u-boot"]
-            tools.gdb(
-                  # arch = project.config( ).arch( ),
-                  file = project.dirs( ).product( "u-boot" ),
-                  # lib_path = os.path.join( project.config( ).compiler_path( ), "lib" ),
-                  # src_path = project.dirs( ).source( ),
-                  # rellocate_offset = 0x23ff0d000, # u-boot-aosp
-                  rellocate_offset = 0x23ff1b000, # u-boot
-                  break_names = [
-                     # "do_bootm",
-                     # "do_bootm_states",
-                     # "bootm_find_other",
-                     # "bootm_find_images",
-                     # "boot_get_ramdisk",
-                     # "select_ramdisk",
-                     "boot_jump_linux",
-                     "armv8_switch_to_el2"
-                  ],
-                  none = None
-               )
-         elif "kernel" == debug:
-            project = projects_map["kernel"]
-            tools.gdb(
-                  # arch = project.config( ).arch( ),
-                  file = project.dirs( ).build( "vmlinux" ),
-                  break_names = [
-                     "primary_entry",
-                     "__primary_switch",
-                     "__primary_switched",
-                     "start_kernel",
-                     "rest_init",
-                     "cpu_startup_entry"
-                  ],
-                  ex_list = [
-                     # f"add-auto-load-safe-path {project.dirs( ).build( )}",
-                     # f"add-auto-load-safe-path " + project.dirs( ).source( "scripts/gdb/vmlinux-gdb.py" ),
-                     # f"source {project.dirs( ).build( 'vmlinux-gdb.py' )}",
-                  ],
-                  none = None
-               )
-
+         tools.debug( projects_map, project_name = "u-boot" )
          sys.exit( )
       elif "start" == action:
-         dt_path = "/mnt/dev/linux/configuration/"
-         dtb_name = "dtb"
-         dtb = f"{dt_path}/{dtb_name}.dtb"
-         dts = f"{dt_path}/{dtb_name}.dts"
-
-         # dt.decompile( dtb, dts )
-         # dt.compile( dts, dtb )
-
-         tools.run_arm64(
-               bios = projects_map["u-boot"].dirs( ).product( "u-boot.bin" ),
-               # kernel = projects_map["kernel"].dirs( ).deploy( "Image" ),
-               # initrd = projects_map["buildroot"].dirs( ).deploy( "rootfs.cpio" ),
-               # append = "loglevel=7 debug printk.devkmsg=on drm.debug=0x0 console=ttyAMA0",
-               # dtb = dtb,
-               drive = LINUX_IMAGE_DRIVE.file( ),
-               # dump_dtb = True, dump_dtb_path = dtb,
-               # gdb = True
-            )
-
+         tools.start( projects_map, configuration.LINUX_IMAGE_DRIVE, bios = True, gdb = True )
          sys.exit( )
       elif "mkimage" == action:
-         tools.mkdrive( projects_map, LINUX_IMAGE_DRIVE, LINUX_ROOT_DIR )
-
+         tools.mkdrive( projects_map, configuration.LINUX_IMAGE_DRIVE )
          sys.exit( )
       else:
          # Collecting standart actions
@@ -304,21 +297,19 @@ def main( app_data: ApplicationData ):
       kw: dict = { }
       if type( project ) == type( projects_map["kernel"] ):
          kw["configs"] = {
-               "CONFIG_CMDLINE": "\"console=ttyAMA0\"",
+               # "CONFIG_CMDLINE": "\"console=ttyAMA0\"",
                # "CONFIG_INITRAMFS_SOURCE": "\"" + projects["buildroot"].dirs( ).product( "rootfs.cpio" ) + "\"",
             }
       elif type( project ) == type( projects_map["buildroot"] ) or type( project ) == type( projects_map["busybox"] ):
-         # kernel_file: str = ""
          if "arm" == project.config( ).arch( ):
             kernel_file = "zImage"
          elif "arm64" == project.config( ).arch( ) or "aarch64" == project.config( ).arch( ):
             kernel_file = "Image"
          kw["kernel"] = os.path.join( projects_map["kernel"].dirs( ).product( ), kernel_file )
       elif type( project ) == type( projects_map["aosp"] ):
-         kw["image"] = ANDROID_IMAGE_DRIVE.file( )
+         kw["image"] = configuration.ANDROID_IMAGE_DRIVE.file( )
          # kw["image"] = projects_map["aosp"].dirs( ).experimental( "main.img" )
          kw["uboot"] = projects_map["u-boot"].dirs( ).product( "u-boot" )
-         # kw["uboot"] = projects_map["u-boot-aosp"].dirs( ).product( "u-boot" )
       project.action( actions = actions, targets = targets, **kw )
 
 

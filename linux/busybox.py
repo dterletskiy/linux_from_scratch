@@ -15,6 +15,7 @@ import linux.base
 
 
 
+BUSYBOX_GITHUB_REPO = "https://github.com/mirror/busybox"
 BUSYBOX_LINK_PATTERN = "https://busybox.net/downloads/busybox-VERSION.tar.bz2"
 BUSYBOX_NAME_PATTERN = "busybox-VERSION"
 BUSYBOX_ARCHIVE_PATTERN = "busybox-VERSION.tar.bz2"
@@ -99,6 +100,7 @@ class BusyBox:
 
    def configure( self, **kwargs ):
       kw_targets = kwargs.get( "targets", ["default", "menuconfig"] )
+      kw_configs = kwargs.get( "configs", { } )
 
       if 0 == len(kw_targets):
          kw_targets = ["default", "menuconfig"]
@@ -113,6 +115,27 @@ class BusyBox:
          if "default" == target:
             target = self.default_config( )
          pfw.shell.run_and_wait_with_status( command, target, print = False, collect = False )
+
+      # Applying configuration patched defined in code
+      if 0 != len( kw_configs ):
+         config_file = open( os.path.join( self.__directories.build( ), ".config" ), "r" )
+         lines: str = ""
+         for line in config_file:
+            # Remove config in case it is present to be added from parameter
+            for config_key, config_value in kw_configs.items( ):
+               pattern: str = r"^(.*)" + config_key + "=\"(.*)\"(.*)$"
+               if re.match( pattern, line ):
+                  pfw.console.debug.error( "regexp pattern: ", pattern )
+                  line = ""
+                  break
+            lines += line
+         # Add all kw_configs from parameter
+         for config_key, config_value in kw_configs.items( ):
+            lines += config_key + "=" + config_value + "\n"
+         config_file.close( )
+         config_file = open( os.path.join( self.__directories.build( ), ".config" ), "w" )
+         config_file.write( lines )
+         config_file.close( )
    # def configure
 
    def build( self, **kwargs ):

@@ -2,6 +2,8 @@
 
 Boot options -> Default kernel command string -> console=ttyAMA0
 Boot options -> Kernel command line type -> Use bootloader kernel arguments if available
+Kernel hacking -> Compile-time checks and compiler options -> Debug information -> Generate DWARF Version 5 debuginfo
+Kernel hacking -> Compile-time checks and compiler options -> Provide GDB scripts for kernel debugging
 
 
 

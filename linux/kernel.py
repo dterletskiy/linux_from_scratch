@@ -153,8 +153,7 @@ class Kernel:
             target = self.default_config( )
          pfw.shell.run_and_wait_with_status( command, target, print = False, collect = False )
 
-
-
+      # Applying configuration patched defined in code
       if 0 != len( kw_configs ):
          config_file = open( os.path.join( self.__directories.build( ), ".config" ), "r" )
          lines: str = ""
