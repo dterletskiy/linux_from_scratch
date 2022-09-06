@@ -197,11 +197,11 @@ def deploy( projects_map: dict, mount_point: str, pause: bool = False ):
          # },
          {
             "src": projects_map["kernel"].dirs( ).deploy( "Image.uimg" ),
-            "dest": os.path.join( mount_point, "boot/Image.uimg" )
+            "dest": os.path.join( mount_point, "boot/kernel-" + projects_map["kernel"].version( ) + ".uimg" )
          },
          {
             "src": projects_map["kernel"].dirs( ).deploy( "zImage.uimg" ),
-            "dest": os.path.join( mount_point, "boot/zImage.uimg" )
+            "dest": os.path.join( mount_point, "boot/kernel-" + projects_map["kernel"].version( ) + ".uimg" )
          },
          {
             "src": configuration.DTB_PATH,
@@ -209,11 +209,11 @@ def deploy( projects_map: dict, mount_point: str, pause: bool = False ):
          },
          {
             "src": projects_map["buildroot"].dirs( ).deploy( "rootfs.cpio.uimg" ),
-            "dest": os.path.join( mount_point, "boot/rootfs.cpio.uimg" )
+            "dest": os.path.join( mount_point, "boot/rootfs-" + projects_map["buildroot"].version( ) + ".cpio.uimg" )
          },
          {
             "src": projects_map["busybox"].dirs( ).deploy( "initramfs.cpio.uimg" ),
-            "dest": os.path.join( mount_point, "boot/initramfs.cpio.uimg" )
+            "dest": os.path.join( mount_point, "boot/initramfs-" + projects_map["busybox"].version( ) + ".cpio.uimg" )
          },
          {
             "src": os.path.join( configuration.TMP_PATH, "boot_linux.img" ),
@@ -294,13 +294,13 @@ def run_arm64( **kwargs ):
 
 def start( projects_map: dict, image_description: pfw.image.Description, **kwargs ):
    kw_bios = kwargs.get( "bios", True )
-   kw_gdb = kwargs.get( "gdb", True )
+   kw_gdb = kwargs.get( "gdb", False )
 
    if True == kw_bios:
       run_arm64(
             bios = projects_map["u-boot"].dirs( ).product( "u-boot.bin" ),
             drive = image_description.file( ),
-            **kwargs
+            gdb = kw_gdb
          )
    else:
       run_arm64(
@@ -309,7 +309,7 @@ def start( projects_map: dict, image_description: pfw.image.Description, **kwarg
             append = "loglevel=7 debug printk.devkmsg=on drm.debug=0x0 console=ttyAMA0",
             dtb = configuration.DTB_PATH,
             drive = image_description.file( ),
-            **kwargs
+            gdb = kw_gdb
          )
 # def start
 

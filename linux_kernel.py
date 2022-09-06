@@ -280,7 +280,12 @@ def main( app_data: ApplicationData ):
          tools.debug( projects_map, project_name = "u-boot" )
          sys.exit( )
       elif "start" == action:
-         tools.start( projects_map, configuration.LINUX_IMAGE_DRIVE, bios = True, gdb = True )
+         tools.start(
+               projects_map,
+               configuration.LINUX_IMAGE_DRIVE,
+               bios = True,
+               # gdb = True
+            )
          sys.exit( )
       elif "mkimage" == action:
          tools.mkdrive( projects_map, configuration.LINUX_IMAGE_DRIVE )

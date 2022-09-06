@@ -272,6 +272,10 @@ class BuildRoot:
       return self.__config
    # def config
 
+   def version( self ):
+      return self.__version
+   # def version
+
 
 
    __name: str = None
