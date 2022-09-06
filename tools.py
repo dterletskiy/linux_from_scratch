@@ -75,10 +75,10 @@ def gdb( **kwargs ):
    kw_file = kwargs.get( "file", None )
    kw_lib_path = kwargs.get( "lib_path", None ) # os.path.join( configuration.compiler_path( ), "lib" )
    kw_src_path = kwargs.get( "src_path", None )
-   kw_rellocate_offset = kwargs.get( "rellocate_offset", None ) # In case of u-boot will be printed as "Relocation Offset is: ..."
-   kw_break_names = kwargs.get( "break_names", None )
-   kw_break_addresses = kwargs.get( "break_addresses", None )
-   kw_break_code = kwargs.get( "break_code", None )
+   kw_load_symbols = kwargs.get( "load_symbols", None ) # { str: [ ] }
+   kw_break_names = kwargs.get( "break_names", None ) # [ ]
+   kw_break_addresses = kwargs.get( "break_addresses", None ) # [ ]
+   kw_break_code = kwargs.get( "break_code", None ) # { str: [ ] }
    kw_ex_list = kwargs.get( "ex_list", [ ] )
 
    command = f"gdb-multiarch"
@@ -104,9 +104,10 @@ def gdb( **kwargs ):
       command += f" -ex \"set solib-search-path {kw_lib_path}\""
    if None != kw_src_path:
       command += f" -ex \"set directories {kw_src_path}\""
-   if None != kw_rellocate_offset:
-      command += f" -ex \"symbol-file\""
-      command += f" -ex \"add-symbol-file {kw_file} {kw_rellocate_offset}\""
+   if None != kw_load_symbols:
+      for symbols_file in kw_load_symbols:
+         for symbols_offset in kw_load_symbols[ symbols_file ]:
+            command += f" -ex \"add-symbol-file {symbols_file} {symbols_offset}\""
    if None != kw_break_names:
       for break_name in kw_break_names:
          command += f" -ex \"b {break_name}\""
@@ -325,15 +326,18 @@ def debug( projects_map: dict, **kwargs ):
 
    if "u-boot" == kw_project_name:
       gdb(
-            # arch = project.config( ).arch( ),
-            file = project.dirs( ).product( "u-boot" ),
-            # lib_path = os.path.join( project.config( ).compiler_path( ), "lib" ),
-            # src_path = project.dirs( ).source( ),
-            # rellocate_offset = "x0" register when enter to "relocate_code" function
-            # rellocate_offset = 0x23ff0d000, # u-boot-aosp
-            # rellocate_offset = 0x23ff1b000, # u-boot v2021.10
-            rellocate_offset = 0x23ff03000, # u-boot v2022.07
+            # arch = projects_map[ "u-boot" ].config( ).arch( ),
+            file = projects_map[ "u-boot" ].dirs( ).product( "u-boot" ),
+            # lib_path = projects_map[ "u-boot" ].config( ).compiler_path( "lib" ),
+            # src_path = projects_map[ "u-boot" ].dirs( ).source( ),
+            load_symbols = {
+               # projects_map[ "u-boot" ].dirs( ).product( "u-boot" ): [ 0x000000000 ], # in case of "u-boot" "x0" register when enter to "relocate_code" function
+               # projects_map[ "u-boot" ].dirs( ).product( "u-boot" ): [ 0x23ff03000 ], # u-boot v2021.10
+               projects_map[ "u-boot" ].dirs( ).product( "u-boot" ): [ 0x23ff03000 ], # u-boot v2022.07
+               projects_map[ "kernel" ].dirs( ).build( "vmlinux" ): [ 0x40410800 ], # kernel 5.15 loaded to 0x40400800
+            },
             break_names = [
+               # u-boot functions
                # "do_bootm",
                # "do_bootm_states",
                # "bootm_find_other",
@@ -341,10 +345,19 @@ def debug( projects_map: dict, **kwargs ):
                # "boot_get_ramdisk",
                # "select_ramdisk",
                "boot_jump_linux",
-               "armv8_switch_to_el2"
+               "armv8_switch_to_el2",
+               # kernel functions
+               "primary_entry",
+               "__primary_switch",
+               "__primary_switched",
+               "start_kernel",
+               "rest_init",
+               "cpu_startup_entry"
             ],
             break_code = {
-               project.dirs( ).source( "arch/arm/cpu/armv8/transition.S" ): [ 30 ]
+               # u-boot code
+               projects_map[ "u-boot" ].dirs( ).source( "arch/arm/cpu/armv8/transition.S" ): [ 30 ]
+               # kernel code
             },
             none = None
          )
