@@ -217,22 +217,22 @@ def init_projects( arch: str ):
    projects_map: dict = {
       "u-boot"       : linux.uboot.UBoot(
                            linux_configuration,
-                           LINUX_ROOT_DIR,
+                           configuration.LINUX_ROOT_DIR,
                            version = UBOOT_VERSION,
                         ),
       "buildroot"    : linux.buildroot.BuildRoot(
                            linux_configuration,
-                           LINUX_ROOT_DIR,
+                           configuration.LINUX_ROOT_DIR,
                            version = BUILDROOT_VERSION
                         ),
       "busybox"      : linux.busybox.BusyBox(
                            linux_configuration,
-                           LINUX_ROOT_DIR,
+                           configuration.LINUX_ROOT_DIR,
                            version = BUSYBOX_VERSION
                         ),
       "kernel"       : linux.kernel.Kernel(
                            linux_configuration,
-                           LINUX_ROOT_DIR,
+                           configuration.LINUX_ROOT_DIR,
                            version = KERNEL_VERSION
                         ),
       "aosp"         : aosp.aosp.AOSP(
@@ -284,7 +284,7 @@ def main( app_data: ApplicationData ):
                projects_map,
                configuration.LINUX_IMAGE_DRIVE,
                bios = True,
-               # gdb = True
+               gdb = True
             )
          sys.exit( )
       elif "mkimage" == action:

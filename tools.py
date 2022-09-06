@@ -78,6 +78,7 @@ def gdb( **kwargs ):
    kw_rellocate_offset = kwargs.get( "rellocate_offset", None ) # In case of u-boot will be printed as "Relocation Offset is: ..."
    kw_break_names = kwargs.get( "break_names", None )
    kw_break_addresses = kwargs.get( "break_addresses", None )
+   kw_break_code = kwargs.get( "break_code", None )
    kw_ex_list = kwargs.get( "ex_list", [ ] )
 
    command = f"gdb-multiarch"
@@ -112,6 +113,10 @@ def gdb( **kwargs ):
    if None != kw_break_addresses:
       for break_addr in kw_break_addresses:
          command += f" -ex \"b *{break_addr}\""
+   if None != kw_break_code:
+      for break_file in kw_break_code:
+         for break_line in kw_break_code[ break_file ]:
+            command += f" -ex \"b {break_file}:{break_line}\""
 
    command += f" -ex \"info breakpoints\""
    command += f" -ex \"info files\""
@@ -318,8 +323,8 @@ def debug( projects_map: dict, **kwargs ):
 
    project = projects_map[ kw_project_name ]
 
-   if "u-boot" == kw_project:
-      tools.gdb(
+   if "u-boot" == kw_project_name:
+      gdb(
             # arch = project.config( ).arch( ),
             file = project.dirs( ).product( "u-boot" ),
             # lib_path = os.path.join( project.config( ).compiler_path( ), "lib" ),
@@ -338,10 +343,13 @@ def debug( projects_map: dict, **kwargs ):
                "boot_jump_linux",
                "armv8_switch_to_el2"
             ],
+            break_code = {
+               project.dirs( ).source( "arch/arm/cpu/armv8/transition.S" ): [ 30 ]
+            },
             none = None
          )
-   elif "kernel" == kw_project:
-      tools.gdb(
+   elif "kernel" == kw_project_name:
+      gdb(
             # arch = project.config( ).arch( ),
             file = project.dirs( ).build( "vmlinux" ),
             break_names = [
