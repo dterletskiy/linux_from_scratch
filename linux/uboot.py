@@ -10,7 +10,7 @@ import pfw.shell
 import pfw.git
 
 import base
-import tools
+import qemu
 import linux.base
 
 
@@ -228,9 +228,8 @@ class UBoot:
       command += f" -serial mon:stdio"
       command += f" -no-reboot"
       command += f" -d guest_errors"
-      
 
-      tools.run_qemu(
+      qemu.run(
             command,
             arch = self.__config.arch( ),
             bios = self.__directories.product( "u-boot.bin" ),

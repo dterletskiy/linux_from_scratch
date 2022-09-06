@@ -10,7 +10,7 @@ import pfw.shell
 import pfw.git
 
 import base
-import tools
+import qemu
 import linux.base
 
 
@@ -266,7 +266,7 @@ class BusyBox:
       command += f" -no-reboot"
       command += f" -d guest_errors"
 
-      tools.run_qemu(
+      qemu.run(
             command,
             arch = self.__config.arch( ),
             initrd = self.__directories.deploy( "initramfs.cpio" ),
