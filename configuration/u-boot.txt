@@ -7,6 +7,8 @@ Library routines -> Android Verified Boot -> Android Verified Boot 2.0 support
 Partition Types -> Enable Partition Labels (disklabels) support
 Device Drivers -> MMC Host controller Support -> MMC/SD/SDIO card support
 Security support -> Build Android Verified Boot operations
+Security support -> Define AVB buffer address -> 0x10000000
+Security support -> Define AVB buffer SIZE -> 0x200
 Command line interface -> Android command support -> ab_select
 Command line interface -> Debug commands -> avd
 
