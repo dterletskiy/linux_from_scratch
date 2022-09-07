@@ -51,9 +51,8 @@ def mkimage( projects_map: dict ):
 def mkbootimg( projects_map: dict ):
    mkbootimg_tool = projects_map["aosp"].create_android_boot_image
 
-   cmdline = "loglevel=7 debug printk.devkmsg=on drm.debug=0x0 console=ttyAMA0 earlyprintk=ttyAMA0"
-   cmdline += " root=/dev/ram rw"
-   cmdline += " loop.max_loop=10"
+   cmdline = qemu.build_cmdline( arch = projects_map["aosp"].config( ).arch( ) )
+   # cmdline += " root=/dev/ram rw"
 
    mkbootimg_tool(
          header_version = 2,
@@ -71,7 +70,7 @@ def mkbootimg( projects_map: dict ):
    mkbootimg_tool(
          header_version = 2,
          kernel = projects_map["aosp"].dirs( ).product( "kernel"),
-         ramdisk = projects_map["aosp"].dirs( ).experimental( "ramdisk"),
+         ramdisk = projects_map["aosp"].dirs( ).experimental( "ramdisk.img"),
          dtb = configuration.DTB_PATH,
          cmdline = cmdline,
          out = os.path.join( configuration.TMP_PATH, "boot_aosp.img" ),
@@ -149,20 +148,49 @@ def mkpartition( projects_map: dict, image_description: pfw.image.Description ):
 # def mkpartition
 
 def mkdrive( projects_map: dict, image_description: pfw.image.Description ):
+   super_image = projects_map["aosp"].dirs( ).product( "super.img" )
+   if "arm64" == projects_map["aosp"].config( ).arch( ):
+      projects_map["aosp"].simg_to_img( projects_map["aosp"].dirs( ).product( "super.img" ), projects_map["aosp"].dirs( ).experimental( "super.raw" ) )
+      super_image = projects_map["aosp"].dirs( ).experimental( "super.raw" )
+
+   userdata_image = projects_map["aosp"].dirs( ).product( "userdata.img" )
+   if "arm64" == projects_map["aosp"].config( ).arch( ):
+      projects_map["aosp"].simg_to_img( projects_map["aosp"].dirs( ).product( "userdata.img" ), projects_map["aosp"].dirs( ).experimental( "userdata.raw" ) )
+      userdata_image = projects_map["aosp"].dirs( ).experimental( "userdata.raw" )
+
+   vbmeta_image = projects_map["aosp"].dirs( ).product( "vbmeta.img" )
+   vbmeta_system_image = projects_map["aosp"].dirs( ).product( "vbmeta_system.img" )
+
    partitions = [
-      pfw.image.Drive.Partition( size = pfw.size.Size( 512, pfw.size.Size.eGran.M ), fs = image_description.fs( ) ),
+      pfw.image.Drive.Partition( clone_from = super_image, label = "super" ),
+      pfw.image.Drive.Partition( clone_from = userdata_image, label = "userdata" ),
+      pfw.image.Drive.Partition( size = pfw.size.SizeGigabyte, label = "cache", fs = "ext4" ),
+      pfw.image.Drive.Partition( size = pfw.size.SizeGigabyte, label = "metadata", fs = "ext4" ),
+      pfw.image.Drive.Partition( size = pfw.size.SizeGigabyte, label = "misc", fs = "ext4" ),
+      pfw.image.Drive.Partition( clone_from = vbmeta_image, label = "vbmeta_a" ),
+      pfw.image.Drive.Partition( clone_from = vbmeta_system_image, label = "vbmeta_system_a" ),
+      pfw.image.Drive.Partition( size = pfw.size.Size( 512, pfw.size.Size.eGran.M ), fs = image_description.fs( ), label = "boot" ),
    ]
 
    mmc: pfw.image.Drive = pfw.image.Drive( image_description.file( ) )
    mmc.create( partitions = partitions, force = True )
    mmc.attach( )
-   mmc.init( partitions, bootable = 1 )
-   mmc.mount( 1, image_description.mount_point( ) )
+   mmc.init( partitions, bootable = 8 )
 
+   # Filling boot partition
+   mmc.mount( 8, image_description.mount_point( ) )
    mkimage( projects_map )
-   # projects_map["aosp"].build_ramdisk( )
+   bootconfig_file: str = None
+   if "x86" == projects_map["aosp"].config( ).arch( ) or "x86_64" == projects_map["aosp"].config( ).arch( ):
+      bootconfig_file = configuration.ANDROID_BOOTCONFIG_X86
+   elif "arm64" == projects_map["aosp"].config( ).arch( ) or "aarch64" == projects_map["aosp"].config( ).arch( ):
+      bootconfig_file = configuration.ANDROID_BOOTCONFIG_ARM64
+   projects_map["aosp"].build_ramdisk(
+         bootconfig = { "tool": projects_map["kernel"].bootconfig, "config": bootconfig_file }
+      )
    mkbootimg( projects_map )
    deploy( projects_map, image_description.mount_point( ), pause = True )
+   mmc.umount( 8 )
 
    mmc.info( )
    mmc.detach( )
@@ -185,7 +213,7 @@ def run_arm64( **kwargs ):
    command += f" -device virtio-blk-pci,modern-pio-notify,drive=main"
 
    qemu.run( command, arch = "arm64", **kwargs )
-# run_experimental_arm64
+# run_arm64
 
 
 
@@ -275,3 +303,155 @@ def debug( projects_map: dict, **kwargs ):
             none = None
          )
 # def debug
+
+
+
+
+
+
+def build_emulator_parameters_trout( projects_map, **kwargs ):
+   kw_drive = kwargs.get( "drive", None )
+   kw_arch = projects_map["aosp"].config( ).arch( )
+
+   PARAMETERS = f"" \
+      + f" -serial mon:stdio" \
+      + f" -nodefaults" \
+      + f" -no-reboot" \
+      + f" -d guest_errors"
+
+   if "x86" == kw_arch:
+      PARAMETERS = PARAMETERS + f" -enable-kvm"
+      PARAMETERS = PARAMETERS + f" -smp cores=2"
+      PARAMETERS = PARAMETERS + f" -m 8192"
+   elif "arm64" == kw_arch:
+      PARAMETERS = PARAMETERS + f" -machine virt"
+      PARAMETERS = PARAMETERS + f" -cpu cortex-a53"
+      PARAMETERS = PARAMETERS + f" -smp cores=4"
+      PARAMETERS = PARAMETERS + f" -m 8192"
+
+   IMAGE_DEVICE_TYPE = f"virtio-blk-pci,modern-pio-notify,iothread=disk-iothread"
+   IMAGE_DEVICES_MAIN = f"" \
+      + f" -drive if=none,index=0,id=main,file={kw_drive}" \
+      + f" -device {IMAGE_DEVICE_TYPE},drive=main"
+
+   NETWORK_NETDEV_USER = f"" \
+      + f" -netdev user,id=eth0_inet,hostfwd=tcp::5550-:5555,ipv6=off" \
+      + f" -device virtio-net-pci,netdev=eth0_inet,id=android"
+
+   NETWORK_NETDEV_BRIDGE = f"" \
+      + f" -netdev bridge,id=eth0_inet,br=virbr0,helper=/mnt/dev/git/qemu/build/qemu-bridge-helper" \
+      + f" -device virtio-net-pci,netdev=eth0_inet,id=android"
+
+   NETWORK_NETDEV_TAP = f"" \
+      + f" -netdev tap,id=eth0_inet,ifname=ethernet_tap,script=no,downscript=no,vhost=on" \
+      + f" -device virtio-net-pci-non-transitional,netdev=eth0_inet,id=android"
+
+   NETWORK_OBJECT_DUMP = f"" \
+      + f" -object filter-dump,id=f1,netdev=eth0_inet,file=/mnt/dev/android/logs/net_dump/eth0_inet_dump_$(date '+%Y-%m-%d_%H:%M:%S').dat" \
+
+   NETWORK_NET_USER = f"" \
+      + f" -net user" \
+      + f" -net nic" \
+
+   NETWORK_NET_BRIDGE = f"" \
+      + f" -net bridge,br=virbr0,helper=/mnt/dev/git/qemu/build/qemu-bridge-helper" \
+      + f" -net nic,model=virtio"
+
+   PCI_KBD_MOUSE = f"" \
+      + " -device virtio-keyboard-pci" \
+      + " -device virtio-mouse-pci"
+
+   USB_BUS = f"" \
+      + " -usb" \
+
+   USB_KBD_MOUSE = f"" \
+      + " -usb" \
+      + " -device usb-kbd" \
+      + " -device usb-mouse" \
+
+   AUDIO_DEVICES = f"" \
+      + " -device intel-hda" \
+      + " -device hda-duplex,audiodev=snd0" \
+      + " -audiodev alsa,id=snd0,out.dev=default" \
+      + " -device virtio-snd-pci,disable-legacy=on,audiodev=snd0"
+
+   CHAR_DEVICES = f"" \
+      + " -device virtio-serial-pci,ioeventfd=off" \
+      + " -chardev null,id=forhvc0" \
+      + " -device virtconsole,chardev=forhvc0" \
+      + " -chardev null,id=forhvc1" \
+      + " -device virtconsole,chardev=forhvc1"
+
+   OTHER_DEVICES = f"" \
+      + " -device virtio-gpu-gl-pci" \
+      + " -display gtk,gl=on,show-cursor=on" \
+      + " -device nec-usb-xhci,id=xhci" \
+      + " -device sdhci-pci" \
+      + " -object iothread,id=disk-iothread" \
+      + " -device virtio-rng-pci"
+
+   command: str = ""\
+      + f" {PARAMETERS}" \
+      + f" {IMAGE_DEVICES_MAIN}" \
+      + f" {NETWORK_NETDEV_USER}" \
+      + f" {USB_BUS}" \
+      + f" {AUDIO_DEVICES}" \
+      + f" {CHAR_DEVICES}" \
+      + f" {OTHER_DEVICES}"
+
+   return command
+# def build_emulator_parameters_trout
+
+def build_bootconfig_trout( **kwargs ):
+   kw_vbmeta_digest = "61344eefe85d31337ffda864c567f529fc18ec1bafa240bb1f46bd561f39a053"
+
+   cmdline = f""
+   cmdline += f" androidboot.qemu=1"
+   cmdline += f" androidboot.selinux=permissive"
+   cmdline += f" androidboot.fstab_suffix=trout"
+   cmdline += f" androidboot.hardware=cutf_cvm"
+   cmdline += f" androidboot.slot_suffix=_a"
+   cmdline += f" androidboot.vbmeta.size=5568"
+   cmdline += f" androidboot.vbmeta.hash_alg=sha256"
+   cmdline += f" androidboot.vbmeta.digest={kw_vbmeta_digest}"
+   cmdline += f" androidboot.hardware.gralloc=minigbm"
+   cmdline += f" androidboot.hardware.hwcomposer=drm_minigbm"
+   cmdline += f" androidboot.hardware.egl=mesa"
+   cmdline += f" androidboot.logcat=*:V"
+   cmdline += f" androidboot.vendor.vehiclehal.server.cid=2"
+   cmdline += f" androidboot.vendor.vehiclehal.server.port=9300"
+   cmdline += f" androidboot.vendor.vehiclehal.server.psf=/data/data/power.file"
+   cmdline += f" androidboot.vendor.vehiclehal.server.pss=/data/data/power.socket"
+   # cmdline += f" androidboot.first_stage_console=1"
+   # cmdline += f" androidboot.force_normal_boot=1"
+
+   if "x86" == kw_arch:
+      cmdline += f" androidboot.boot_devices=pci0000:00/0000:00:02.0"
+   elif "arm64" == kw_arch:
+      cmdline += f" androidboot.boot_devices=4010000000.pcie"
+
+   pfw.console.debug.trace( "cmdline = '%s'" % (cmdline) )
+   return cmdline
+# def build_cmdline_trout
+
+def start_trout( projects_map: dict, image_description: pfw.image.Description, **kwargs ):
+   kw_bios = kwargs.get( "bios", True )
+   kw_gdb = kwargs.get( "gdb", False )
+
+   command = build_emulator_parameters_trout(
+         projects_map, 
+         drive = image_description.file( ),
+         debug = True
+      )
+
+   qemu.run(
+         command,
+         arch = "arm64",
+         bios = projects_map["u-boot"].dirs( ).product( "u-boot.bin" ),
+         # kernel = projects_map["aosp"].dirs( ).product( "kernel" ),
+         # initrd = projects_map["aosp"].dirs( ).experimental( "ramdisk.img" ),
+         # append = build_cmdline_trout( projects_map ),
+         gdb = kw_gdb,
+      )
+# def start_trout
+

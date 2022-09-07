@@ -228,10 +228,12 @@ class AOSP:
       self.__execute( command )
    # def simg_to_img
 
-   def build_ramdisk( self ):
-      EXPERIMENTAL_RAMDISK_DIR = self.__directories.experimental( "ramdisk_dir" )
+   def build_ramdisk( self, **kwargs ):
+      kw_bootconfig = kwargs.get( "bootconfig", None )
+
+      EXPERIMENTAL_RAMDISK_DIR = self.__directories.experimental( "ramdisk" )
       EXPERIMENTAL_RAMDISK_IMAGE = self.__directories.experimental( "ramdisk.img" )
-      EXPERIMENTAL_RAMDISK = self.__directories.experimental( "ramdisk" )
+      # EXPERIMENTAL_RAMDISK = self.__directories.experimental( "ramdisk" )
 
       ANDROID_PRODUCT_RAMDISK_DIR = self.__directories.product( "ramdisk" )
       ANDROID_RAMDISK_IMAGE = self.__directories.product( "ramdisk.img" )
@@ -246,9 +248,14 @@ class AOSP:
          + f" cp -R {ANDROID_PRODUCT_RAMDISK_DIR}/* {EXPERIMENTAL_RAMDISK_DIR};" \
          + f" cp -R {ANDROID_PRODUCT_VENDOR_RAMDISK_DIR}/* {EXPERIMENTAL_RAMDISK_DIR};" \
          + f" find . ! -name . | LC_ALL=C sort | cpio -o -H newc -R root:root | lz4 -l -12 --favor-decSpeed > {EXPERIMENTAL_RAMDISK_IMAGE};" \
-         + f" cp {EXPERIMENTAL_RAMDISK_IMAGE} {EXPERIMENTAL_RAMDISK};"
+
+      # command += f" cp {EXPERIMENTAL_RAMDISK_IMAGE} {EXPERIMENTAL_RAMDISK};"
 
       self.__execute( command )
+
+      if None != kw_bootconfig and isinstance( kw_bootconfig, dict ):
+         pfw.console.debug.info( "Addint bootconfig to ramdisk" )
+         kw_bootconfig["tool"]( EXPERIMENTAL_RAMDISK_IMAGE, clear = True, add = kw_bootconfig["config"] )
    # def build_ramdisk
 
    def extract_android_boot_image( self, **kwargs ):
@@ -302,7 +309,7 @@ class AOSP:
    # def create_android_boot_image
 
    def build_main_image( self ):
-      partitions = self.__init_main_partitions_uboot( )
+      partitions = self.__init_main_partitions( )
 
       mmc: pfw.image.Drive = pfw.image.Drive( self.__directories.experimental( "main.img" ) )
       mmc.create( partitions = partitions, align = pfw.size.Size.eGran.G, force = True )
@@ -318,8 +325,7 @@ class AOSP:
       parameters: str = ""
 
       if "trout" == self.__config.device( ):
-         # parameters = self.__build_emulator_parameters_trout( **kwargs )
-         parameters = self.__build_emulator_parameters_trout_uboot( **kwargs )
+         parameters = self.__build_emulator_parameters_trout( **kwargs )
 
       self.__run_emulator( parameters, **kwargs )
    # def run
@@ -522,56 +528,6 @@ class AOSP:
 
       return command
    # def __build_emulator_parameters_trout
-
-   def __init_main_partitions_uboot( self ):
-      boot_image = self.__directories.product( "boot.img" )
-      dtb_image = self.__directories.experimental( "dtb.dtb" )
-
-      partitions = [
-            pfw.image.Drive.Partition( clone_from = boot_image, label = "boot" ),
-            pfw.image.Drive.Partition( clone_from = dtb_image, label = "dtb" ),
-         ]
-
-      return partitions
-   # def __init_main_partitions_uboot
-
-   def __build_emulator_parameters_trout_uboot( self, **kwargs ):
-      kw_debug = kwargs.get( "debug", False )
-      kw_image = kwargs.get( "image", None )
-      kw_uboot = kwargs.get( "uboot", self.__directories.product( "bootloader" ) )
-
-      PARAMETERS = f"" \
-         + f" -serial mon:stdio" \
-         + f" -nodefaults" \
-         + f" -no-reboot" \
-         + f" -d guest_errors" \
-
-      if "x86" == self.__config.arch( ):
-         PARAMETERS = PARAMETERS + f" -enable-kvm"
-         PARAMETERS = PARAMETERS + f" -smp cores=2"
-         PARAMETERS = PARAMETERS + f" -m 8192"
-      elif "arm64" == self.__config.arch( ):
-         PARAMETERS = PARAMETERS + f" -machine virt"
-         PARAMETERS = PARAMETERS + f" -cpu cortex-a53"
-         PARAMETERS = PARAMETERS + f" -smp cores=4"
-         PARAMETERS = PARAMETERS + f" -m 8192"
-
-      IMAGE_DEVICE_TYPE = f"virtio-blk-pci,modern-pio-notify,iothread=disk-iothread"
-      IMAGE_DEVICES_MAIN = f"" \
-         + f" -drive if=none,index=0,id=main,file={kw_image}" \
-         + f" -device {IMAGE_DEVICE_TYPE},drive=main"
-
-      OTHER_DEVICES = f"" \
-         + " -object iothread,id=disk-iothread"
-
-      command: str = ""\
-         + f" {PARAMETERS}" \
-         + f" -kernel {kw_uboot}" \
-         + f" {IMAGE_DEVICES_MAIN}" \
-         + f" {OTHER_DEVICES}"
-
-      return command
-   # def __build_emulator_parameters_trout_uboot
 
    def __run_emulator( self, parameters, **kwargs ):
       kw_gdb = kwargs.get( "gdb", False )

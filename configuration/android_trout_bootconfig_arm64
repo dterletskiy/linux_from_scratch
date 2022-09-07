@@ -1,0 +1,17 @@
+androidboot.qemu=1
+androidboot.selinux=permissive
+androidboot.fstab_suffix=trout
+androidboot.hardware=cutf_cvm
+androidboot.slot_suffix=_a
+androidboot.vbmeta.size=5568
+androidboot.vbmeta.hash_alg=sha256
+androidboot.vbmeta.digest=61344eefe85d31337ffda864c567f529fc18ec1bafa240bb1f46bd561f39a053
+androidboot.hardware.gralloc=minigbm
+androidboot.hardware.hwcomposer=drm_minigbm
+androidboot.hardware.egl=mesa
+androidboot.logcat=*:V
+androidboot.vendor.vehiclehal.server.cid=2
+androidboot.vendor.vehiclehal.server.port=9300
+androidboot.vendor.vehiclehal.server.psf=/data/data/power.file
+androidboot.vendor.vehiclehal.server.pss=/data/data/power.socket
+androidboot.boot_devices=4010000000.pcie

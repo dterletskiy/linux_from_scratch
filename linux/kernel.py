@@ -196,6 +196,24 @@ class Kernel:
          command += f" LOADADDR=0x10000"
 
       pfw.shell.run_and_wait_with_status( command, targets, output = pfw.shell.eOutput.PTY )
+
+      # Building host tools
+      self.build_tool( tool = "tools/bootconfig", host = True )
+   # def build
+
+   def build_tool( self, **kwargs ):
+      kw_tool = kwargs.get( "tool", "tools/bootconfig" )
+      kw_host = kwargs.get( "host", True )
+
+      command = "make"
+      command += f" O={self.__directories.build( kw_tool )}"
+      command += f" -C {self.__directories.source( kw_tool )}"
+      if False == kw_host:
+         command += f" ARCH={self.__config.arch( )}"
+         command += f" CROSS_COMPILE={self.__config.compiler( )}"
+      command += f" -j{self.__config.cores( )}"
+
+      pfw.shell.run_and_wait_with_status( command, output = pfw.shell.eOutput.PTY )
    # def build
 
    def clean( self, **kwargs ):
@@ -311,6 +329,23 @@ class Kernel:
          else:
             pfw.console.debug.warning( "unsuported action: ", _action )
    # def action
+
+   def bootconfig( self, initrd: str, **kwargs ):
+      kw_clear = kwargs.get( "clear", False )
+      kw_add = kwargs.get( "add", None )
+      kw_show = kwargs.get( "show", True )
+
+      command = self.__directories.build( "tools/bootconfig/bootconfig " )
+
+      if True == kw_clear:
+         pfw.shell.run_and_wait_with_status( command + f"-d {initrd}", output = pfw.shell.eOutput.PTY )
+
+      if None != kw_add:
+         pfw.shell.run_and_wait_with_status( command + f"-a {kw_add} {initrd}", output = pfw.shell.eOutput.PTY )
+
+      if True == kw_show:
+         pfw.shell.run_and_wait_with_status( command + f"-l {initrd}", output = pfw.shell.eOutput.PTY )
+   # def bootconfig
 
 
 

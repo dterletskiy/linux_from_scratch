@@ -22,6 +22,9 @@ UBOOT_SCRIPT: str = None
 SYSLINUX_SCRIPT: str = None
 DTB_PATH: str = None
 
+ANDROID_BOOTCONFIG_X86: str = None
+ANDROID_BOOTCONFIG_ARM64: str = None
+
 TMP_PATH: str = None
 
 
@@ -62,20 +65,23 @@ def init( ):
 
 
 def print( ):
-   pfw.console.debug.info( "LINUX_ROOT_DIR:        ", LINUX_ROOT_DIR )
-   pfw.console.debug.info( "KERNEL_VERSION:        ", KERNEL_VERSION )
-   pfw.console.debug.info( "BUSYBOX_VERSION:       ", BUSYBOX_VERSION )
-   pfw.console.debug.info( "BUILDROOT_VERSION:     ", BUILDROOT_VERSION )
-   pfw.console.debug.info( "UBOOT_VERSION:         ", UBOOT_VERSION )
+   pfw.console.debug.info( "LINUX_ROOT_DIR:             ", LINUX_ROOT_DIR )
+   pfw.console.debug.info( "KERNEL_VERSION:             ", KERNEL_VERSION )
+   pfw.console.debug.info( "BUSYBOX_VERSION:            ", BUSYBOX_VERSION )
+   pfw.console.debug.info( "BUILDROOT_VERSION:          ", BUILDROOT_VERSION )
+   pfw.console.debug.info( "UBOOT_VERSION:              ", UBOOT_VERSION )
 
-   pfw.console.debug.info( "ANDROID_ROOT_DIR:      ", ANDROID_ROOT_DIR )
-   pfw.console.debug.info( "ANDROID_VERSION:       ", ANDROID_VERSION )
+   pfw.console.debug.info( "ANDROID_ROOT_DIR:           ", ANDROID_ROOT_DIR )
+   pfw.console.debug.info( "ANDROID_VERSION:            ", ANDROID_VERSION )
 
-   pfw.console.debug.info( "UBOOT_SCRIPT:          ", UBOOT_SCRIPT )
-   pfw.console.debug.info( "SYSLINUX_SCRIPT:       ", SYSLINUX_SCRIPT )
-   pfw.console.debug.info( "DTB_PATH:              ", DTB_PATH )
+   pfw.console.debug.info( "UBOOT_SCRIPT:               ", UBOOT_SCRIPT )
+   pfw.console.debug.info( "SYSLINUX_SCRIPT:            ", SYSLINUX_SCRIPT )
+   pfw.console.debug.info( "DTB_PATH:                   ", DTB_PATH )
 
-   pfw.console.debug.info( "TMP_PATH:              ", TMP_PATH )
+   pfw.console.debug.info( "ANDROID_BOOTCONFIG_X86:     ", ANDROID_BOOTCONFIG_X86 )
+   pfw.console.debug.info( "ANDROID_BOOTCONFIG_ARM64:   ", ANDROID_BOOTCONFIG_ARM64 )
 
-   pfw.console.debug.info( "LINUX_IMAGE_DRIVE:     ", LINUX_IMAGE_DRIVE )
-   pfw.console.debug.info( "ANDROID_IMAGE_DRIVE:   ", ANDROID_IMAGE_DRIVE )
+   pfw.console.debug.info( "TMP_PATH:                   ", TMP_PATH )
+
+   pfw.console.debug.info( "LINUX_IMAGE_DRIVE:          ", LINUX_IMAGE_DRIVE )
+   pfw.console.debug.info( "ANDROID_IMAGE_DRIVE:        ", ANDROID_IMAGE_DRIVE )

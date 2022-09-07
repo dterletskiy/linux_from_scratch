@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 
+import pfw.console
 import pfw.shell
 
 import configuration
@@ -62,3 +63,33 @@ def run( parameters, **kwargs ):
 
    return result["code"]
 # def run
+
+
+def build_cmdline( **kwargs ):
+   kw_arch = kwargs.get( "arch", "arm64" )
+   kw_max_loop = kwargs.get( "max_loop", 10 )
+   kw_bootconfig = kwargs.get( "bootconfig", True )
+   kw_debug = kwargs.get( "debug", True )
+
+   cmdline = f"loop.max_loop={kw_max_loop}"
+   if True == kw_debug:
+      cmdline += f" loglevel=7"
+      cmdline += f" earlyprintk"
+      cmdline += f" debug"
+      cmdline += f" printk.devkmsg=on"
+      cmdline += f" drm.debug=0x0"
+   else:
+      cmdline += f" loglevel=1"
+
+   if True == kw_bootconfig:
+      cmdline += f" bootconfig"
+
+   if "x86" == kw_arch or "x86_64" == kw_arch:
+      cmdline += f" console=ttyS0,38400"
+   elif "arm" == kw_arch or "arm32" == kw_arch or "arm64" == kw_arch or "aarch64" == kw_arch:
+      cmdline += f" console=ttyAMA0"
+
+
+   pfw.console.debug.trace( "cmdline = '%s'" % (cmdline) )
+   return cmdline
+# def build_cmdline

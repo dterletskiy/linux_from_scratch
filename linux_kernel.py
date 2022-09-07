@@ -200,6 +200,8 @@ configuration.ANDROID_VERSION: str = ANDROID_VERSION
 configuration.UBOOT_SCRIPT: str = UBOOT_SCRIPT
 configuration.SYSLINUX_SCRIPT: str = SYSLINUX_SCRIPT
 configuration.DTB_PATH: str = DTB_PATH
+configuration.ANDROID_BOOTCONFIG_X86: str = ANDROID_BOOTCONFIG_X86
+configuration.ANDROID_BOOTCONFIG_ARM64: str = ANDROID_BOOTCONFIG_ARM64
 configuration.TMP_PATH: str = TMP_PATH
 configuration.init( )
 configuration.print( )
