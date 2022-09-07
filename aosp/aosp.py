@@ -214,18 +214,22 @@ class AOSP:
    # def deploy
 
    def simg_to_img( self, sparse_file, raw_file, **kwargs ):
+      if False == os.path.exists( sparse_file ):
+         pfw.console.debug.error( "Original '%s' file does not exist" % ( sparse_file ) )
+         return False
+
       if True == os.path.exists( raw_file ):
          if os.path.getmtime( raw_file ) >= os.path.getmtime( sparse_file ):
             pfw.console.debug.warning( "Raw file '%s' is newer then original '%s' file" % ( raw_file, sparse_file ) )
-
-      if False == os.path.exists( raw_file ):
-         pfw.console.debug.warning( "Original '%s' file does not exist" % ( sparse_file ) )
+            return True
 
       # pfw.console.debug.trace( "last modified: %s" % time.ctime( os.path.getmtime( sparse_file ) ) )
       # pfw.console.debug.trace( "created: %s" % time.ctime( os.path.getctime( sparse_file ) ) )
 
       command = f"simg2img {sparse_file} {raw_file}"
       self.__execute( command )
+
+      return True
    # def simg_to_img
 
    def build_ramdisk( self, **kwargs ):
