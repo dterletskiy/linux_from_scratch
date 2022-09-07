@@ -61,7 +61,11 @@ def mkbootimg( projects_map: dict ):
          ramdisk = projects_map["buildroot"].dirs( ).deploy( "rootfs.cpio" ),
          dtb = configuration.DTB_PATH,
          cmdline = cmdline,
-         out = os.path.join( configuration.TMP_PATH, "boot_linux.img" )
+         out = os.path.join( configuration.TMP_PATH, "boot_linux.img" ),
+         base = 0x50000000,
+         kernel_offset = 0x3000000,
+         ramdisk_offset = 0x6000000,
+         dtb_offset = 0x00000000,
       )
 
    mkbootimg_tool(
@@ -70,7 +74,11 @@ def mkbootimg( projects_map: dict ):
          ramdisk = projects_map["aosp"].dirs( ).experimental( "ramdisk"),
          dtb = configuration.DTB_PATH,
          cmdline = cmdline,
-         out = os.path.join( configuration.TMP_PATH, "boot_aosp.img" )
+         out = os.path.join( configuration.TMP_PATH, "boot_aosp.img" ),
+         base = 0x50000000,
+         kernel_offset = 0x3000000,
+         ramdisk_offset = 0x6000000,
+         dtb_offset = 0x00000000,
       )
 # def mkbootimg
 
@@ -152,7 +160,7 @@ def mkdrive( projects_map: dict, image_description: pfw.image.Description ):
    mmc.mount( 1, image_description.mount_point( ) )
 
    mkimage( projects_map )
-   projects_map["aosp"].build_ramdisk( )
+   # projects_map["aosp"].build_ramdisk( )
    mkbootimg( projects_map )
    deploy( projects_map, image_description.mount_point( ), pause = True )
 
@@ -217,7 +225,8 @@ def debug( projects_map: dict, **kwargs ):
                # projects_map[ "u-boot" ].dirs( ).product( "u-boot" ): [ 0x000000000 ], # in case of "u-boot" "x0" register when enter to "relocate_code" function
                # projects_map[ "u-boot" ].dirs( ).product( "u-boot" ): [ 0x23ff03000 ], # u-boot v2021.10
                projects_map[ "u-boot" ].dirs( ).product( "u-boot" ): [ 0x23ff03000 ], # u-boot v2022.07
-               projects_map[ "kernel" ].dirs( ).build( "vmlinux" ): [ 0x40410800 ], # kernel 5.15 loaded to 0x40400800
+               projects_map[ "kernel" ].dirs( ).build( "vmlinux" ): [ 0x40410800 ], # kernel 5.15 loaded to 0x40410800
+               # projects_map[ "kernel" ].dirs( ).build( "vmlinux" ): [ 0x53010000 ], # kernel 5.15 loaded to 0x40410800
             },
             break_names = [
                # u-boot functions

@@ -273,6 +273,10 @@ class AOSP:
       kw_ramdisk = kwargs.get( "ramdisk", None )
       kw_dtb = kwargs.get( "dtb", None )
       kw_cmdline = kwargs.get( "cmdline", None )
+      kw_base = kwargs.get( "base", None )
+      kw_kernel_offset = kwargs.get( "kernel_offset", None )
+      kw_ramdisk_offset = kwargs.get( "ramdisk_offset", None )
+      kw_dtb_offset = kwargs.get( "dtb_offset", None )
 
       command: str = self.__directories.build( "host/linux-x86/bin/mkbootimg" )
       command += f" --header_version {kw_header_version}"
@@ -284,6 +288,14 @@ class AOSP:
          command += f" --dtb {kw_dtb}"
       if None != kw_cmdline:
          command += f" --cmdline \"{kw_cmdline}\""
+      if None != kw_base:
+         command += f" --base {kw_base}"
+      if None != kw_kernel_offset:
+         command += f" --kernel_offset {kw_kernel_offset}"
+      if None != kw_ramdisk_offset:
+         command += f" --ramdisk_offset {kw_ramdisk_offset}"
+      if None != kw_dtb_offset:
+         command += f" --dtb_offset {kw_dtb_offset}"
       command += f" --out {kw_out}"
 
       self.__execute( command )
@@ -374,6 +386,9 @@ class AOSP:
 
    def __build_emulator_parameters_trout( self, **kwargs ):
       kw_debug = kwargs.get( "debug", False )
+      kw_kernel = kwargs.get( "kernel", self.__directories.product( "kernel" ) )
+      kw_ramdisk = kwargs.get( "ramdisk", self.__directories.experimental( "ramdisk.img" ) )
+      kw_drive = kwargs.get( "drive", self.__directories.experimental( "main.img" ) )
 
       APPEND = f"loop.max_loop=10"
       if True == kw_debug:
@@ -434,7 +449,7 @@ class AOSP:
 
       IMAGE_DEVICE_TYPE = f"virtio-blk-pci,modern-pio-notify,iothread=disk-iothread"
       IMAGE_DEVICES_MAIN = f"" \
-         + f" -drive if=none,index=0,id=main,file=" + self.__directories.experimental( "main.img" ) \
+         + f" -drive if=none,index=0,id=main,file={kw_drive}" \
          + f" -device {IMAGE_DEVICE_TYPE},drive=main"
 
       NETWORK_NETDEV_USER = f"" \
@@ -493,13 +508,10 @@ class AOSP:
          + " -object iothread,id=disk-iothread" \
          + " -device virtio-rng-pci"
 
-      KERNEL = self.__directories.product( "kernel" )
-      RAMDISK = self.__directories.experimental( "ramdisk.img" )
-
       command: str = ""\
          + f" {PARAMETERS}" \
-         + f" -kernel {KERNEL}" \
-         + f" -initrd {RAMDISK}" \
+         + f" -kernel {kw_kernel}" \
+         + f" -initrd {kw_ramdisk}" \
          + f" -append \"{APPEND} {BOOTCONFIG}\"" \
          + f" {IMAGE_DEVICES_MAIN}" \
          + f" {NETWORK_NETDEV_USER}" \

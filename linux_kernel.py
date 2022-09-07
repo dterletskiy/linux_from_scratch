@@ -284,7 +284,7 @@ def main( app_data: ApplicationData ):
                projects_map,
                configuration.LINUX_IMAGE_DRIVE,
                bios = True,
-               gdb = True
+               # gdb = True
             )
          sys.exit( )
       elif "mkimage" == action:
