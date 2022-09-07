@@ -229,13 +229,13 @@ class BusyBox:
       pfw.shell.run_and_wait_with_status( f"mkdir -p " + os.path.join( rootfs_path, "dev" ) )
       for index in range( 1, 5 ):
          pfw.shell.run_and_wait_with_status(
-              f"sudo -S mknod -m 666 " + os.path.join( rootfs_path, "dev/tty" + str(index) ) + f" c 4 {str(index)}"
+              f"sudo mknod -m 666 " + os.path.join( rootfs_path, "dev/tty" + str(index) ) + f" c 4 {str(index)}"
             )
       pfw.shell.run_and_wait_with_status(
-           f"sudo -S mknod -m 666 " + os.path.join( rootfs_path, "dev/console" ) + f" c 5 1"
+           f"sudo mknod -m 666 " + os.path.join( rootfs_path, "dev/console" ) + f" c 5 1"
          )
       pfw.shell.run_and_wait_with_status(
-            f"sudo -S mknod -m 666 " + os.path.join( rootfs_path, "dev/null" ) + f" c 1 3"
+            f"sudo mknod -m 666 " + os.path.join( rootfs_path, "dev/null" ) + f" c 1 3"
          )
 
       os.system(

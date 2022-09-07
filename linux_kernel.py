@@ -134,10 +134,10 @@ g_app_data.info( )
 
 
 
+g_config_variables: dict = { }
+
 def configure( app_data ):
    if None != app_data.config:
-      global_variables = globals( )
-
       pattern: str = r"^\s*(.*)\s*:\s*(.*)\s*$"
       config_file = open( app_data.config, "r" )
       for line in config_file:
@@ -148,7 +148,7 @@ def configure( app_data ):
             if "INCLUDE" == var_name:
                app_data.includes.append( var_value )
             else:
-               global_variables.__setitem__( var_name, var_value )
+               g_config_variables[ var_name ] = var_value
       config_file.close( )
 
 
@@ -189,22 +189,7 @@ pfw.shell.run_and_wait_with_status( "/bin/echo ${LFS_VERSION}", env = ENVIRONMEN
 
 
 
-# Next variables must be defined in configuration file:
-configuration.LINUX_ROOT_DIR: str = LINUX_ROOT_DIR
-configuration.KERNEL_VERSION: str = KERNEL_VERSION
-configuration.BUSYBOX_VERSION: str = BUSYBOX_VERSION
-configuration.BUILDROOT_VERSION: str = BUILDROOT_VERSION
-configuration.UBOOT_VERSION: str = UBOOT_VERSION
-configuration.ANDROID_ROOT_DIR: str = ANDROID_ROOT_DIR
-configuration.ANDROID_VERSION: str = ANDROID_VERSION
-configuration.UBOOT_SCRIPT: str = UBOOT_SCRIPT
-configuration.SYSLINUX_SCRIPT: str = SYSLINUX_SCRIPT
-configuration.DTB_PATH: str = DTB_PATH
-configuration.ANDROID_BOOTCONFIG_X86: str = ANDROID_BOOTCONFIG_X86
-configuration.ANDROID_BOOTCONFIG_ARM64: str = ANDROID_BOOTCONFIG_ARM64
-configuration.TMP_PATH: str = TMP_PATH
-configuration.init( )
-configuration.print( )
+configuration.init( g_config_variables )
 
 
 
@@ -220,27 +205,27 @@ def init_projects( arch: str ):
       "u-boot"       : linux.uboot.UBoot(
                            linux_configuration,
                            configuration.LINUX_ROOT_DIR,
-                           version = UBOOT_VERSION,
+                           version = configuration.UBOOT_VERSION,
                         ),
       "buildroot"    : linux.buildroot.BuildRoot(
                            linux_configuration,
                            configuration.LINUX_ROOT_DIR,
-                           version = BUILDROOT_VERSION
+                           version = configuration.BUILDROOT_VERSION
                         ),
       "busybox"      : linux.busybox.BusyBox(
                            linux_configuration,
                            configuration.LINUX_ROOT_DIR,
-                           version = BUSYBOX_VERSION
+                           version = configuration.BUSYBOX_VERSION
                         ),
       "kernel"       : linux.kernel.Kernel(
                            linux_configuration,
                            configuration.LINUX_ROOT_DIR,
-                           version = KERNEL_VERSION
+                           version = configuration.KERNEL_VERSION
                         ),
       "aosp"         : aosp.aosp.AOSP(
                            aosp_configuration,
-                           ANDROID_ROOT_DIR,
-                           tag = ANDROID_VERSION
+                           configuration.ANDROID_ROOT_DIR,
+                           tag = configuration.ANDROID_VERSION
                         ),
    }
 
