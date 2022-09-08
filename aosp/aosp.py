@@ -11,7 +11,9 @@ import pfw.image
 import pfw.git
 
 import base
+import configuration
 import tools
+import qemu
 import aosp.base
 
 
@@ -329,9 +331,7 @@ class AOSP:
       parameters: str = ""
 
       if "trout" == self.__config.device( ):
-         parameters = self.__build_emulator_parameters_trout( **kwargs )
-
-      self.__run_emulator( parameters, **kwargs )
+         parameters = self.__run_emulator_trout( **kwargs )
    # def run
 
    def action( self, actions: list, **kwargs ):
@@ -394,68 +394,33 @@ class AOSP:
       return partitions
    # def __init_main_partitions
 
-   def __build_emulator_parameters_trout( self, **kwargs ):
+   def __build_bootconfig( self, **kwargs ):
+      kw_bootconfig_file = kwargs.get( "bootconfig", None )
+
+      if None == kw_bootconfig_file:
+         if "x86" == self.__config.arch( ) or "x86_64" == self.__config.arch( ):
+            kw_bootconfig_file = configuration.ANDROID_BOOTCONFIG_X86
+         elif "arm64" == self.__config.arch( ) or "aarch64" == self.__config.arch( ):
+            kw_bootconfig_file = configuration.ANDROID_BOOTCONFIG_ARM64
+
+      bootcobfig: str = ""
+      file = open( kw_bootconfig_file, "r" )
+      for line in file:
+         bootcobfig += line + " "
+      file.close( )
+
+      return bootcobfig
+   # def __build_bootconfig
+
+   def __run_emulator_trout( self, **kwargs ):
       kw_debug = kwargs.get( "debug", False )
       kw_kernel = kwargs.get( "kernel", self.__directories.product( "kernel" ) )
       kw_ramdisk = kwargs.get( "ramdisk", self.__directories.experimental( "ramdisk.img" ) )
       kw_drive = kwargs.get( "drive", self.__directories.experimental( "main.img" ) )
 
-      APPEND = f"loop.max_loop=10"
-      if True == kw_debug:
-         APPEND = APPEND + f" loglevel=7"
-         APPEND = APPEND + f" debug"
-         APPEND = APPEND + f" printk.devkmsg=on"
-         APPEND = APPEND + f" drm.debug=0x0"
-      else:
-         APPEND = APPEND + f" loglevel=1"
-
-      if "x86" == self.__config.arch( ):
-         APPEND = APPEND + f" console=ttyS0,38400"
-      elif "arm64" == self.__config.arch( ):
-         APPEND = APPEND + f" console=ttyAMA0"
-
-      vbmeta_digest = "440a35a328669d9236e49eaa17e9b8130c8a29205d964a206e94b41a4ead3cc1"
-
-      BOOTCONFIG = f"" \
-         + f" androidboot.qemu=1" \
-         + f" androidboot.selinux=permissive" \
-         + f" androidboot.fstab_suffix=trout" \
-         + f" androidboot.hardware=cutf_cvm" \
-         + f" androidboot.slot_suffix=_a" \
-         + f" androidboot.vbmeta.size=5568" \
-         + f" androidboot.vbmeta.hash_alg=sha256" \
-         + f" androidboot.vbmeta.digest={vbmeta_digest}" \
-         + f" androidboot.hardware.gralloc=minigbm" \
-         + f" androidboot.hardware.hwcomposer=drm_minigbm" \
-         + f" androidboot.hardware.egl=mesa" \
-         + f" androidboot.logcat=*:V" \
-         + f" androidboot.vendor.vehiclehal.server.cid=2" \
-         + f" androidboot.vendor.vehiclehal.server.port=9300" \
-         + f" androidboot.vendor.vehiclehal.server.psf=/data/data/power.file" \
-         + f" androidboot.vendor.vehiclehal.server.pss=/data/data/power.socket"
-         # + f" androidboot.first_stage_console=1" \
-         # + f" androidboot.force_normal_boot=1" \
-
-      if "x86" == self.__config.arch( ):
-         BOOTCONFIG = BOOTCONFIG + f" androidboot.boot_devices=pci0000:00/0000:00:02.0"
-      elif "arm64" == self.__config.arch( ):
-         BOOTCONFIG = BOOTCONFIG + f" androidboot.boot_devices=4010000000.pcie"
-
-      PARAMETERS = f"" \
-         + f" -serial mon:stdio" \
-         + f" -nodefaults" \
-         + f" -no-reboot" \
-         + f" -d guest_errors"
-
-      if "x86" == self.__config.arch( ):
-         PARAMETERS = PARAMETERS + f" -enable-kvm"
-         PARAMETERS = PARAMETERS + f" -smp cores=2"
-         PARAMETERS = PARAMETERS + f" -m 8192"
-      elif "arm64" == self.__config.arch( ):
-         PARAMETERS = PARAMETERS + f" -machine virt"
-         PARAMETERS = PARAMETERS + f" -cpu cortex-a53"
-         PARAMETERS = PARAMETERS + f" -smp cores=4"
-         PARAMETERS = PARAMETERS + f" -m 8192"
+      APPEND = qemu.build_cmdline( arch = self.__config.arch( ), **kwargs )
+      BOOTCONFIG = self.__build_bootconfig( **kwargs )
+      PARAMETERS = qemu.build_parameters( arch = self.__config.arch( ), **kwargs )
 
       IMAGE_DEVICE_TYPE = f"virtio-blk-pci,modern-pio-notify,iothread=disk-iothread"
       IMAGE_DEVICES_MAIN = f"" \
@@ -530,30 +495,25 @@ class AOSP:
          + f" {CHAR_DEVICES}" \
          + f" {OTHER_DEVICES}"
 
+      parameters: str = ""
+      parameters += f" {PARAMETERS}"
+      parameters += f" {IMAGE_DEVICES_MAIN}"
+      parameters += f" {NETWORK_NETDEV_USER}"
+      parameters += f" {USB_BUS}"
+      parameters += f" {AUDIO_DEVICES}"
+      parameters += f" {CHAR_DEVICES}"
+      parameters += f" {OTHER_DEVICES}"
+
+      qemu.run(
+            parameters,
+            arch = self.__config.arch( ),
+            kernel = kw_kernel,
+            initrd = kw_ramdisk,
+            append = f"{APPEND} {BOOTCONFIG}"
+         )
+
       return command
-   # def __build_emulator_parameters_trout
-
-   def __run_emulator( self, parameters, **kwargs ):
-      kw_gdb = kwargs.get( "gdb", False )
-      kw_dump_dtb = kwargs.get( "dump_dtb", False )
-      kw_dump_dtb_path = kwargs.get( "dump_dtb_path", self.__directories.experimental( "dtb.dtb" ) )
-
-      EMULATOR = "/mnt/dev/git/qemu/build/"
-      if "x86" == self.__config.arch( ):
-         EMULATOR = EMULATOR + f"qemu-system-x86_64"
-      elif "arm64" == self.__config.arch( ):
-         EMULATOR = EMULATOR + f"qemu-system-aarch64"
-
-      command: str = f"{EMULATOR} {parameters}"
-
-      if True == kw_dump_dtb:
-         command += f" -machine dumpdtb={kw_dump_dtb_path}"
-
-      if True == kw_gdb:
-         command += f" -s -S"
-
-      self.__execute( command )
-   # def __run_emulator
+   # def __run_emulator_trout
 
    def __execute( self, command: str = "", **kwargs ):
       kw_output = kwargs.get( "output", pfw.shell.eOutput.PTY )

@@ -267,15 +267,22 @@ def main( app_data: ApplicationData ):
          tools.debug( projects_map, project_name = "u-boot" )
          sys.exit( )
       elif "start" == action:
-         tools.start(
+         tools.start_trout(
                projects_map,
                configuration.LINUX_IMAGE_DRIVE,
                bios = True,
                # gdb = True
             )
+
+         # projects_map["aosp"].run( debug = True )
+
          sys.exit( )
       elif "mkimage" == action:
          tools.mkdrive( projects_map, configuration.LINUX_IMAGE_DRIVE )
+
+         # projects_map["aosp"].build_ramdisk( )
+         # projects_map["aosp"].build_main_image( )
+
          sys.exit( )
       else:
          # Collecting standart actions

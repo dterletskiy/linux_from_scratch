@@ -65,6 +65,34 @@ def run( parameters, **kwargs ):
 # def run
 
 
+
+def build_parameters( **kwargs ):
+   kw_arch = kwargs.get( "arch", "arm64" )
+   kw_nographic = kwargs.get( "nographic", False )
+
+   parameters = f"" \
+      + f" -serial mon:stdio" \
+      + f" -nodefaults" \
+      + f" -no-reboot" \
+      + f" -d guest_errors"
+
+   if True == kw_nographic:
+      parameters += f" -nographic"
+
+   if "x86" == kw_arch or "x86_64" == kw_arch:
+      parameters += f" -enable-kvm"
+      parameters += f" -smp cores=2"
+      parameters += f" -m 8192"
+   elif "arm" == kw_arch or "arm32" == kw_arch or "arm64" == kw_arch or "aarch64" == kw_arch:
+      parameters += f" -machine virt"
+      parameters += f" -cpu cortex-a53"
+      parameters += f" -smp cores=4"
+      parameters += f" -m 8192"
+
+   return parameters
+# def build_parameters
+
+
 def build_cmdline( **kwargs ):
    kw_arch = kwargs.get( "arch", "arm64" )
    kw_max_loop = kwargs.get( "max_loop", 10 )

@@ -161,7 +161,9 @@ def mkdrive( projects_map: dict, image_description: pfw.image.Description ):
    vbmeta_image = projects_map["aosp"].dirs( ).product( "vbmeta.img" )
    vbmeta_system_image = projects_map["aosp"].dirs( ).product( "vbmeta_system.img" )
 
+   boot_part_num = 1
    partitions = [
+      pfw.image.Drive.Partition( size = pfw.size.Size( 512, pfw.size.Size.eGran.M ), fs = image_description.fs( ), label = "boot" ),
       pfw.image.Drive.Partition( clone_from = super_image, label = "super" ),
       pfw.image.Drive.Partition( clone_from = userdata_image, label = "userdata" ),
       pfw.image.Drive.Partition( size = pfw.size.SizeGigabyte, label = "cache", fs = "ext4" ),
@@ -169,16 +171,15 @@ def mkdrive( projects_map: dict, image_description: pfw.image.Description ):
       pfw.image.Drive.Partition( size = pfw.size.SizeGigabyte, label = "misc", fs = "ext4" ),
       pfw.image.Drive.Partition( clone_from = vbmeta_image, label = "vbmeta_a" ),
       pfw.image.Drive.Partition( clone_from = vbmeta_system_image, label = "vbmeta_system_a" ),
-      pfw.image.Drive.Partition( size = pfw.size.Size( 512, pfw.size.Size.eGran.M ), fs = image_description.fs( ), label = "boot" ),
    ]
 
    mmc: pfw.image.Drive = pfw.image.Drive( image_description.file( ) )
    mmc.create( partitions = partitions, force = True )
    mmc.attach( )
-   mmc.init( partitions, bootable = 8 )
+   mmc.init( partitions, bootable = boot_part_num )
 
    # Filling boot partition
-   mmc.mount( 8, image_description.mount_point( ) )
+   mmc.mount( boot_part_num, image_description.mount_point( ) )
    mkimage( projects_map )
    bootconfig_file: str = None
    if "x86" == projects_map["aosp"].config( ).arch( ) or "x86_64" == projects_map["aosp"].config( ).arch( ):
@@ -190,7 +191,7 @@ def mkdrive( projects_map: dict, image_description: pfw.image.Description ):
       )
    mkbootimg( projects_map )
    deploy( projects_map, image_description.mount_point( ), pause = True )
-   mmc.umount( 8 )
+   mmc.umount( boot_part_num )
 
    mmc.info( )
    mmc.detach( )
@@ -199,16 +200,7 @@ def mkdrive( projects_map: dict, image_description: pfw.image.Description ):
 def run_arm64( **kwargs ):
    kw_drive = kwargs.get( "drive", None )
 
-   command: str = ""
-   command += f" -machine virt"
-   command += f" -cpu cortex-a53"
-   command += f" -smp cores=4"
-   command += f" -m 8192"
-   # command += f" -nographic"
-   command += f" -serial mon:stdio"
-   command += f" -nodefaults"
-   command += f" -no-reboot"
-   command += f" -d guest_errors"
+   command: str = qemu.build_parameters( "arm64" )
    command += f" -drive if=none,index=0,id=main,file={kw_drive}"
    command += f" -device virtio-blk-pci,modern-pio-notify,drive=main"
 
