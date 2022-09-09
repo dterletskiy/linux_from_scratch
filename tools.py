@@ -81,6 +81,19 @@ def mkbootimg( projects_map: dict ):
       )
 # def mkbootimg
 
+def prepare( projects_map: dict ):
+   mkimage( projects_map )
+   bootconfig_file: str = None
+   if "x86" == projects_map["aosp"].config( ).arch( ) or "x86_64" == projects_map["aosp"].config( ).arch( ):
+      bootconfig_file = configuration.ANDROID_BOOTCONFIG_X86
+   elif "arm64" == projects_map["aosp"].config( ).arch( ) or "aarch64" == projects_map["aosp"].config( ).arch( ):
+      bootconfig_file = configuration.ANDROID_BOOTCONFIG_ARM64
+   projects_map["aosp"].build_ramdisk(
+         bootconfig = { "tool": projects_map["kernel"].bootconfig, "config": bootconfig_file }
+      )
+   mkbootimg( projects_map )
+# def prepare
+
 def deploy( projects_map: dict, mount_point: str, pause: bool = False ):
    files_list: list = [
          {
@@ -134,20 +147,20 @@ def deploy( projects_map: dict, mount_point: str, pause: bool = False ):
       pfw.console.debug.promt( )
 # def deploy
 
-def mkpartition( projects_map: dict, image_description: pfw.image.Description ):
-   mmc: pfw.image.Partition = pfw.image.Partition( image_description.file( ) )
-   mmc.create( image_description.size( ), force = True )
-   mmc.format( image_description.fs( ) )
-   mmc.mount( image_description.mount_point( ) )
+def mkpartition( projects_map: dict ):
+   mmc: pfw.image.Partition = pfw.image.Partition( configuration.LINUX_IMAGE_PARTITION )
+   mmc.create( force = True )
+   mmc.format( )
+   mmc.mount( )
 
-   mkimage( projects_map )
-   deploy( projects_map, image_description.mount_point( ), pause = True )
+   prepare( projects_map )
+   deploy( projects_map, configuration.LINUX_IMAGE_PARTITION.mount_point( ), pause = True )
 
    mmc.info( )
    mmc.umount( )
 # def mkpartition
 
-def mkdrive( projects_map: dict, image_description: pfw.image.Description ):
+def mkdrive( projects_map: dict ):
    super_image = projects_map["aosp"].dirs( ).product( "super.img" )
    if "arm64" == projects_map["aosp"].config( ).arch( ):
       projects_map["aosp"].simg_to_img( projects_map["aosp"].dirs( ).product( "super.img" ), projects_map["aosp"].dirs( ).experimental( "super.raw" ) )
@@ -163,7 +176,8 @@ def mkdrive( projects_map: dict, image_description: pfw.image.Description ):
 
    boot_part_num = 1
    partitions = [
-      pfw.image.Drive.Partition( size = pfw.size.Size( 512, pfw.size.Size.eGran.M ), fs = image_description.fs( ), label = "boot" ),
+      # pfw.image.Drive.Partition( size = pfw.size.Size( 512, pfw.size.Size.eGran.M ), fs = configuration.LINUX_IMAGE_PARTITION.fs( ), label = "boot" ),
+      pfw.image.Drive.Partition( clone_from = configuration.LINUX_IMAGE_PARTITION.file( ), label = "boot" ),
       pfw.image.Drive.Partition( clone_from = super_image, label = "super" ),
       pfw.image.Drive.Partition( clone_from = userdata_image, label = "userdata" ),
       pfw.image.Drive.Partition( size = pfw.size.SizeGigabyte, label = "cache", fs = "ext4" ),
@@ -173,25 +187,16 @@ def mkdrive( projects_map: dict, image_description: pfw.image.Description ):
       pfw.image.Drive.Partition( clone_from = vbmeta_system_image, label = "vbmeta_system_a" ),
    ]
 
-   mmc: pfw.image.Drive = pfw.image.Drive( image_description.file( ) )
+   mmc: pfw.image.Drive = pfw.image.Drive( configuration.LINUX_IMAGE_DRIVE.file( ) )
    mmc.create( partitions = partitions, force = True )
    mmc.attach( )
    mmc.init( partitions, bootable = boot_part_num )
 
    # Filling boot partition
-   mmc.mount( boot_part_num, image_description.mount_point( ) )
-   mkimage( projects_map )
-   bootconfig_file: str = None
-   if "x86" == projects_map["aosp"].config( ).arch( ) or "x86_64" == projects_map["aosp"].config( ).arch( ):
-      bootconfig_file = configuration.ANDROID_BOOTCONFIG_X86
-   elif "arm64" == projects_map["aosp"].config( ).arch( ) or "aarch64" == projects_map["aosp"].config( ).arch( ):
-      bootconfig_file = configuration.ANDROID_BOOTCONFIG_ARM64
-   projects_map["aosp"].build_ramdisk(
-         bootconfig = { "tool": projects_map["kernel"].bootconfig, "config": bootconfig_file }
-      )
-   mkbootimg( projects_map )
-   deploy( projects_map, image_description.mount_point( ), pause = True )
-   mmc.umount( boot_part_num )
+   # mmc.mount( boot_part_num, configuration.LINUX_IMAGE_DRIVE.mount_point( ) )
+   # prepare( projects_map )
+   # deploy( projects_map, configuration.LINUX_IMAGE_DRIVE.mount_point( ), pause = True )
+   # mmc.umount( boot_part_num )
 
    mmc.info( )
    mmc.detach( )
@@ -209,14 +214,14 @@ def run_arm64( **kwargs ):
 
 
 
-def start( projects_map: dict, image_description: pfw.image.Description, **kwargs ):
+def start( projects_map: dict, **kwargs ):
    kw_bios = kwargs.get( "bios", True )
    kw_gdb = kwargs.get( "gdb", False )
 
    if True == kw_bios:
       run_arm64(
             bios = projects_map["u-boot"].dirs( ).product( "u-boot.bin" ),
-            drive = image_description.file( ),
+            drive = configuration.LINUX_IMAGE_DRIVE.file( ),
             gdb = kw_gdb
          )
    else:
@@ -225,7 +230,7 @@ def start( projects_map: dict, image_description: pfw.image.Description, **kwarg
             initrd = projects_map["buildroot"].dirs( ).deploy( "rootfs.cpio" ),
             append = "loglevel=7 debug printk.devkmsg=on drm.debug=0x0 console=ttyAMA0",
             dtb = configuration.DTB_PATH,
-            drive = image_description.file( ),
+            drive = configuration.LINUX_IMAGE_DRIVE.file( ),
             gdb = kw_gdb
          )
 # def start
@@ -426,13 +431,13 @@ def build_bootconfig_trout( **kwargs ):
    return cmdline
 # def build_cmdline_trout
 
-def start_trout( projects_map: dict, image_description: pfw.image.Description, **kwargs ):
+def start_trout( projects_map: dict, **kwargs ):
    kw_bios = kwargs.get( "bios", True )
    kw_gdb = kwargs.get( "gdb", False )
 
    command = build_emulator_parameters_trout(
          projects_map, 
-         drive = image_description.file( ),
+         drive = configuration.LINUX_IMAGE_DRIVE.file( ),
          debug = True
       )
 
