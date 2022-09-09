@@ -202,22 +202,22 @@ def init_projects( arch: str ):
    projects_map: dict = {
       "u-boot"       : linux.uboot.UBoot(
                            linux_configuration,
-                           configuration.LINUX_ROOT_DIR,
+                           configuration.UBOOT_ROOT_DIR,
                            version = configuration.UBOOT_VERSION,
                         ),
       "buildroot"    : linux.buildroot.BuildRoot(
                            linux_configuration,
-                           configuration.LINUX_ROOT_DIR,
+                           configuration.BUILDROOT_ROOT_DIR,
                            version = configuration.BUILDROOT_VERSION
                         ),
       "busybox"      : linux.busybox.BusyBox(
                            linux_configuration,
-                           configuration.LINUX_ROOT_DIR,
+                           configuration.BUSYBOX_ROOT_DIR,
                            version = configuration.BUSYBOX_VERSION
                         ),
       "kernel"       : linux.kernel.Kernel(
                            linux_configuration,
-                           configuration.LINUX_ROOT_DIR,
+                           configuration.KERNEL_ROOT_DIR,
                            version = configuration.KERNEL_VERSION
                         ),
       "aosp"         : aosp.aosp.AOSP(
