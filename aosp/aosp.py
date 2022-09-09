@@ -328,10 +328,8 @@ class AOSP:
    # def build_main_image
 
    def run( self, **kwargs ):
-      parameters: str = ""
-
       if "trout" == self.__config.device( ):
-         parameters = self.__run_emulator_trout( **kwargs )
+         self.__run_emulator_trout( **kwargs )
    # def run
 
    def action( self, actions: list, **kwargs ):

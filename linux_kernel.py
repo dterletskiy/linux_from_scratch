@@ -176,10 +176,8 @@ import linux.uboot
 import linux.buildroot
 import linux.busybox
 import linux.kernel
-import linux.tools
 import aosp.base
 import aosp.aosp
-import aosp.tools
 
 
 
@@ -277,7 +275,7 @@ def main( app_data: ApplicationData ):
 
          sys.exit( )
       elif "mkimage" == action:
-         # tools.mkpartition( projects_map )
+         tools.mkpartition( projects_map )
          tools.mkdrive( projects_map )
 
          # projects_map["aosp"].build_ramdisk( )
@@ -300,15 +298,11 @@ def main( app_data: ApplicationData ):
                # "CONFIG_INITRAMFS_SOURCE": "\"" + projects["buildroot"].dirs( ).product( "rootfs.cpio" ) + "\"",
             }
       elif type( project ) == type( projects_map["buildroot"] ) or type( project ) == type( projects_map["busybox"] ):
-         if "arm" == project.config( ).arch( ):
+         if "arm" == project.config( ).arch( ) or "arm32" == project.config( ).arch( ):
             kernel_file = "zImage"
          elif "arm64" == project.config( ).arch( ) or "aarch64" == project.config( ).arch( ):
             kernel_file = "Image"
          kw["kernel"] = os.path.join( projects_map["kernel"].dirs( ).product( ), kernel_file )
-      elif type( project ) == type( projects_map["aosp"] ):
-         kw["image"] = configuration.ANDROID_IMAGE_DRIVE.file( )
-         # kw["image"] = projects_map["aosp"].dirs( ).experimental( "main.img" )
-         kw["uboot"] = projects_map["u-boot"].dirs( ).product( "u-boot" )
       project.action( actions = actions, targets = targets, **kw )
 
 
