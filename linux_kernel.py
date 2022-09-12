@@ -171,6 +171,7 @@ import base
 import configuration
 import dt
 import tools
+import qemu
 import linux.base
 import linux.uboot
 import linux.buildroot
@@ -193,7 +194,7 @@ configuration.init( g_config_variables )
 
 
 
-
+qemu.init( "/mnt/dev/git/qemu/build/" )
 
 def init_projects( arch: str ):
    linux_configuration: linux.base.Configuration = linux.base.config[ arch ]

@@ -1,17 +1,32 @@
 #!/usr/bin/python3
 
+import os
+
 import pfw.console
 import pfw.shell
 
-import configuration
 import dt
 
 
 
-EMULATOR = "/mnt/dev/git/qemu/build/"
+EMULATOR: str = ""
+
+def init( qemu_path: str ):
+   global EMULATOR
+   EMULATOR = qemu_path
+# def init
+
+def qemu( emulator: str, **kwargs ):
+   kw_qemu_path = kwargs.get( "qemu_path", None )
+
+   if None == kw_qemu_path:
+      kw_qemu_path = EMULATOR
+
+   return os.path.join( kw_qemu_path, emulator )
+# def qemu
 
 def run( parameters, **kwargs ):
-   kw_emulator = kwargs.get( "emulator", EMULATOR )
+   kw_emulator = kwargs.get( "emulator", None )
    kw_bios = kwargs.get( "bios", None )
    kw_kernel = kwargs.get( "kernel", None )
    kw_initrd = kwargs.get( "initrd", None )
@@ -25,13 +40,13 @@ def run( parameters, **kwargs ):
    kw_output = kwargs.get( "output", pfw.shell.eOutput.PTY )
 
    if "x86" == kw_arch:
-      kw_emulator = kw_emulator + f"qemu-system-x86_64"
+      kw_emulator = qemu( f"qemu-system-x86_64", qemu_path = kw_emulator )
    elif "x86_64" == kw_arch:
-      kw_emulator = kw_emulator + f"qemu-system-x86_64"
+      kw_emulator = qemu( f"qemu-system-x86_64", qemu_path = kw_emulator )
    elif "arm" == kw_arch or "arm32" == kw_arch:
-      kw_emulator = kw_emulator + f"qemu-system-arm"
+      kw_emulator = qemu( f"qemu-system-arm", qemu_path = kw_emulator )
    elif "arm64" == kw_arch or "aarch64" == kw_arch:
-      kw_emulator = kw_emulator + f"qemu-system-aarch64"
+      kw_emulator = qemu( f"qemu-system-aarch64", qemu_path = kw_emulator )
 
    command: str = f"{kw_emulator} {parameters}"
 
