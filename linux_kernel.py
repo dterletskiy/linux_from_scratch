@@ -205,21 +205,25 @@ def init_projects( arch: str ):
                            linux_configuration,
                            configuration.UBOOT_ROOT_DIR,
                            version = configuration.UBOOT_VERSION,
+                           defconfig = configuration.UBOOT_DEFCONFIG
                         ),
       "buildroot"    : linux.buildroot.BuildRoot(
                            linux_configuration,
                            configuration.BUILDROOT_ROOT_DIR,
-                           version = configuration.BUILDROOT_VERSION
+                           version = configuration.BUILDROOT_VERSION,
+                           defconfig = configuration.BUILDROOT_DEFCONFIG
                         ),
       "busybox"      : linux.busybox.BusyBox(
                            linux_configuration,
                            configuration.BUSYBOX_ROOT_DIR,
-                           version = configuration.BUSYBOX_VERSION
+                           version = configuration.BUSYBOX_VERSION,
+                           defconfig = configuration.BUSYBOX_DEFCONFIG
                         ),
       "kernel"       : linux.kernel.Kernel(
                            linux_configuration,
                            configuration.KERNEL_ROOT_DIR,
-                           version = configuration.KERNEL_VERSION
+                           version = configuration.KERNEL_VERSION,
+                           defconfig = configuration.KERNEL_DEFCONFIG
                         ),
       "aosp"         : aosp.aosp.AOSP(
                            aosp_configuration,

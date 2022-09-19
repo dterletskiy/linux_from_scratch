@@ -24,6 +24,7 @@ class BuildRoot:
    def __init__( self, config: linux.base.Configuration, root_dir: str, **kwargs ):
       self.reset( )
       self.__config = config
+      self.__defconfig = kwargs.get( "defconfig", "None" )
       self.__version = kwargs.get( "version", "master" )
       self.__name = kwargs.get( "name", "buildroot-" + self.__version )
       self.__url_git = BUILDROOT_GIT_REPO
@@ -83,24 +84,12 @@ class BuildRoot:
       self.clone( )
    # def sync
 
-   def default_config( self ):
-      config: str = None
-      if "arm" == self.__config.arch( ):
-         config = "qemu_arm_vexpress_defconfig"
-      elif "arm64" == self.__config.arch( ) or "aarch64" == self.__config.arch( ):
-         config = "qemu_aarch64_virt_defconfig"
-      else:
-         config = "defconfig"
-
-      return config
-   # def default_config
-
    def configure( self, **kwargs ):
-      kw_targets = kwargs.get( "targets", ["default", "menuconfig"] )
+      kw_targets = kwargs.get( "targets", ["defconfig", "menuconfig"] )
       kw_configs = kwargs.get( "configs", { } )
 
-      if 0 == len(kw_targets):
-         kw_targets = ["default", "menuconfig"]
+      if None == kw_targets or 0 == len(kw_targets):
+         kw_targets = ["defconfig", "menuconfig"]
 
       command = "make"
       command += f" O={self.__directories.build( )}"
@@ -109,8 +98,8 @@ class BuildRoot:
       command += f" CROSS_COMPILE={self.__config.compiler( )}"
 
       for target in kw_targets:
-         if "default" == target:
-            target = self.default_config( )
+         if "defconfig" == target:
+            target = self.defconfig( )
          pfw.shell.run_and_wait_with_status( command, target, print = False, collect = False )
 
       # Applying configuration patched defined in code
@@ -271,6 +260,10 @@ class BuildRoot:
       return self.__config
    # def config
 
+   def defconfig( self ):
+      return self.__defconfig
+   # def defconfig
+
    def version( self ):
       return self.__version
    # def version
@@ -282,4 +275,5 @@ class BuildRoot:
    __version: str = None
    __directories: linux.base.Directories = None
    __config: linux.base.Configuration = None
+   __defconfig: str = None
 # class BuildRoot

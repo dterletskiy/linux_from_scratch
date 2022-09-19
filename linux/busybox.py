@@ -26,6 +26,7 @@ class BusyBox:
    def __init__( self, config: linux.base.Configuration, root_dir: str, **kwargs ):
       self.reset( )
       self.__config = config
+      self.__defconfig = kwargs.get( "defconfig", "None" )
       self.__version = kwargs.get( "version", "master" )
       self.__name = BUSYBOX_NAME_PATTERN.replace( "VERSION", self.__version )
       self.__url = BUSYBOX_LINK_PATTERN.replace( "VERSION", self.__version )
@@ -86,24 +87,12 @@ class BusyBox:
       self.extract( )
    # def sync
 
-   def default_config( self ):
-      config: str = None
-      if "arm" == self.__config.arch( ):
-         config = "defconfig"
-      elif "arm64" == self.__config.arch( ) or "aarch64" == self.__config.arch( ):
-         config = "defconfig"
-      else:
-         config = "defconfig"
-
-      return config
-   # def default_config
-
    def configure( self, **kwargs ):
-      kw_targets = kwargs.get( "targets", ["default", "menuconfig"] )
+      kw_targets = kwargs.get( "targets", ["defconfig", "menuconfig"] )
       kw_configs = kwargs.get( "configs", { } )
 
-      if 0 == len(kw_targets):
-         kw_targets = ["default", "menuconfig"]
+      if None == kw_targets or 0 == len(kw_targets):
+         kw_targets = ["defconfig", "menuconfig"]
 
       command = "make"
       command += f" O={self.__directories.build( )}"
@@ -112,8 +101,8 @@ class BusyBox:
       command += f" CROSS_COMPILE={self.__config.compiler( )}"
 
       for target in kw_targets:
-         if "default" == target:
-            target = self.default_config( )
+         if "defconfig" == target:
+            target = self.defconfig( )
          pfw.shell.run_and_wait_with_status( command, target, print = False, collect = False )
 
       # Applying configuration patched defined in code
@@ -313,6 +302,10 @@ class BusyBox:
       return self.__config
    # def config
 
+   def defconfig( self ):
+      return self.__defconfig
+   # def defconfig
+
    def version( self ):
       return self.__version
    # def version
@@ -325,4 +318,5 @@ class BusyBox:
    __archive_name: str = None
    __directories: linux.base.Directories = None
    __config: linux.base.Configuration = None
+   __defconfig: str = None
 # class BusyBox
