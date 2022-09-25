@@ -140,6 +140,11 @@ class Xen:
       command += f" -j{self.__config.cores( )}"
 
       pfw.shell.run_and_wait_with_status( command, targets, output = pfw.shell.eOutput.PTY, cwd = self.__directories.source( ) )
+
+      # xen does not allowed to change build directory, so we should manually copy all built artifacts
+      # to build directory for compatibility with other projects
+      command = f"cp -r {self.__directories.source( 'dist/install/*' )} {self.__directories.build( )}"
+      pfw.shell.run_and_wait_with_status( command, output = pfw.shell.eOutput.PTY )
    # def build
 
    def clean( self, **kwargs ):
@@ -157,11 +162,6 @@ class Xen:
       command += f" CROSS_COMPILE={self.__config.compiler( )}"
 
       pfw.shell.run_and_wait_with_status( command, targets, output = pfw.shell.eOutput.PTY )
-
-      # xen does not allowed to change build directory, so we should manually copy all built artifacts
-      # to build directory for compatibility with other projects
-      command = f"cp -r {self.__directories.source( 'dist/install/*' )} {self.__directories.build( )}"
-      pfw.shell.run_and_wait_with_status( command, output = pfw.shell.eOutput.PTY )
    # def clean
 
    def deploy( self, **kwargs ):
