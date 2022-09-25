@@ -19,8 +19,9 @@ def mkimage( projects_map: dict ):
            projects_map["kernel"].dirs( ).deploy( "Image" ), "kernel"
          , compression = "none", load_addr = "0x53000000"
       )
+
    mkimage_tool(
-           projects_map["kernel"].dirs( ).deploy( "Image.gz" ), "kernel"
+           projects_map["xen"].dirs( ).deploy( "boot/xen-" + projects_map["xen"].version( ) ), "kernel"
          , compression = "none", load_addr = "0x53000000"
       )
 
@@ -96,29 +97,45 @@ def prepare( projects_map: dict ):
 
 def deploy( projects_map: dict, mount_point: str, pause: bool = False ):
    files_list: list = [
-         {
-            "src": configuration.UBOOT_SCRIPT + ".uimg",
-            "dest": os.path.join( mount_point, "boot/boot.scr" )
-         },
          # {
          #    "src": configuration.SYSLINUX_SCRIPT,
          #    "dest": os.path.join( mount_point, "boot/extlinux/extlinux.conf" )
          # },
          {
-            "src": projects_map["kernel"].dirs( ).deploy( "Image.uimg" ),
-            "dest": os.path.join( mount_point, "boot/kernel-" + projects_map["kernel"].version( ) + ".uimg" )
-         },
-         {
-            "src": projects_map["kernel"].dirs( ).deploy( "zImage.uimg" ),
-            "dest": os.path.join( mount_point, "boot/kernel-" + projects_map["kernel"].version( ) + ".uimg" )
+            "src": configuration.UBOOT_SCRIPT + ".uimg",
+            "dest": os.path.join( mount_point, "boot/boot.scr" )
          },
          {
             "src": configuration.DTB_PATH,
             "dest": os.path.join( mount_point, "boot/dtb.dtb" )
          },
          {
+            "src": projects_map["kernel"].dirs( ).deploy( "Image" ),
+            "dest": os.path.join( mount_point, "boot/kernel-" + projects_map["kernel"].version( ) )
+         },
+         {
+            "src": projects_map["kernel"].dirs( ).deploy( "Image.uimg" ),
+            "dest": os.path.join( mount_point, "boot/kernel-" + projects_map["kernel"].version( ) + ".uimg" )
+         },
+         {
+            "src": projects_map["xen"].dirs( ).deploy( "boot/xen-" + projects_map["xen"].version( ) ),
+            "dest": os.path.join( mount_point, "boot/xen-" + projects_map["xen"].version( ) )
+         },
+         {
+            "src": projects_map["xen"].dirs( ).deploy( "boot/xen-" + projects_map["xen"].version( ) + ".uimg" ),
+            "dest": os.path.join( mount_point, "boot/xen-" + projects_map["xen"].version( ) + ".uimg" )
+         },
+         {
+            "src": projects_map["buildroot"].dirs( ).deploy( "rootfs.cpio" ),
+            "dest": os.path.join( mount_point, "boot/rootfs-" + projects_map["buildroot"].version( ) + ".cpio" )
+         },
+         {
             "src": projects_map["buildroot"].dirs( ).deploy( "rootfs.cpio.uimg" ),
             "dest": os.path.join( mount_point, "boot/rootfs-" + projects_map["buildroot"].version( ) + ".cpio.uimg" )
+         },
+         {
+            "src": projects_map["busybox"].dirs( ).deploy( "initramfs.cpio" ),
+            "dest": os.path.join( mount_point, "boot/initramfs-" + projects_map["busybox"].version( ) + ".cpio" )
          },
          {
             "src": projects_map["busybox"].dirs( ).deploy( "initramfs.cpio.uimg" ),
@@ -161,6 +178,8 @@ def mkpartition( projects_map: dict ):
 # def mkpartition
 
 def mkdrive( projects_map: dict ):
+   boot_image = configuration.LINUX_IMAGE_PARTITION.file( )
+
    super_image = projects_map["aosp"].dirs( ).product( "super.img" )
    if "arm64" == projects_map["aosp"].config( ).arch( ):
       projects_map["aosp"].simg_to_img( projects_map["aosp"].dirs( ).product( "super.img" ), projects_map["aosp"].dirs( ).experimental( "super.raw" ) )
@@ -176,28 +195,20 @@ def mkdrive( projects_map: dict ):
 
    boot_part_num = 1
    partitions = [
-      # pfw.image.Drive.Partition( size = pfw.size.Size( 512, pfw.size.Size.eGran.M ), fs = configuration.LINUX_IMAGE_PARTITION.fs( ), label = "boot" ),
-      pfw.image.Drive.Partition( clone_from = configuration.LINUX_IMAGE_PARTITION.file( ), label = "boot" ),
-      pfw.image.Drive.Partition( clone_from = super_image, label = "super" ),
-      pfw.image.Drive.Partition( clone_from = userdata_image, label = "userdata" ),
-      pfw.image.Drive.Partition( size = pfw.size.SizeGigabyte, label = "cache", fs = "ext4" ),
-      pfw.image.Drive.Partition( size = pfw.size.SizeGigabyte, label = "metadata", fs = "ext4" ),
-      pfw.image.Drive.Partition( size = pfw.size.SizeGigabyte, label = "misc", fs = "ext4" ),
-      pfw.image.Drive.Partition( clone_from = vbmeta_image, label = "vbmeta_a" ),
-      pfw.image.Drive.Partition( clone_from = vbmeta_system_image, label = "vbmeta_system_a" ),
+      pfw.image.Drive.Partition( clone_from = boot_image, label = "boot" ),
+      # pfw.image.Drive.Partition( clone_from = super_image, label = "super" ),
+      # pfw.image.Drive.Partition( clone_from = userdata_image, label = "userdata" ),
+      # pfw.image.Drive.Partition( size = pfw.size.SizeGigabyte, label = "cache", fs = "ext4" ),
+      # pfw.image.Drive.Partition( size = pfw.size.SizeGigabyte, label = "metadata", fs = "ext4" ),
+      # pfw.image.Drive.Partition( size = pfw.size.SizeGigabyte, label = "misc", fs = "ext4" ),
+      # pfw.image.Drive.Partition( clone_from = vbmeta_image, label = "vbmeta_a" ),
+      # pfw.image.Drive.Partition( clone_from = vbmeta_system_image, label = "vbmeta_system_a" ),
    ]
 
    mmc: pfw.image.Drive = pfw.image.Drive( configuration.LINUX_IMAGE_DRIVE.file( ) )
    mmc.create( partitions = partitions, force = True )
    mmc.attach( )
    mmc.init( partitions, bootable = boot_part_num )
-
-   # Filling boot partition
-   # mmc.mount( boot_part_num, configuration.LINUX_IMAGE_DRIVE.mount_point( ) )
-   # prepare( projects_map )
-   # deploy( projects_map, configuration.LINUX_IMAGE_DRIVE.mount_point( ), pause = True )
-   # mmc.umount( boot_part_num )
-
    mmc.info( )
    mmc.detach( )
 # def mkdrive
@@ -205,7 +216,7 @@ def mkdrive( projects_map: dict ):
 def run_arm64( **kwargs ):
    kw_drive = kwargs.get( "drive", None )
 
-   command: str = qemu.build_parameters( "arm64" )
+   command: str = qemu.build_parameters( arch = "arm64" )
    command += f" -drive if=none,index=0,id=main,file={kw_drive}"
    command += f" -device virtio-blk-pci,modern-pio-notify,drive=main"
 
@@ -250,11 +261,11 @@ def debug( projects_map: dict, **kwargs ):
                # projects_map[ "u-boot" ].dirs( ).product( "u-boot" ): [ 0x000000000 ], # in case of "u-boot" "x0" register when enter to "relocate_code" function
                # projects_map[ "u-boot" ].dirs( ).product( "u-boot" ): [ 0x23ff03000 ], # u-boot v2021.10
                projects_map[ "u-boot" ].dirs( ).product( "u-boot" ): [ 0x23ff03000 ], # u-boot v2022.07
-               projects_map[ "kernel" ].dirs( ).build( "vmlinux" ): [ 0x40410800 ], # kernel 5.15 loaded to 0x40410800
-               # projects_map[ "kernel" ].dirs( ).build( "vmlinux" ): [ 0x53010000 ], # kernel 5.15 loaded to 0x40410800
+               # projects_map[ "kernel" ].dirs( ).deploy( "vmlinux" ): [ 0x40410800 ], # kernel 5.15 loaded to 0x40410800
+               # projects_map[ "kernel" ].dirs( ).deploy( "vmlinux" ): [ 0x53010000 ], # kernel 5.15 loaded to 0x40410800
             },
             break_names = [
-               # u-boot functions
+               ### u-boot functions
                # "do_bootm",
                # "do_bootm_states",
                # "bootm_find_other",
@@ -262,14 +273,15 @@ def debug( projects_map: dict, **kwargs ):
                # "boot_get_ramdisk",
                # "select_ramdisk",
                "boot_jump_linux",
+               "announce_and_cleanup",
                "armv8_switch_to_el2",
-               # kernel functions
-               "primary_entry",
-               "__primary_switch",
-               "__primary_switched",
-               "start_kernel",
-               "rest_init",
-               "cpu_startup_entry"
+               ### kernel functions
+               # "primary_entry",
+               # "__primary_switch",
+               # "__primary_switched",
+               # "start_kernel",
+               # "rest_init",
+               # "cpu_startup_entry"
             ],
             break_addresses = [
             ],
@@ -283,7 +295,7 @@ def debug( projects_map: dict, **kwargs ):
    elif "kernel" == kw_project_name:
       gdb.run(
             # arch = project.config( ).arch( ),
-            file = project.dirs( ).build( "vmlinux" ),
+            file = project.dirs( ).deploy( "vmlinux" ),
             break_names = [
                "primary_entry",
                "__primary_switch",
@@ -465,7 +477,7 @@ def run_vexpress_ca9x4( projects_map: dict, **kwargs ):
    command: str = None
    parameters: list = [ ]
 
-   QEMU_PATH="/mnt/dev/git/qemu/build/"
+   QEMU_PATH=""
 
    command = f"{QEMU_PATH}qemu-system-arm"
    parameters.append( "-machine vexpress-a9" )

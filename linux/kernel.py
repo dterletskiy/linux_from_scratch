@@ -15,29 +15,19 @@ import linux.base
 
 
 
-KERNEL_LINK_PATTERN = "https://cdn.kernel.org/pub/linux/kernel/vEPOCH.x/linux-VERSION.tar.xz"
-KERNEL_NAME_PATTERN = "linux-VERSION"
 KERNEL_ARCHIVE_PATTERN = "linux-VERSION.tar.xz"
+KERNEL_LINK_PATTERN = "https://cdn.kernel.org/pub/linux/kernel/vEPOCH.x/" + KERNEL_ARCHIVE_PATTERN
 KERNEL_GIT_REPO = "git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git"
 
 
 
 class Kernel:
-   class eTarget( Enum ):
-      kernel = 1
-      modules = 2
-      modules_install = 3
-      dtbs = 4
-      uimage = 5
-      all = 6
-   # class eTarget
-
    def __init__( self, config: linux.base.Configuration, root_dir: str, **kwargs ):
       self.reset( )
       self.__config = config
       self.__defconfig = kwargs.get( "defconfig", "None" )
       self.__version = kwargs.get( "version", "master" )
-      self.__name = KERNEL_NAME_PATTERN.replace( "VERSION", self.__version )
+      self.__name = kwargs.get( "name", "linux-" + self.__version )
       self.__url = KERNEL_LINK_PATTERN.replace( "EPOCH", self.__version[0] ).replace( "VERSION", self.__version )
       self.__url_git = KERNEL_GIT_REPO
       self.__archive_name = KERNEL_ARCHIVE_PATTERN.replace( "VERSION", self.__version )
@@ -170,6 +160,7 @@ class Kernel:
       targets: str = ""
       for target in kw_targets:
          targets += f"{target} "
+      targets += f"vmlinux "
 
       command = "make"
       command += f" O={self.__directories.build( )}"
@@ -206,7 +197,10 @@ class Kernel:
    # def build
 
    def clean( self, **kwargs ):
-      kw_targets = kwargs.get( "targets", ["distclean"] )
+      kw_targets = kwargs.get( "targets", ["clean", "distclean", "mrproper"] )
+
+      if None == kw_targets or 0 == len(kw_targets):
+         kw_targets = ["clean", "distclean", "mrproper"]
 
       targets: str = ""
       for target in kw_targets:
@@ -222,43 +216,41 @@ class Kernel:
    # def clean
 
    def deploy( self, **kwargs ):
-      deploy_path = kwargs.get( "deploy_path", None )
-      is_create_structure = kwargs.get( "is_create_structure", False )
+      kw_deploy_path = kwargs.get( "deploy_path", self.__directories.deploy( ) )
+      kw_is_create_structure = kwargs.get( "is_create_structure", False )
 
-      if None == deploy_path:
-         deploy_path = self.__directories.deploy( )
-      else:
-         if True != os.path.isdir( deploy_path ):
-            pfw.console.debug.error( "deploy path does noe exist: ", deploy_path )
-            return None
+      if True != os.path.isdir( kw_deploy_path ):
+         pfw.console.debug.error( "deploy path does noe exist: ", kw_deploy_path )
+         return None
 
-         if True == is_create_structure:
-            deploy_path = os.path.join( deploy_path, self.__config.arch( ), self.__name )
-            pfw.shell.run_and_wait_with_status( f"mkdir -p {deploy_path}" )
-      pfw.console.debug.info( "deploy -> ", deploy_path )
-      pfw.shell.run_and_wait_with_status( f"rm -r {deploy_path}" )
-      pfw.shell.run_and_wait_with_status( f"mkdir -p {deploy_path}" )
+      if True == kw_is_create_structure:
+         kw_deploy_path = os.path.join( kw_deploy_path, self.__config.arch( ), self.__name )
+
+      pfw.console.debug.info( "deploy -> ", kw_deploy_path )
+      pfw.shell.run_and_wait_with_status( f"rm -rf {kw_deploy_path}" )
+      pfw.shell.run_and_wait_with_status( f"mkdir -p {kw_deploy_path}" )
 
       files_list: list = [
-            os.path.join( self.__directories.product( ), "Image" ),
-            os.path.join( self.__directories.product( ), "zImage" ),
-            os.path.join( self.__directories.product( ), "Image.gz" ),
-            os.path.join( self.__directories.product( ), "compressed/vmlinux" )
+            self.__directories.product( "Image" ),
+            self.__directories.product( "zImage" ),
+            self.__directories.product( "Image.gz" ),
+            self.__directories.product( "compressed/vmlinux" ),
+            self.__directories.build( "vmlinux" ),
          ]
 
       for file in files_list:
-         pfw.console.debug.trace( "file: '%s' ->\n     '%s'" % ( file, deploy_path ) )
-         pfw.shell.run_and_wait_with_status( f"cp {file} {deploy_path}" )
+         pfw.console.debug.trace( "file: '%s' ->\n     '%s'" % ( file, kw_deploy_path ) )
+         pfw.shell.run_and_wait_with_status( f"cp {file} {kw_deploy_path}" )
 
       directories_list: list = [ 
             os.path.join( self.__directories.product( ), "dts" )
          ]
 
       for directory in directories_list:
-         pfw.console.debug.trace( "directory: '%s' ->\n     '%s'" % ( directory, deploy_path ) )
-         pfw.shell.run_and_wait_with_status( f"cp -r {directory} {deploy_path}" )
+         pfw.console.debug.trace( "directory: '%s' ->\n     '%s'" % ( directory, kw_deploy_path ) )
+         pfw.shell.run_and_wait_with_status( f"cp -r {directory} {kw_deploy_path}" )
 
-      return deploy_path
+      return kw_deploy_path
    # def deploy
 
    def run( self, **kwargs ):

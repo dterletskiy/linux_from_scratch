@@ -53,6 +53,7 @@ TROUT_ARM64_USERDEBUG = Configuration( device = "trout", arch = "arm64", variant
 
 config: dict = {
    "x86": TROUT_X86_USERDEBUG,
+   "x86_64": TROUT_X86_USERDEBUG,
    "arm64": TROUT_ARM64_USERDEBUG,
    "aarch64": TROUT_ARM64_USERDEBUG
 }

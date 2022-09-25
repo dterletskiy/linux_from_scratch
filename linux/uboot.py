@@ -148,7 +148,10 @@ class UBoot:
    # def build
 
    def clean( self, **kwargs ):
-      kw_targets = kwargs.get( "targets", ["distclean"] )
+      kw_targets = kwargs.get( "targets", ["clean", "distclean", "mrproper"] )
+
+      if None == kw_targets or 0 == len(kw_targets):
+         kw_targets = ["clean", "distclean", "mrproper"]
 
       targets: str = ""
       for target in kw_targets:

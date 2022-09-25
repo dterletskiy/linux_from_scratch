@@ -11,11 +11,10 @@ import base
 
 
 class Configuration:
-   def __init__( self, arch: str, compiler: str, compiler_path: str, machine: str, cores: str ):
+   def __init__( self, arch: str, compiler: str, compiler_path: str, cores: str ):
       self.__arch = arch
       self.__compiler = compiler
       self.__compiler_path = compiler_path
-      self.__machine = machine
       self.__cores = cores
    # def __init__
 
@@ -45,7 +44,6 @@ class Configuration:
       pfw.console.debug.info( "arch:            \'", self.__arch, "\'", tabs = ( tabulations + 1 ) )
       pfw.console.debug.info( "compiler:        \'", self.__compiler, "\'", tabs = ( tabulations + 1 ) )
       pfw.console.debug.info( "compiler_path:   \'", self.__compiler_path, "\'", tabs = ( tabulations + 1 ) )
-      pfw.console.debug.info( "machine:         \'", self.__machine, "\'", tabs = ( tabulations + 1 ) )
       pfw.console.debug.info( "cores:           \'", self.__cores, "\'", tabs = ( tabulations + 1 ) )
    # def info
 
@@ -63,10 +61,6 @@ class Configuration:
       return os.path.join( self.__compiler_path, sub_path )
    # def arch
 
-   def machine( self ):
-      return self.__machine
-   # def arch
-
    def cores( self ):
       return self.__cores
    # def arch
@@ -74,7 +68,6 @@ class Configuration:
    __arch: str = None
    __compiler: str = None
    __compiler_path: str = None
-   __machine: str = None
    __cores: str = None
 # class Configuration
 
@@ -83,28 +76,36 @@ config: dict = {
            arch = "arm"
          , compiler = "arm-linux-gnueabi-"
          , compiler_path = "/usr/arm-linux-gnueabi"
-         , machine = "vexpress"
+         , cores = "8"
+      ),
+   "arm32": Configuration(
+           arch = "arm"
+         , compiler = "arm-linux-gnueabi-"
+         , compiler_path = "/usr/arm-linux-gnueabi"
          , cores = "8"
       ),
    "arm64": Configuration(
            arch = "arm64"
          , compiler = "aarch64-linux-gnu-"
-         , compiler_path = "/usr/arm-linux-gnueabi"
-         , machine = "vexpress"
+         , compiler_path = "/usr/aarch64-linux-gnu"
          , cores = "8"
       ),
    "aarch64": Configuration(
            arch = "aarch64"
          , compiler = "aarch64-linux-gnu-"
-         , compiler_path = "/usr/arm-linux-gnueabi"
-         , machine = "vexpress"
+         , compiler_path = "/usr/aarch64-linux-gnu"
          , cores = "8"
       ),
    "x86": Configuration(
            arch = "x86"
-         , compiler = "to_do"
+         , compiler = ""
+         , compiler_path = "/ust"
+         , cores = "8"
+      ),
+   "x86_64": Configuration(
+           arch = "x86_64"
+         , compiler = ""
          , compiler_path = "to_do"
-         , machine = "to_do"
          , cores = "8"
       )
 }
