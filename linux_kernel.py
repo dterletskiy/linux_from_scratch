@@ -177,6 +177,8 @@ import linux.uboot
 import linux.buildroot
 import linux.busybox
 import linux.kernel
+import linux.xen
+import linux.qemu
 import aosp.base
 import aosp.aosp
 
@@ -194,7 +196,7 @@ configuration.init( g_config_variables )
 
 
 
-qemu.init( "/mnt/dev/git/qemu/build/" )
+qemu.init( "/home/dmytro_terletskyi/Soft/qemu/bin" )
 
 def init_projects( arch: str ):
    linux_configuration: linux.base.Configuration = linux.base.config[ arch ]
@@ -224,6 +226,16 @@ def init_projects( arch: str ):
                            configuration.KERNEL_ROOT_DIR,
                            version = configuration.KERNEL_VERSION,
                            defconfig = configuration.KERNEL_DEFCONFIG
+                        ),
+      "xen"          : linux.xen.Xen(
+                           linux_configuration,
+                           configuration.XEN_ROOT_DIR,
+                           version = configuration.XEN_VERSION
+                        ),
+      "qemu"          : linux.qemu.Qemu(
+                           linux_configuration,
+                           configuration.QEMU_ROOT_DIR,
+                           version = configuration.QEMU_VERSION
                         ),
       "aosp"         : aosp.aosp.AOSP(
                            aosp_configuration,
@@ -270,7 +282,8 @@ def main( app_data: ApplicationData ):
          tools.debug( projects_map, project_name = "u-boot" )
          sys.exit( )
       elif "start" == action:
-         tools.start_trout(
+         # tools.start_trout(
+         tools.start(
                projects_map,
                bios = True,
                # gdb = True

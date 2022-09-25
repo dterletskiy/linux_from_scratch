@@ -65,9 +65,9 @@ class ConfigurationValue:
 
 # Next variables must be defined in configuration file:
 g_required_configuration_variables: dict = [
-   ConfigurationValue( "KERNEL_ROOT_DIR"              , None, "" ),
-   ConfigurationValue( "KERNEL_VERSION"               , None, "" ),
-   ConfigurationValue( "KERNEL_DEFCONFIG"             , None, "" ),
+   ConfigurationValue( "UBOOT_ROOT_DIR"               , None, "" ),
+   ConfigurationValue( "UBOOT_VERSION"                , None, "" ),
+   ConfigurationValue( "UBOOT_DEFCONFIG"              , None, "" ),
 
    ConfigurationValue( "BUSYBOX_ROOT_DIR"             , None, "" ),
    ConfigurationValue( "BUSYBOX_VERSION"              , None, "" ),
@@ -77,9 +77,15 @@ g_required_configuration_variables: dict = [
    ConfigurationValue( "BUILDROOT_VERSION"            , None, "" ),
    ConfigurationValue( "BUILDROOT_DEFCONFIG"          , None, "" ),
 
-   ConfigurationValue( "UBOOT_ROOT_DIR"               , None, "" ),
-   ConfigurationValue( "UBOOT_VERSION"                , None, "" ),
-   ConfigurationValue( "UBOOT_DEFCONFIG"              , None, "" ),
+   ConfigurationValue( "KERNEL_ROOT_DIR"              , None, "" ),
+   ConfigurationValue( "KERNEL_VERSION"               , None, "" ),
+   ConfigurationValue( "KERNEL_DEFCONFIG"             , None, "" ),
+
+   ConfigurationValue( "XEN_ROOT_DIR"                 , None, "" ),
+   ConfigurationValue( "XEN_VERSION"                  , None, "" ),
+
+   ConfigurationValue( "QEMU_ROOT_DIR"                , None, "" ),
+   ConfigurationValue( "QEMU_VERSION"                 , None, "" ),
 
    ConfigurationValue( "ANDROID_ROOT_DIR"             , None, "" ),
    ConfigurationValue( "ANDROID_VERSION"              , None, "" ),
