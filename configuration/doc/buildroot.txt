@@ -2,3 +2,7 @@
 
 Filesystem images -> cpio the root filesystem (for use as an initial RAM filesystem)
 Host utilities -> host qemu (disable)
+
+Target packages -> Show packages that are also provided by busybox (enable)
+Target packages -> Shell and utilities -> bash (enable)
+Target packages -> Libraries -> Hardware handling -> dtc (libfdt) (enable)

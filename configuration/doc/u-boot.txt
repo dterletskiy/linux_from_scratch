@@ -12,6 +12,14 @@ Security support -> Define AVB buffer SIZE -> 0x200
 Command line interface -> Android command support -> ab_select
 Command line interface -> Debug commands -> avd
 
+Command line interface -> Environment commands -> ask for env variable
+
+Command line interface -> Environment commands -> search env
+Library routines -> Enable regular expression support
+
+Command line interface -> Environment commands -> indirect
+
+
 u-boot aosp:
 Boot options -> Boot images -> Enable support for Android Boot Images
 Init options -> Support for Android Bootloader boot flow
