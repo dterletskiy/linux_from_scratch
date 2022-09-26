@@ -2,6 +2,7 @@
 
 import os
 import subprocess
+import re
 
 import pfw.console
 import pfw.shell
@@ -11,6 +12,37 @@ import gdb
 import qemu
 
 
+
+def build_uboot_script( ):
+   script_in_file = configuration.UBOOT_SCRIPT_SOURCE
+   script_out_file = configuration.UBOOT_SCRIPT
+
+   script_in_dir = os.path.dirname( script_in_file )
+
+   script_in_file_names = os.listdir( script_in_dir )
+   script_in_files = [ os.path.join( script_in_dir, script_in_file_name ) for script_in_file_name in script_in_file_names ]
+
+   script_in_file_h = open( script_in_file, "r" )
+   pattern: str = r"^\s*import\s*\"(.*)\"\s*$"
+   script_out_file_lines: str = ""
+   for script_in_file_line in script_in_file_h:
+      match = re.match( pattern, script_in_file_line )
+      if match:
+         import_file_name = match.group( 1 )
+         import_file = os.path.join( script_in_dir, import_file_name )
+         import_file_h = open( import_file, "r" )
+         for import_file_line in import_file_h:
+            script_out_file_lines += import_file_line
+         import_file_h.close( )
+         script_out_file_lines += "\n\n\n"
+      else:
+         script_out_file_lines += script_in_file_line
+   script_in_file_h.close( )
+
+   script_out_file_h = open( script_out_file, "w+" )
+   script_out_file_h.write( script_out_file_lines )
+   script_out_file_h.close( )
+# def build_uboot_script
 
 def mkimage( projects_map: dict ):
    mkimage_tool = projects_map["u-boot"].mkimage
@@ -83,6 +115,7 @@ def mkbootimg( projects_map: dict ):
 # def mkbootimg
 
 def prepare( projects_map: dict ):
+   build_uboot_script( )
    mkimage( projects_map )
    bootconfig_file: str = None
    if "x86" == projects_map["aosp"].config( ).arch( ) or "x86_64" == projects_map["aosp"].config( ).arch( ):

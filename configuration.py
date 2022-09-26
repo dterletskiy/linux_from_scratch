@@ -90,7 +90,8 @@ g_required_configuration_variables: dict = [
    ConfigurationValue( "ANDROID_ROOT_DIR"             , None, "" ),
    ConfigurationValue( "ANDROID_VERSION"              , None, "" ),
 
-   ConfigurationValue( "UBOOT_SCRIPT"                 , None, "" ),
+   ConfigurationValue( "UBOOT_SCRIPT"                 , None, "u-boot script what will be used for booting" ),
+   ConfigurationValue( "UBOOT_SCRIPT_SOURCE"          , None, "u-boot source script file what will parsed and used for generating final u-boot script file" ),
    ConfigurationValue( "SYSLINUX_SCRIPT"              , None, "" ),
    ConfigurationValue( "DTB_PATH"                     , None, "" ),
 

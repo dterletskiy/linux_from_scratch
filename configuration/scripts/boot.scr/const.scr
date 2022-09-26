@@ -1,0 +1,10 @@
+setenv result_true                  0
+setenv result_false                 1
+setenv result_none                  2
+setenv result                       ${result_none}
+
+setenv mode_none                    0
+setenv mode_kernel                  1
+setenv mode_xen                     2
+setenv mode_abi                     3
+setenv mode_poweroff                9

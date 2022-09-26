@@ -1,0 +1,37 @@
+setenv command_update_boot_count '
+   if env exists boot_count; then
+      echo "@TDA: boot_count found"
+   else
+      setenv boot_count 0
+   fi
+   setexpr boot_count ${boot_count} + 1
+   echo "@TDA: boot_count = ${boot_count}"
+   env save
+'
+
+setenv command_boot_xen '
+   echo "@TDA: booting xen...";
+   if bootm ${xen_address} - ${fdt_address}; then
+      echo "@TDA: ... xen booted";
+   else;
+      echo "@TDA: ... xen boot error";
+   fi
+'
+
+setenv command_boot_kernel '
+   echo "@TDA: booting kernel...";
+   if bootm ${kernel_address} ${ramdisk_address} ${fdt_address}; then
+      echo "@TDA: ... kernel booted";
+   else;
+      echo "@TDA: ... kernel boot error";
+   fi
+'
+
+setenv command_boot_abi '
+   echo "@TDA: booting Android Boot Image...";
+   if bootm ${abi_address} ${abi_address} ${fdt_address}; then
+      echo "@TDA: ... Android Boot Image booted";
+   else;
+      echo "@TDA: ... Android Boot Image boot error";
+   fi
+'

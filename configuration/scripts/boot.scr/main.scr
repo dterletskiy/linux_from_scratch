@@ -1,0 +1,157 @@
+echo "@TDA: --------------- Boot script begin ---------------"
+
+import "const.scr"
+import "data.scr"
+import "commands.scr"
+import "helpers.scr"
+
+
+
+##########################################################################
+#                                                                        #
+#                         Processing boot counts                         #
+#                                                                        #
+##########################################################################
+run command_update_boot_count
+
+
+##########################################################################
+#                                                                        #
+#                         Calculating files sizes                        #
+#                                                                        #
+##########################################################################
+setenv _device_ ${boot_device}
+setenv _names_ fdt xen kernel ramdisk abi
+run command_size_names
+
+
+
+##########################################################################
+#                                                                        #
+#                       Printing debug information                       #
+#                                                                        #
+##########################################################################
+run command_print_data
+
+
+
+##########################################################################
+#                                                                        #
+#                      Boot action mode processing                       #
+#                                                                        #
+##########################################################################
+echo "@TDA: Choose mode to boot:"
+echo "   ${mode_none}. Boot nothing"
+echo "   ${mode_kernel}. Boot Linux Kernel with Ramdisk and Device Tree"
+echo "   ${mode_xen}. Boot XEN and Linux Dom-0"
+echo "   ${mode_abi}. Boot Android Boot Image"
+echo "   ${mode_poweroff}. Poweroff"
+askenv mode "Enter boot mode (default [${mode_none}]):"
+if env exists mode; then
+   echo "@TDA: Chosen mode: ${mode}"
+else
+   echo "@TDA: Using default choise [${mode_none}]"
+   setenv mode ${mode_none};
+fi
+
+if itest ${mode_none} == ${mode}; then
+   echo "@TDA: Using 'none' mode"
+elif itest ${mode_kernel} == ${mode}; then
+   echo "@TDA: Using 'kernel' mode"
+
+   setenv _names_ kernel ramdisk fdt
+   setenv _device_ ${boot_device}
+   run command_load_names
+
+   run command_boot_kernel
+elif itest ${mode_xen} == ${mode}; then
+   echo "@TDA: Using 'xen' mode"
+
+   setenv _names_ xen kernel ramdisk fdt
+   setenv _device_ ${boot_device}
+   run command_load_names
+
+   run command_boot_xen
+elif itest ${mode_abi} == ${mode}; then
+   echo "@TDA: Using 'ABI' mode"
+
+   setenv _names_ abi fdt
+   setenv _device_ ${boot_device}
+   run command_load_names
+
+   run command_boot_abi
+elif itest ${mode_poweroff} == ${mode}; then
+   poweroff
+else
+   echo "@TDA: undefined mode"
+fi
+
+
+
+
+
+
+
+
+setenv _names_ xen kernel ramdisk fdt
+setenv _device_ ${boot_device}
+run command_load_names
+
+
+
+fdt addr ${fdt_address}
+fdt resize
+
+fdt mknod / chosen
+fdt set /chosen \#address-cells <2>
+fdt set /chosen \#size-cells <1>
+fdt set /chosen bootargs ${bootargs_xen}
+
+fdt mknod /chosen module@0
+fdt set /chosen/module@0 compatible "xen,linux-zimage" "xen,multiboot-module"
+fdt set /chosen/module@0 reg <${kernel_address} ${kernel_size}>
+fdt set /chosen/module@0 bootargs "earlyprintk=serial,ttyAMA0 console=ttyAMA0,115200n8 earlycon=xenboot"
+
+fdt mknod /chosen module@1
+fdt set /chosen/module@1 compatible "xen,linux-initrd" "xen,multiboot-module"
+fdt set /chosen/module@1 reg <${ramdisk_address} ${ramdisk_size}>
+
+booti ${xen_address} - ${fdt_address}
+
+
+
+
+
+
+
+
+##########################################################################
+#                                                                        #
+#                            Finishing script                            #
+#                                                                        #
+##########################################################################
+echo "@TDA: script commands finished. What is next?"
+echo "   0. Continue"
+echo "   1. Execute script ones more"
+echo "   2. Poweroff"
+askenv choise "Enter your choise (default [0]):"
+if env exists choise; then
+   echo "@TDA: Choise: ${choise}"
+else
+   echo "@TDA: Using default choise [0]"
+   setenv choise 0;
+fi
+
+if itest 0 == ${choise}; then
+   echo "@TDA: finishing script"
+elif itest 1 == ${choise}; then
+   source
+elif itest 2 == ${choise}; then
+   poweroff
+else
+   echo "@TDA: undefined choise"
+   echo "@TDA: finishing script"
+fi
+
+
+echo "@TDA: ---------------- Boot script end -----------------"

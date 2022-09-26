@@ -1,0 +1,32 @@
+setenv initrd_high                  0x66000000
+
+setenv boot_device                  ${devtype} ${devnum}:${distro_bootpart}
+
+setenv xen_location                 /boot/xen-4.16.2.uimg
+setenv kernel_location              /boot/kernel-5.19.uimg
+setenv ramdisk_location             /boot/rootfs-2022.05.2.cpio.uimg
+setenv fdt_location                 /boot/dtb.dtb
+setenv abi_location                 /boot/boot_aosp.img
+
+setenv xen_address                  ${kernel_addr_r}
+setenv kernel_address               ${kernel_addr_r}
+setenv ramdisk_address              ${ramdisk_addr_r}
+# setenv fdt_address                  ${fdt_addr_r}
+setenv fdt_address                  ${fdt_addr}
+setenv abi_address                  ${kernel_addr_r}
+
+setenv fdt_address                  0x40000000
+setenv xen_address                  0x41000000
+setenv kernel_address               0x42000000
+setenv ramdisk_address              0x46000000
+setenv abi_address                  0x42000000
+
+
+
+setenv bootargs_debug               "earlyprintk=serial,ttyAMA0 loglevel=7 debug printk.devkmsg=on drm.debug=0x0 nokaslr"
+setenv bootargs_console             "console=ttyAMA0"
+setenv bootargs_root                "root=/dev/${devtype}blk${devnum}p${distro_bootpart} rw"
+setenv bootargs_root                "root=/dev/ram rw"
+setenv bootargs_kernel              ${bootargs} ${bootargs_debug} ${bootargs_console}
+setenv bootargs_xen                 "earlyprintk=serial,ttyAMA0 console=ttyAMA0,115200n8 earlycon=xenboot loglvl=all guest_loglvl=all"
+setenv bootargs                     ${bootargs_kernel}
