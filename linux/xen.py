@@ -161,14 +161,14 @@ class Xen:
       command += f" XEN_TARGET_ARCH={self.__config.arch( )}"
       command += f" CROSS_COMPILE={self.__config.compiler( )}"
 
-      pfw.shell.run_and_wait_with_status( command, targets, output = pfw.shell.eOutput.PTY )
+      pfw.shell.run_and_wait_with_status( command, targets, output = pfw.shell.eOutput.PTY, cwd = self.__directories.source( ) )
    # def clean
 
    def deploy( self, **kwargs ):
       deploy_path = kwargs.get( "deploy_path", self.__directories.deploy( ) )
 
       command = f"cp -r {self.__directories.source( 'dist/install/*' )} {deploy_path}"
-      pfw.shell.run_and_wait_with_status( command, output = pfw.shell.eOutput.PTY )
+      pfw.shell.run_and_wait_with_status( command, output = pfw.shell.eOutput.PTY, cwd = self.__directories.source( ) )
 
       return deploy_path
    # def deploy
