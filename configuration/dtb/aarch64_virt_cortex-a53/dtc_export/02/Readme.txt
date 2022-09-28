@@ -1,0 +1,13 @@
+qemu-system-aarch64 \
+   -serial mon:stdio \
+   -nodefaults \
+   -no-reboot \
+   -d guest_errors \
+   -machine virt \
+   -machine virtualization=true \
+   -cpu cortex-a53 \
+   -smp cores=4 \
+   -m 8192 \
+   -drive if=none,index=0,id=main,file=/mnt/dev/tmp/drive.img \
+   -device virtio-blk-pci,modern-pio-notify,drive=main \
+   -bios /mnt/dev/linux_from_scratch/build/arm64/u-boot-v2022.07/u-boot.bin
