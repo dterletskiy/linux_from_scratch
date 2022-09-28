@@ -85,11 +85,14 @@ def build_parameters( **kwargs ):
    kw_arch = kwargs.get( "arch", "arm64" )
    kw_nographic = kwargs.get( "nographic", False )
 
-   parameters = f"" \
-      + f" -serial mon:stdio" \
-      + f" -nodefaults" \
-      + f" -no-reboot" \
-      + f" -d guest_errors"
+   parameters = f""
+   parameters += f" -serial mon:stdio"
+   parameters += f" -nodefaults"
+   parameters += f" -no-reboot"
+   parameters += f" -d guest_errors"
+
+   # parameters += f" -chardev socket,id=qemu-monitor,host=localhost,port=7777,server=on,wait=off,telnet=on"
+   # parameters += f" -mon qemu-monitor,mode=readline"
 
    if True == kw_nographic:
       parameters += f" -nographic"
@@ -100,6 +103,7 @@ def build_parameters( **kwargs ):
       parameters += f" -m 8192"
    elif "arm" == kw_arch or "arm32" == kw_arch or "arm64" == kw_arch or "aarch64" == kw_arch:
       parameters += f" -machine virt"
+      parameters += f" -machine virtualization=true"
       parameters += f" -cpu cortex-a53"
       parameters += f" -smp cores=4"
       parameters += f" -m 8192"

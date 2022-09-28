@@ -25,7 +25,7 @@ class Kernel:
    def __init__( self, config: linux.base.Configuration, root_dir: str, **kwargs ):
       self.reset( )
       self.__config = config
-      self.__defconfig = kwargs.get( "defconfig", "None" )
+      self.__defconfig = kwargs.get( "defconfig", None )
       self.__version = kwargs.get( "version", "master" )
       self.__name = kwargs.get( "name", "linux-" + self.__version )
       self.__url = KERNEL_LINK_PATTERN.replace( "EPOCH", self.__version[0] ).replace( "VERSION", self.__version )

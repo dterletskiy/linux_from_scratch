@@ -45,7 +45,7 @@ def build_uboot_script( ):
 # def build_uboot_script
 
 def mkimage( projects_map: dict ):
-   mkimage_tool = projects_map["u-boot"].mkimage
+   mkimage_tool = projects_map["uboot"].mkimage
 
    mkimage_tool(
            projects_map["kernel"].dirs( ).deploy( "Image" ), "kernel"
@@ -264,7 +264,7 @@ def start( projects_map: dict, **kwargs ):
 
    if True == kw_bios:
       run_arm64(
-            bios = projects_map["u-boot"].dirs( ).product( "u-boot.bin" ),
+            bios = projects_map["uboot"].dirs( ).product( "u-boot.bin" ),
             drive = configuration.LINUX_IMAGE_DRIVE.file( ),
             gdb = kw_gdb
          )
@@ -280,20 +280,20 @@ def start( projects_map: dict, **kwargs ):
 # def start
 
 def debug( projects_map: dict, **kwargs ):
-   kw_project_name = kwargs.get( "project_name", "u-boot" )
+   kw_project_name = kwargs.get( "project_name", "uboot" )
 
    project = projects_map[ kw_project_name ]
 
-   if "u-boot" == kw_project_name:
+   if "uboot" == kw_project_name:
       gdb.run(
-            # arch = projects_map[ "u-boot" ].config( ).arch( ),
-            file = projects_map[ "u-boot" ].dirs( ).product( "u-boot" ),
-            # lib_path = projects_map[ "u-boot" ].config( ).compiler_path( "lib" ),
-            # src_path = projects_map[ "u-boot" ].dirs( ).source( ),
+            # arch = projects_map[ "uboot" ].config( ).arch( ),
+            file = projects_map[ "uboot" ].dirs( ).product( "u-boot" ),
+            # lib_path = projects_map[ "uboot" ].config( ).compiler_path( "lib" ),
+            # src_path = projects_map[ "uboot" ].dirs( ).source( ),
             load_symbols = {
-               # projects_map[ "u-boot" ].dirs( ).product( "u-boot" ): [ 0x000000000 ], # in case of "u-boot" "x0" register when enter to "relocate_code" function
-               # projects_map[ "u-boot" ].dirs( ).product( "u-boot" ): [ 0x23ff03000 ], # u-boot v2021.10
-               projects_map[ "u-boot" ].dirs( ).product( "u-boot" ): [ 0x23ff03000 ], # u-boot v2022.07
+               # projects_map[ "uboot" ].dirs( ).product( "u-boot" ): [ 0x000000000 ], # in case of "u-boot" "x0" register when enter to "relocate_code" function
+               # projects_map[ "uboot" ].dirs( ).product( "u-boot" ): [ 0x23ff03000 ], # u-boot v2021.10
+               projects_map[ "uboot" ].dirs( ).product( "u-boot" ): [ 0x23ff03000 ], # u-boot v2022.07
                # projects_map[ "kernel" ].dirs( ).deploy( "vmlinux" ): [ 0x40410800 ], # kernel 5.15 loaded to 0x40410800
                # projects_map[ "kernel" ].dirs( ).deploy( "vmlinux" ): [ 0x53010000 ], # kernel 5.15 loaded to 0x40410800
             },
@@ -320,7 +320,7 @@ def debug( projects_map: dict, **kwargs ):
             ],
             break_code = {
                # u-boot code
-               projects_map[ "u-boot" ].dirs( ).source( "arch/arm/cpu/armv8/transition.S" ): [ 30 ]
+               projects_map[ "uboot" ].dirs( ).source( "arch/arm/cpu/armv8/transition.S" ): [ 30 ]
                # kernel code
             },
             none = None
@@ -489,7 +489,7 @@ def start_trout( projects_map: dict, **kwargs ):
    qemu.run(
          command,
          arch = "arm64",
-         bios = projects_map["u-boot"].dirs( ).product( "u-boot.bin" ),
+         bios = projects_map["uboot"].dirs( ).product( "u-boot.bin" ),
          # kernel = projects_map["aosp"].dirs( ).product( "kernel" ),
          # initrd = projects_map["aosp"].dirs( ).experimental( "ramdisk.img" ),
          # append = build_cmdline_trout( projects_map ),
@@ -517,7 +517,7 @@ def run_vexpress_ca9x4( projects_map: dict, **kwargs ):
    parameters.append( "-nographic" )
    parameters.append( "-smp 1" )
    parameters.append( "-m 256M" )
-   parameters.append( "-kernel " + os.path.join( projects_map["u-boot"].dirs( ).product( ), "u-boot" ) )
+   parameters.append( "-kernel " + os.path.join( projects_map["uboot"].dirs( ).product( ), "u-boot" ) )
    parameters.append( "-sd " + kw_drive )
    # parameters.append( "-hda " + kw_partition )
    # parameters.append( "-drive file= " + kw_drive + ",if=sd,format=raw" )

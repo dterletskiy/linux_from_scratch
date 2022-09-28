@@ -26,7 +26,7 @@ class UBoot:
    def __init__( self, config: linux.base.Configuration, root_dir: str, **kwargs ):
       self.reset( )
       self.__url_git = kwargs.get( "url", UBOOT_DEFAULT_REPO )
-      self.__defconfig = kwargs.get( "defconfig", "None" )
+      self.__defconfig = kwargs.get( "defconfig", None )
       self.__version = kwargs.get( "version", "master" )
       self.__name = kwargs.get( "name", "u-boot-" + self.__version )
       self.__config = config

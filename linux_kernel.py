@@ -34,6 +34,12 @@ import re
 
 
 
+##########################################################################
+#                                                                        #
+#                          Begin configuration                           #
+#                                                                        #
+##########################################################################
+
 MIN_PYTHON = (3, 8)
 if sys.version_info < MIN_PYTHON:
    print( "Python minimal required version is %s.%s" % MIN_PYTHON )
@@ -42,15 +48,52 @@ if sys.version_info < MIN_PYTHON:
 
 
 
+class ApplicationDataNew:
+   def info( self, **kwargs ):
+      print( self.__class__.__name__, ":" )
+      print( "   config:         \'", self.config, "\'" )
+      print( "   includes:       \'", self.includes, "\'" )
+      print( "   arch:           \'", self.arch, "\'" )
+      print( "   actions:        \'", self.actions, "\'" )
+      print( "   projects:       \'", self.projects, "\'" )
+      print( "   targets:        \'", self.targets, "\'" )
+
+      print( "   antlr_jar:      \'", self.antlr_jar, "\'" )
+      print( "   antlr_outdir:   \'", self.antlr_outdir, "\'" )
+      print( "   antlr_lexers:   \'", self.antlr_lexers, "\'" )
+      print( "   antlr_parsers:  \'", self.antlr_parsers, "\'" )
+   # def info
+
+   __config: str = None
+   __includes: list = [ ]
+   __arch: str = None
+   __actions: list = [ ]
+   __projects: list = [ ]
+   __targets: list = [ ]
+
+   __antlr_jar: str = None
+   __antlr_outdir: str = None
+   __antlr_lexers: list = [ ]
+   __antlr_parsers: list = [ ]
+# class ApplicationData
+
+
+
+
 class ApplicationData:
    def info( self, **kwargs ):
       print( self.__class__.__name__, ":" )
-      print( "   config:      \'", self.config, "\'" )
-      print( "   includes:    \'", self.includes, "\'" )
-      print( "   arch:        \'", self.arch, "\'" )
-      print( "   actions:     \'", self.actions, "\'" )
-      print( "   projects:    \'", self.projects, "\'" )
-      print( "   targets:     \'", self.targets, "\'" )
+      print( "   config:         \'", self.config, "\'" )
+      print( "   includes:       \'", self.includes, "\'" )
+      print( "   arch:           \'", self.arch, "\'" )
+      print( "   actions:        \'", self.actions, "\'" )
+      print( "   projects:       \'", self.projects, "\'" )
+      print( "   targets:        \'", self.targets, "\'" )
+
+      print( "   antlr_jar:      \'", self.antlr_jar, "\'" )
+      print( "   antlr_outdir:   \'", self.antlr_outdir, "\'" )
+      print( "   antlr_lexers:   \'", self.antlr_lexers, "\'" )
+      print( "   antlr_parsers:  \'", self.antlr_parsers, "\'" )
    # def info
 
    config: str = None
@@ -59,6 +102,11 @@ class ApplicationData:
    actions: list = [ ]
    projects: list = [ ]
    targets: list = [ ]
+
+   antlr_jar: str = None
+   antlr_outdir: str = None
+   antlr_lexers: list = [ ]
+   antlr_parsers: list = [ ]
 # class ApplicationData
 
 
@@ -72,6 +120,11 @@ class Description:
    action = "Action"
    project = "Project"
    target = "Target"
+
+   antlr_jar = "Path to antlr jar file"
+   antlr_outdir = "Output directory for generated lexer, parser, listener and visitor files."
+   antlr_lexer = "Path to lexer grammer files"
+   antlr_parser = "Path to parser grammer files"
 # class Description
 g_description = Description( )
 
@@ -95,6 +148,11 @@ def cmdline_argparse( argv ):
    parser.add_argument( "--action", dest = "action", type = str, action = "store", required = False, help = g_description.action )
    parser.add_argument( "--project", dest = "project", type = str, action = "store", required = False, help = g_description.project )
    parser.add_argument( "--target", dest = "target", type = str, action = "store", required = False, help = g_description.target )
+
+   parser.add_argument( "--antlr_jar", dest = "antlr_jar", type = str, action = "store", help = g_description.antlr_jar )
+   parser.add_argument( "--antlr_outdir", dest = "antlr_outdir", type = str, action = "store", help = g_description.antlr_outdir )
+   parser.add_argument( "--antlr_lexer", dest = "antlr_lexer", type = str, action = "append", help = g_description.antlr_lexer )
+   parser.add_argument( "--antlr_parser", dest = "antlr_parser", type = str, action = "append", help = g_description.antlr_parser )
 
    # parser.print_help( )
    try:
@@ -126,17 +184,31 @@ def cmdline_argparse( argv ):
       print( "target: ", argument.target )
       application_data.targets = argument.target.split( "," )
 
+   if argument.antlr_jar:
+      print( "antlr_jar: ", argument.antlr_jar )
+      application_data.antlr_jar = argument.antlr_jar
+
+   if argument.antlr_outdir:
+      print( "antlr_outdir: ", argument.antlr_outdir )
+      application_data.includes.append( argument.antlr_outdir )
+      application_data.antlr_outdir = argument.antlr_outdir
+
+   if argument.antlr_lexer:
+      print( "antlr_lexer: ", argument.antlr_lexer )
+      application_data.antlr_lexers.extend( argument.antlr_lexer )
+
+   if argument.antlr_parser:
+      print( "antlr_parser: ", argument.antlr_parser )
+      application_data.antlr_parsers.extend( argument.antlr_parser )
+
    return application_data
 # def cmdline_argparse
 
-g_app_data = cmdline_argparse( sys.argv[1:] )
-g_app_data.info( )
 
-
-
-g_config_variables: dict = { }
 
 def configure( app_data ):
+   config_variables: dict = { }
+
    if None != app_data.config:
       pattern: str = r"^\s*(.*)\s*:\s*(.*)\s*$"
       config_file = open( app_data.config, "r" )
@@ -147,18 +219,31 @@ def configure( app_data ):
             var_value = match.group( 2 )
             if "INCLUDE" == var_name:
                app_data.includes.append( var_value )
+            elif "ANTLR_JAR" == var_name and None == app_data.antlr_jar:
+               app_data.antlr_jar = var_value
+            elif "ANTLR_OUTDIR" == var_name and None == app_data.antlr_outdir:
+               app_data.antlr_outdir = var_value
+            elif "ANTLR_LEXER" == var_name:
+               app_data.antlr_lexers.append( var_value )
+            elif "ANTLR_PARSER" == var_name:
+               app_data.antlr_parsers.append( var_value )
             else:
-               g_config_variables[ var_name ] = var_value
+               config_variables[ var_name ] = var_value
       config_file.close( )
 
 
 
-   include_count: int = 0
-   for path in app_data.includes:
-      include_count += 1
-      sys.path.insert( include_count, path )
+   for path in reversed( app_data.includes ):
+      sys.path.insert( 0, path )
+
+   return config_variables
 # def configure
-configure( g_app_data )
+
+
+
+g_app_data: ApplicationData = cmdline_argparse( sys.argv[1:] )
+g_config_variables: dict = configure( g_app_data )
+g_app_data.info( )
 
 
 
@@ -172,6 +257,7 @@ import configuration
 import dt
 import tools
 import qemu
+import antlr
 import linux.base
 import linux.uboot
 import linux.buildroot
@@ -184,68 +270,35 @@ import aosp.aosp
 
 
 
+configuration.init( g_config_variables )
+qemu.init( configuration.QEMU_BIN_DIR )
+antlr.init( g_app_data.antlr_jar )
+antlr_gendir = antlr.gen_grammar( lexers = g_app_data.antlr_lexers, parsers = g_app_data.antlr_parsers )
+sys.path.insert( 0, antlr_gendir )
+
+
+
+import generator.pdl.parser
+
+
+
 ENVIRONMENT = dict( os.environ )
 ENVIRONMENT["LFS_VERSION"] = str(1.0)
 pfw.shell.run_and_wait_with_status( "/bin/echo ${LFS_VERSION}", env = ENVIRONMENT, shell = True )
 
+##########################################################################
+#                                                                        #
+#                           End configuration                            #
+#                                                                        #
+##########################################################################
 
 
-configuration.init( g_config_variables )
 
 
 
 
 
-qemu.init( "/home/dmytro_terletskyi/Soft/qemu/bin" )
 
-def init_projects( arch: str ):
-   linux_configuration: linux.base.Configuration = linux.base.config[ arch ]
-   aosp_configuration: aosp.base.Configuration = aosp.base.config[ arch ]
-
-   projects_map: dict = {
-      "u-boot"       : linux.uboot.UBoot(
-                           linux_configuration,
-                           configuration.UBOOT_ROOT_DIR,
-                           version = configuration.UBOOT_VERSION,
-                           defconfig = configuration.UBOOT_DEFCONFIG
-                        ),
-      "buildroot"    : linux.buildroot.BuildRoot(
-                           linux_configuration,
-                           configuration.BUILDROOT_ROOT_DIR,
-                           version = configuration.BUILDROOT_VERSION,
-                           defconfig = configuration.BUILDROOT_DEFCONFIG
-                        ),
-      "busybox"      : linux.busybox.BusyBox(
-                           linux_configuration,
-                           configuration.BUSYBOX_ROOT_DIR,
-                           version = configuration.BUSYBOX_VERSION,
-                           defconfig = configuration.BUSYBOX_DEFCONFIG
-                        ),
-      "kernel"       : linux.kernel.Kernel(
-                           linux_configuration,
-                           configuration.KERNEL_ROOT_DIR,
-                           version = configuration.KERNEL_VERSION,
-                           defconfig = configuration.KERNEL_DEFCONFIG
-                        ),
-      "xen"          : linux.xen.Xen(
-                           linux_configuration,
-                           configuration.XEN_ROOT_DIR,
-                           version = configuration.XEN_VERSION
-                        ),
-      "qemu"          : linux.qemu.Qemu(
-                           linux_configuration,
-                           configuration.QEMU_ROOT_DIR,
-                           version = configuration.QEMU_VERSION
-                        ),
-      "aosp"         : aosp.aosp.AOSP(
-                           aosp_configuration,
-                           configuration.ANDROID_ROOT_DIR,
-                           tag = configuration.ANDROID_VERSION
-                        ),
-   }
-
-   return projects_map
-# def init_projects
 
 def init_actions( ):
    actions_map: dict = {
@@ -265,7 +318,7 @@ def init_actions( ):
 # def init_actions
 
 def main( app_data: ApplicationData ):
-   projects_map = init_projects( app_data.arch )
+   projects_map = generator.pdl.parser.parse( configuration.PDL )
    actions_map = init_actions( )
 
    projects: list = [ ]
@@ -279,7 +332,7 @@ def main( app_data: ApplicationData ):
    for action in app_data.actions:
       # Processing extended actions
       if "gdb" == action:
-         tools.debug( projects_map, project_name = "u-boot" )
+         tools.debug( projects_map, project_name = "uboot" )
          sys.exit( )
       elif "start" == action:
          # tools.start_trout(

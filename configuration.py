@@ -65,30 +65,7 @@ class ConfigurationValue:
 
 # Next variables must be defined in configuration file:
 g_required_configuration_variables: dict = [
-   ConfigurationValue( "UBOOT_ROOT_DIR"               , None, "" ),
-   ConfigurationValue( "UBOOT_VERSION"                , None, "" ),
-   ConfigurationValue( "UBOOT_DEFCONFIG"              , None, "" ),
-
-   ConfigurationValue( "BUSYBOX_ROOT_DIR"             , None, "" ),
-   ConfigurationValue( "BUSYBOX_VERSION"              , None, "" ),
-   ConfigurationValue( "BUSYBOX_DEFCONFIG"            , None, "" ),
-
-   ConfigurationValue( "BUILDROOT_ROOT_DIR"           , None, "" ),
-   ConfigurationValue( "BUILDROOT_VERSION"            , None, "" ),
-   ConfigurationValue( "BUILDROOT_DEFCONFIG"          , None, "" ),
-
-   ConfigurationValue( "KERNEL_ROOT_DIR"              , None, "" ),
-   ConfigurationValue( "KERNEL_VERSION"               , None, "" ),
-   ConfigurationValue( "KERNEL_DEFCONFIG"             , None, "" ),
-
-   ConfigurationValue( "XEN_ROOT_DIR"                 , None, "" ),
-   ConfigurationValue( "XEN_VERSION"                  , None, "" ),
-
-   ConfigurationValue( "QEMU_ROOT_DIR"                , None, "" ),
-   ConfigurationValue( "QEMU_VERSION"                 , None, "" ),
-
-   ConfigurationValue( "ANDROID_ROOT_DIR"             , None, "" ),
-   ConfigurationValue( "ANDROID_VERSION"              , None, "" ),
+   ConfigurationValue( "PDL"                          , None, "path to project description language configuration file" ),
 
    ConfigurationValue( "UBOOT_SCRIPT"                 , None, "u-boot script what will be used for booting" ),
    ConfigurationValue( "UBOOT_SCRIPT_SOURCE"          , None, "u-boot source script file what will parsed and used for generating final u-boot script file" ),
@@ -98,7 +75,11 @@ g_required_configuration_variables: dict = [
    ConfigurationValue( "ANDROID_BOOTCONFIG_X86"       , None, "" ),
    ConfigurationValue( "ANDROID_BOOTCONFIG_ARM64"     , None, "" ),
 
-   ConfigurationValue( "TMP_PATH"                     , None, "" ),
+   ConfigurationValue( "TMP_PATH"                     , "/tmp", "directory for temporary files and artifacts" ),
+
+   ConfigurationValue( "QEMU_BIN_DIR"                 , "", "directory with qemu binaries" ),
+
+   # ConfigurationValue( "ANTLR_JAR"                    , None, "path to antlr jar file" ),
 ]
 
 
@@ -116,22 +97,25 @@ def init( variables: dict = { } ):
       if required_config.name( ) in global_variables.keys( ):
          pass
       else:
-         pfw.console.debug.error( "configuration variable '%s' is not defined in configuration file" % ( required_config.name( ) ) )
-         pfw.console.debug.error( "configuration variable '%s': %s" % ( required_config.name( ), required_config.description( ) ) )
-         sys.exit( 1 )
+         if None != required_config.value( ):
+            global_variables[ required_config.name( ) ] = required_config.value( )
+         else:
+            pfw.console.debug.error( "configuration variable '%s' is not defined in configuration file" % ( required_config.name( ) ) )
+            pfw.console.debug.error( "configuration variable '%s': %s" % ( required_config.name( ), required_config.description( ) ) )
+            sys.exit( 1 )
 
    global LINUX_IMAGE_PARTITION
    LINUX_IMAGE_PARTITION = pfw.image.Description(
            os.path.join( TMP_PATH, "partition.img" )
          , os.path.join( TMP_PATH, "partition" )
-         , pfw.size.Size( 256, pfw.size.Size.eGran.M )
+         , pfw.size.Size( 512, pfw.size.Size.eGran.M )
          , "ext2"
       )
    global LINUX_IMAGE_DRIVE
    LINUX_IMAGE_DRIVE = pfw.image.Description(
            os.path.join( TMP_PATH, "drive.img" )
          , os.path.join( TMP_PATH, "drive" )
-         , pfw.size.Size( 256, pfw.size.Size.eGran.M )
+         , pfw.size.Size( 512, pfw.size.Size.eGran.M )
          , "ext2"
       )
 
