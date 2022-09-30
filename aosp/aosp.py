@@ -397,9 +397,9 @@ class AOSP:
 
       if None == kw_bootconfig_file:
          if "x86" == self.__config.arch( ) or "x86_64" == self.__config.arch( ):
-            kw_bootconfig_file = configuration.ANDROID_BOOTCONFIG_X86
+            kw_bootconfig_file = configuration.value( "android_bootconfig_x86" )
          elif "arm64" == self.__config.arch( ) or "aarch64" == self.__config.arch( ):
-            kw_bootconfig_file = configuration.ANDROID_BOOTCONFIG_ARM64
+            kw_bootconfig_file = configuration.value( "android_bootconfig_arm64" )
 
       bootcobfig: str = ""
       file = open( kw_bootconfig_file, "r" )

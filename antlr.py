@@ -31,6 +31,7 @@ def gen_grammar( **kwargs ):
    kw_lexers = kwargs.get( "lexers", [ ] )
    kw_parsers = kwargs.get( "parsers", [ ] )
    kw_outdir = kwargs.get( "outdir", "/tmp/antlr_gen" )
+   kw_extend_path = kwargs.get( "extend_path", True )
 
    os.makedirs( kw_outdir, exist_ok = True )
 
@@ -44,6 +45,9 @@ def gen_grammar( **kwargs ):
       command += f" -listener"
       command += f" -visitor"
       pfw.shell.run_and_wait_with_status( command )
+
+   if True == kw_extend_path:
+      sys.path.insert( 0, kw_outdir )
 
    return kw_outdir
 # def antlr_gen

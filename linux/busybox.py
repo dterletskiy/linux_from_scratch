@@ -220,8 +220,9 @@ class BusyBox:
 
       pfw.shell.run_and_wait_with_status( f"touch ./etc/init.d/rcS", cwd = rootfs_path )
       pfw.shell.run_and_wait_with_status( f"echo '#! /bin/sh' > ./etc/init.d/rcS", cwd = rootfs_path )
-      pfw.shell.run_and_wait_with_status( f"echo 'mount -t proc none /proc' >> ./etc/init.d/rcS", cwd = rootfs_path )
-      pfw.shell.run_and_wait_with_status( f"echo 'mount -t sysfs none /sys' >> ./etc/init.d/rcS", cwd = rootfs_path )
+      pfw.shell.run_and_wait_with_status( f"echo 'mount -t proc proc /proc' >> ./etc/init.d/rcS", cwd = rootfs_path )
+      pfw.shell.run_and_wait_with_status( f"echo 'mount -t sysfs sysfs /sys' >> ./etc/init.d/rcS", cwd = rootfs_path )
+      # pfw.shell.run_and_wait_with_status( f"echo 'mount -t devtmpfs devtmpfs /dev' >> ./etc/init.d/rcS", cwd = rootfs_path )
       pfw.shell.run_and_wait_with_status( f"echo '/sbin/mdev -s' >> ./etc/init.d/rcS", cwd = rootfs_path )
       pfw.shell.run_and_wait_with_status( f"chmod +x ./etc/init.d/rcS", cwd = rootfs_path )
 

@@ -14,8 +14,8 @@ import qemu
 
 
 def build_uboot_script( ):
-   script_in_file = configuration.UBOOT_SCRIPT_SOURCE
-   script_out_file = configuration.UBOOT_SCRIPT
+   script_in_file = configuration.value( "uboot_script_source" )
+   script_out_file = configuration.value( "uboot_script" )
 
    script_in_dir = os.path.dirname( script_in_file )
 
@@ -76,7 +76,7 @@ def mkimage( projects_map: dict ):
       )
 
    mkimage_tool(
-           configuration.UBOOT_SCRIPT, "script"
+           configuration.value( "uboot_script" ), "script"
          , compression = "none", load_addr = "0x65000000"
       )
 # def mkimage
@@ -91,9 +91,9 @@ def mkbootimg( projects_map: dict ):
          header_version = 2,
          kernel = projects_map["kernel"].dirs( ).deploy( "Image" ),
          ramdisk = projects_map["buildroot"].dirs( ).deploy( "rootfs.cpio" ),
-         dtb = configuration.DTB_PATH,
+         dtb = configuration.value( "dtb_path" ),
          cmdline = cmdline,
-         out = os.path.join( configuration.TMP_PATH, "boot_linux.img" ),
+         out = os.path.join( configuration.value( "tmp_path" ), "boot_linux.img" ),
          base = 0x50000000,
          kernel_offset = 0x3000000,
          ramdisk_offset = 0x6000000,
@@ -104,9 +104,9 @@ def mkbootimg( projects_map: dict ):
          header_version = 2,
          kernel = projects_map["aosp"].dirs( ).product( "kernel"),
          ramdisk = projects_map["aosp"].dirs( ).experimental( "ramdisk.img"),
-         dtb = configuration.DTB_PATH,
+         dtb = configuration.value( "dtb_path" ),
          cmdline = cmdline,
-         out = os.path.join( configuration.TMP_PATH, "boot_aosp.img" ),
+         out = os.path.join( configuration.value( "tmp_path" ), "boot_aosp.img" ),
          base = 0x50000000,
          kernel_offset = 0x3000000,
          ramdisk_offset = 0x6000000,
@@ -119,9 +119,9 @@ def prepare( projects_map: dict ):
    mkimage( projects_map )
    bootconfig_file: str = None
    if "x86" == projects_map["aosp"].config( ).arch( ) or "x86_64" == projects_map["aosp"].config( ).arch( ):
-      bootconfig_file = configuration.ANDROID_BOOTCONFIG_X86
+      bootconfig_file = configuration.value( "android_bootconfig_x86" )
    elif "arm64" == projects_map["aosp"].config( ).arch( ) or "aarch64" == projects_map["aosp"].config( ).arch( ):
-      bootconfig_file = configuration.ANDROID_BOOTCONFIG_ARM64
+      bootconfig_file = configuration.value( "android_bootconfig_arm64" )
    projects_map["aosp"].build_ramdisk(
          bootconfig = { "tool": projects_map["kernel"].bootconfig, "config": bootconfig_file }
       )
@@ -131,15 +131,15 @@ def prepare( projects_map: dict ):
 def deploy( projects_map: dict, mount_point: str, pause: bool = False ):
    files_list: list = [
          # {
-         #    "src": configuration.SYSLINUX_SCRIPT,
+         #    "src": configuration.value( "syslinux_script" ),
          #    "dest": os.path.join( mount_point, "boot/extlinux/extlinux.conf" )
          # },
          {
-            "src": configuration.UBOOT_SCRIPT + ".uimg",
+            "src": configuration.value( "uboot_script" ) + ".uimg",
             "dest": os.path.join( mount_point, "boot/boot.scr" )
          },
          {
-            "src": configuration.DTB_PATH,
+            "src": configuration.value( "dtb_path" ),
             "dest": os.path.join( mount_point, "boot/dtb.dtb" )
          },
          {
@@ -175,11 +175,11 @@ def deploy( projects_map: dict, mount_point: str, pause: bool = False ):
             "dest": os.path.join( mount_point, "boot/initramfs-" + projects_map["busybox"].version( ) + ".cpio.uimg" )
          },
          {
-            "src": os.path.join( configuration.TMP_PATH, "boot_linux.img" ),
+            "src": os.path.join( configuration.value( "tmp_path" ), "boot_linux.img" ),
             "dest": os.path.join( mount_point, "boot/boot_linux.img" )
          },
          {
-            "src": os.path.join( configuration.TMP_PATH, "boot_aosp.img" ),
+            "src": os.path.join( configuration.value( "tmp_path" ), "boot_aosp.img" ),
             "dest": os.path.join( mount_point, "boot/boot_aosp.img" )
          },
       ]
@@ -198,20 +198,20 @@ def deploy( projects_map: dict, mount_point: str, pause: bool = False ):
 # def deploy
 
 def mkpartition( projects_map: dict ):
-   mmc: pfw.image.Partition = pfw.image.Partition( configuration.LINUX_IMAGE_PARTITION )
+   mmc: pfw.image.Partition = pfw.image.Partition( configuration.value( "linux_image_partition" ) )
    mmc.create( force = True )
    mmc.format( )
    mmc.mount( )
 
    prepare( projects_map )
-   deploy( projects_map, configuration.LINUX_IMAGE_PARTITION.mount_point( ), pause = True )
+   deploy( projects_map, configuration.value( "linux_image_partition" ).mount_point( ), pause = True )
 
    mmc.info( )
    mmc.umount( )
 # def mkpartition
 
 def mkdrive( projects_map: dict ):
-   boot_image = configuration.LINUX_IMAGE_PARTITION.file( )
+   boot_image = configuration.value( "linux_image_partition" ).file( )
 
    super_image = projects_map["aosp"].dirs( ).product( "super.img" )
    if "arm64" == projects_map["aosp"].config( ).arch( ):
@@ -238,7 +238,7 @@ def mkdrive( projects_map: dict ):
       # pfw.image.Drive.Partition( clone_from = vbmeta_system_image, label = "vbmeta_system_a" ),
    ]
 
-   mmc: pfw.image.Drive = pfw.image.Drive( configuration.LINUX_IMAGE_DRIVE.file( ) )
+   mmc: pfw.image.Drive = pfw.image.Drive( configuration.value( "linux_image_drive" ).file( ) )
    mmc.create( partitions = partitions, force = True )
    mmc.attach( )
    mmc.init( partitions, bootable = boot_part_num )
@@ -265,7 +265,7 @@ def start( projects_map: dict, **kwargs ):
    if True == kw_bios:
       run_arm64(
             bios = projects_map["uboot"].dirs( ).product( "u-boot.bin" ),
-            drive = configuration.LINUX_IMAGE_DRIVE.file( ),
+            drive = configuration.value( "linux_image_drive" ).file( ),
             gdb = kw_gdb
          )
    else:
@@ -273,8 +273,8 @@ def start( projects_map: dict, **kwargs ):
             kernel = projects_map["kernel"].dirs( ).deploy( "Image" ),
             initrd = projects_map["buildroot"].dirs( ).deploy( "rootfs.cpio" ),
             append = "loglevel=7 debug printk.devkmsg=on drm.debug=0x0 console=ttyAMA0",
-            dtb = configuration.DTB_PATH,
-            drive = configuration.LINUX_IMAGE_DRIVE.file( ),
+            dtb = configuration.value( "dtb_path" ),
+            drive = configuration.value( "linux_image_drive" ).file( ),
             gdb = kw_gdb
          )
 # def start
@@ -482,7 +482,7 @@ def start_trout( projects_map: dict, **kwargs ):
 
    command = build_emulator_parameters_trout(
          projects_map, 
-         drive = configuration.LINUX_IMAGE_DRIVE.file( ),
+         drive = configuration.value( "linux_image_drive" ).file( ),
          debug = True
       )
 
