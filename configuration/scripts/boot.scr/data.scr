@@ -2,9 +2,11 @@ setenv initrd_high                  0x66000000
 
 setenv boot_device                  ${devtype} ${devnum}:${distro_bootpart}
 
-setenv xen_location                 /boot/xen-4.16.2.uimg
-setenv kernel_location              /boot/kernel-5.19.uimg
-setenv ramdisk_location             /boot/rootfs-2022.05.2.cpio.uimg
+setenv xen_location                 /boot/xen-4.16.2
+setenv kernel_location              /boot/kernel-5.19
+setenv buildroot_location           /boot/rootfs-2022.05.2.cpio
+setenv busybox_location             /boot/initramfs-1.35.0.cpio
+setenv ramdisk_location             ${buildroot_location}
 setenv fdt_location                 /boot/dtb.dtb
 setenv abi_location                 /boot/boot_aosp.img
 
@@ -24,9 +26,14 @@ setenv abi_address                  0x42000000
 
 
 setenv bootargs_debug               "earlyprintk=serial,ttyAMA0 loglevel=7 debug printk.devkmsg=on drm.debug=0x0 nokaslr"
-setenv bootargs_console             "console=ttyAMA0"
+setenv bootargs_console             "console=ttyAMA0,115200n8"
 setenv bootargs_root                "root=/dev/${devtype}blk${devnum}p${distro_bootpart} rw"
 setenv bootargs_root                "root=/dev/ram rw"
-setenv bootargs_kernel              ${bootargs} ${bootargs_debug} ${bootargs_console}
-setenv bootargs_xen                 "earlyprintk=serial,ttyAMA0 console=ttyAMA0,115200n8 earlycon=xenboot loglvl=all guest_loglvl=all"
-setenv bootargs                     ${bootargs_kernel}
+setenv bootargs_rdinit              "rdinit=/sbin/init"
+setenv bootargs_kernel              ${bootargs_debug} ${bootargs_console}
+
+setenv bootargs_xen                 "dom0_mem=256M loglvl=info"
+setenv bootargs_dom0_buildroot      "earlyprintk=serial,ttyAMA0 console=hvc0 earlycon=xenboot clk_ignore_unused rw root=/dev/ram0"
+setenv bootargs_dom0_busybox        "earlyprintk=serial,ttyAMA0 console=hvc0 earlycon=xenboot clk_ignore_unused rw root=/dev/ram0 rdinit=/bin/sh"
+setenv bootargs_dom0                ${bootargs_dom0_buildroot}
+setenv bootargs_domu                "rw root=/dev/ram0 rdinit=/sbin/init console=ttyAMA0"

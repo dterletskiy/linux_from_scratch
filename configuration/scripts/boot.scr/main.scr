@@ -63,6 +63,8 @@ elif itest ${mode_kernel} == ${mode}; then
    setenv _device_ ${boot_device}
    run command_load_names
 
+   setenv bootargs ${bootargs_kernel}
+
    run command_boot_kernel
 elif itest ${mode_xen} == ${mode}; then
    echo "@TDA: Using 'xen' mode"
@@ -71,7 +73,59 @@ elif itest ${mode_xen} == ${mode}; then
    setenv _device_ ${boot_device}
    run command_load_names
 
-   run command_boot_xen
+
+
+
+   fdt addr ${fdt_address}
+
+   fdt resize
+   fdt mknod / chosen
+   fdt set /chosen \#address-cells <1>
+   fdt set /chosen \#size-cells <1>
+   # fdt set /chosen bootargs ${bootargs_xen}
+   # fdt set /chosen xen,dom0-bootargs "${bootargs_dom0}"
+
+   fdt resize
+   fdt mknod /chosen module@0
+   fdt set /chosen/module@0 compatible "xen,linux-zimage" "xen,multiboot-module"
+   fdt set /chosen/module@0 reg <${kernel_address} ${kernel_size}>
+   fdt set /chosen/module@0 bootargs "${bootargs_dom0}"
+
+   fdt resize
+   fdt mknod /chosen module@1
+   fdt set /chosen/module@1 compatible "xen,linux-initrd" "xen,multiboot-module"
+   fdt set /chosen/module@1 reg <${ramdisk_address} ${ramdisk_size}>
+
+
+
+   fdt resize
+   fdt mknod /chosen domU1
+   fdt set /chosen/domU1 compatible "xen,domain"
+   fdt set /chosen/domU1 \#address-cells <1>
+   fdt set /chosen/domU1 \#size-cells <1>
+   fdt set /chosen/domU1 \cpus <1>
+   fdt set /chosen/domU1 \memory <0 548576>
+   fdt set /chosen/domU1 vpl011
+
+   fdt resize
+   fdt mknod /chosen/domU1 module@0
+   fdt set /chosen/domU1/module@0 compatible "multiboot,kernel" "multiboot,module"
+   fdt set /chosen/domU1/module@0 reg <${kernel_address} ${kernel_size}>
+   fdt set /chosen/domU1/module@0 bootargs "${bootargs_domu}"
+
+   fdt resize
+   fdt mknod /chosen/domU1 module@1
+   fdt set /chosen/domU1/module@1 compatible "multiboot,ramdisk" "multiboot,module"
+   fdt set /chosen/domU1/module@1 reg <${ramdisk_address} ${ramdisk_size}>
+
+
+
+
+   # setenv bootargs "${bootargs_xen}"
+
+   booti ${xen_address} - ${fdt_address}
+
+   # run command_boot_xen
 elif itest ${mode_abi} == ${mode}; then
    echo "@TDA: Using 'ABI' mode"
 
@@ -79,49 +133,14 @@ elif itest ${mode_abi} == ${mode}; then
    setenv _device_ ${boot_device}
    run command_load_names
 
+   setenv bootargs "${bootargs_kernel}"
+
    run command_boot_abi
 elif itest ${mode_poweroff} == ${mode}; then
    poweroff
 else
    echo "@TDA: undefined mode"
 fi
-
-
-
-
-
-
-
-
-setenv _names_ xen kernel ramdisk fdt
-setenv _device_ ${boot_device}
-run command_load_names
-
-
-
-fdt addr ${fdt_address}
-fdt resize
-
-fdt mknod / chosen
-fdt set /chosen \#address-cells <2>
-fdt set /chosen \#size-cells <1>
-fdt set /chosen bootargs ${bootargs_xen}
-
-fdt mknod /chosen module@0
-fdt set /chosen/module@0 compatible "xen,linux-zimage" "xen,multiboot-module"
-fdt set /chosen/module@0 reg <${kernel_address} ${kernel_size}>
-fdt set /chosen/module@0 bootargs "earlyprintk=serial,ttyAMA0 console=ttyAMA0,115200n8 earlycon=xenboot"
-
-fdt mknod /chosen module@1
-fdt set /chosen/module@1 compatible "xen,linux-initrd" "xen,multiboot-module"
-fdt set /chosen/module@1 reg <${ramdisk_address} ${ramdisk_size}>
-
-booti ${xen_address} - ${fdt_address}
-
-
-
-
-
 
 
 

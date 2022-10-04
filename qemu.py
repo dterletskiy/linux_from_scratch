@@ -84,15 +84,18 @@ def run( parameters, **kwargs ):
 def build_parameters( **kwargs ):
    kw_arch = kwargs.get( "arch", "arm64" )
    kw_nographic = kwargs.get( "nographic", False )
+   kw_nodefaults = kwargs.get( "nodefaults", False )
 
    parameters = f""
    parameters += f" -serial mon:stdio"
-   parameters += f" -nodefaults"
    parameters += f" -no-reboot"
    parameters += f" -d guest_errors"
 
    # parameters += f" -chardev socket,id=qemu-monitor,host=localhost,port=7777,server=on,wait=off,telnet=on"
    # parameters += f" -mon qemu-monitor,mode=readline"
+
+   if True == kw_nodefaults:
+      parameters += f" -nodefaults"
 
    if True == kw_nographic:
       parameters += f" -nographic"
