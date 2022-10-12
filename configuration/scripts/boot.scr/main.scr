@@ -149,6 +149,15 @@ fi
 #                            Finishing script                            #
 #                                                                        #
 ##########################################################################
+# echo "@TDA: Choose mode to boot:"
+# bootmenu_delay=5
+# setenv bootmenu_0 Continue=echo "@TDA: finishing script"
+# setenv bootmenu_1 Execute script ones more=source
+# setenv bootmenu_2 Poweroff=poweroff
+# bootmenu
+
+
+
 echo "@TDA: script commands finished. What is next?"
 echo "   0. Continue"
 echo "   1. Execute script ones more"

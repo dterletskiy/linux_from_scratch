@@ -75,18 +75,18 @@ import aosp.aosp
 
 
 def extend_configuration( ):
-   configuration.config.set_value( "linux_image_partition",
+   configuration.config.set_value( "boot_partition_image",
       pfw.image.Description(
-           os.path.join( configuration.config.get_value( "tmp_path" ), "partition.img" )
-         , os.path.join( configuration.config.get_value( "tmp_path" ), "partition" )
+           os.path.join( configuration.config.get_value( "tmp_path" ), "boot.img" )
+         , os.path.join( configuration.config.get_value( "tmp_path" ), "boot" )
          , pfw.size.Size( 512, pfw.size.Size.eGran.M )
          , "ext2"
       )
    )
-   configuration.config.set_value( "linux_image_drive",
+   configuration.config.set_value( "main_drive_image",
       pfw.image.Description(
-           os.path.join( configuration.config.get_value( "tmp_path" ), "drive.img" )
-         , os.path.join( configuration.config.get_value( "tmp_path" ), "drive" )
+           os.path.join( configuration.config.get_value( "tmp_path" ), "main.img" )
+         , os.path.join( configuration.config.get_value( "tmp_path" ), "main" )
          , pfw.size.Size( 512, pfw.size.Size.eGran.M )
          , "ext2"
       )
@@ -175,11 +175,10 @@ def main( ):
       if "gdb" == action_name:
          tools.debug( projects_map, project_name = "uboot" )
       elif "start" == action_name:
-         tools.start_trout(
-         # tools.start(
+         tools.start(
                projects_map,
-               bios = True,
-               # gdb = True
+               bios = "aosp",
+               gdb = False
             )
       elif "mkimage" == action_name:
          tools.mkpartition( projects_map )

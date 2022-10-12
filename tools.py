@@ -13,37 +13,6 @@ import qemu
 
 
 
-def build_uboot_script( ):
-   script_in_file = configuration.value( "uboot_script_source" )
-   script_out_file = configuration.value( "uboot_script" )
-
-   script_in_dir = os.path.dirname( script_in_file )
-
-   script_in_file_names = os.listdir( script_in_dir )
-   script_in_files = [ os.path.join( script_in_dir, script_in_file_name ) for script_in_file_name in script_in_file_names ]
-
-   script_in_file_h = open( script_in_file, "r" )
-   pattern: str = r"^\s*import\s*\"(.*)\"\s*$"
-   script_out_file_lines: str = ""
-   for script_in_file_line in script_in_file_h:
-      match = re.match( pattern, script_in_file_line )
-      if match:
-         import_file_name = match.group( 1 )
-         import_file = os.path.join( script_in_dir, import_file_name )
-         import_file_h = open( import_file, "r" )
-         for import_file_line in import_file_h:
-            script_out_file_lines += import_file_line
-         import_file_h.close( )
-         script_out_file_lines += "\n\n\n"
-      else:
-         script_out_file_lines += script_in_file_line
-   script_in_file_h.close( )
-
-   script_out_file_h = open( script_out_file, "w+" )
-   script_out_file_h.write( script_out_file_lines )
-   script_out_file_h.close( )
-# def build_uboot_script
-
 def mkimage( projects_map: dict ):
    mkimage_tool = projects_map["uboot"].mkimage
 
@@ -115,7 +84,7 @@ def mkbootimg( projects_map: dict ):
 # def mkbootimg
 
 def prepare( projects_map: dict ):
-   build_uboot_script( )
+   projects_map["uboot"].build_uboot_script( configuration.value( "uboot_script_source" ), configuration.value( "uboot_script" ) )
 
    mkimage( projects_map )
 
@@ -201,20 +170,20 @@ def deploy( projects_map: dict, mount_point: str, pause: bool = False ):
 # def deploy
 
 def mkpartition( projects_map: dict ):
-   mmc: pfw.image.Partition = pfw.image.Partition( configuration.value( "linux_image_partition" ) )
+   mmc: pfw.image.Partition = pfw.image.Partition( configuration.value( "boot_partition_image" ) )
    mmc.create( force = True )
    mmc.format( )
    mmc.mount( )
 
    prepare( projects_map )
-   deploy( projects_map, configuration.value( "linux_image_partition" ).mount_point( ), pause = True )
+   deploy( projects_map, configuration.value( "boot_partition_image" ).mount_point( ), pause = True )
 
    mmc.info( )
    mmc.umount( )
 # def mkpartition
 
 def mkdrive( projects_map: dict ):
-   boot_image = configuration.value( "linux_image_partition" ).file( )
+   boot_image = configuration.value( "boot_partition_image" ).file( )
 
    super_image = projects_map["aosp"].dirs( ).product( "super.img" )
    if "arm64" == projects_map["aosp"].config( ).arch( ):
@@ -244,46 +213,13 @@ def mkdrive( projects_map: dict ):
       pfw.image.Drive.Partition( clone_from = vbmeta_system_image, label = "vbmeta_system_a" ),
    ]
 
-   mmc: pfw.image.Drive = pfw.image.Drive( configuration.value( "linux_image_drive" ).file( ) )
+   mmc: pfw.image.Drive = pfw.image.Drive( configuration.value( "main_drive_image" ).file( ) )
    mmc.create( partitions = partitions, force = True )
    mmc.attach( )
    mmc.init( partitions, bootable = boot_part_num )
    mmc.info( )
    mmc.detach( )
 # def mkdrive
-
-def run_arm64( **kwargs ):
-   kw_drive = kwargs.get( "drive", None )
-
-   command: str = qemu.build_parameters( arch = "arm64" )
-   command += f" -drive if=none,index=0,id=main,file={kw_drive}"
-   command += f" -device virtio-blk-pci,modern-pio-notify,drive=main"
-
-   qemu.run( command, arch = "arm64", **kwargs )
-# run_arm64
-
-
-
-def start( projects_map: dict, **kwargs ):
-   kw_bios = kwargs.get( "bios", True )
-   kw_gdb = kwargs.get( "gdb", False )
-
-   if True == kw_bios:
-      run_arm64(
-            bios = projects_map["uboot"].dirs( ).product( "u-boot.bin" ),
-            drive = configuration.value( "linux_image_drive" ).file( ),
-            gdb = kw_gdb
-         )
-   else:
-      run_arm64(
-            kernel = projects_map["kernel"].dirs( ).deploy( "Image" ),
-            initrd = projects_map["buildroot"].dirs( ).deploy( "rootfs.cpio" ),
-            append = "loglevel=7 debug printk.devkmsg=on drm.debug=0x0 console=ttyAMA0",
-            dtb = configuration.value( "dtb_path" ),
-            drive = configuration.value( "linux_image_drive" ).file( ),
-            gdb = kw_gdb
-         )
-# def start
 
 def debug( projects_map: dict, **kwargs ):
    kw_project_name = kwargs.get( "project_name", "uboot" )
@@ -450,58 +386,39 @@ def build_emulator_parameters_trout( projects_map, **kwargs ):
    return command
 # def build_emulator_parameters_trout
 
-def build_bootconfig_trout( **kwargs ):
-   kw_vbmeta_digest = "61344eefe85d31337ffda864c567f529fc18ec1bafa240bb1f46bd561f39a053"
-
-   cmdline = f""
-   cmdline += f" androidboot.qemu=1"
-   cmdline += f" androidboot.selinux=permissive"
-   cmdline += f" androidboot.fstab_suffix=trout"
-   cmdline += f" androidboot.hardware=cutf_cvm"
-   cmdline += f" androidboot.slot_suffix=_a"
-   cmdline += f" androidboot.vbmeta.size=5568"
-   cmdline += f" androidboot.vbmeta.hash_alg=sha256"
-   cmdline += f" androidboot.vbmeta.digest={kw_vbmeta_digest}"
-   cmdline += f" androidboot.hardware.gralloc=minigbm"
-   cmdline += f" androidboot.hardware.hwcomposer=drm_minigbm"
-   cmdline += f" androidboot.hardware.egl=mesa"
-   cmdline += f" androidboot.logcat=*:V"
-   cmdline += f" androidboot.vendor.vehiclehal.server.cid=2"
-   cmdline += f" androidboot.vendor.vehiclehal.server.port=9300"
-   cmdline += f" androidboot.vendor.vehiclehal.server.psf=/data/data/power.file"
-   cmdline += f" androidboot.vendor.vehiclehal.server.pss=/data/data/power.socket"
-   # cmdline += f" androidboot.first_stage_console=1"
-   # cmdline += f" androidboot.force_normal_boot=1"
-
-   if "x86" == kw_arch:
-      cmdline += f" androidboot.boot_devices=pci0000:00/0000:00:02.0"
-   elif "arm64" == kw_arch:
-      cmdline += f" androidboot.boot_devices=4010000000.pcie"
-
-   pfw.console.debug.trace( "cmdline = '%s'" % (cmdline) )
-   return cmdline
-# def build_cmdline_trout
-
-def start_trout( projects_map: dict, **kwargs ):
-   kw_bios = kwargs.get( "bios", True )
+def start( projects_map: dict, **kwargs ):
+   kw_mode = kwargs.get( "mode", "aosp" )
    kw_gdb = kwargs.get( "gdb", False )
+   kw_drive = kwargs.get( "drive", configuration.value( "main_drive_image" ).file( ) )
 
-   command = build_emulator_parameters_trout(
-         projects_map, 
-         drive = configuration.value( "linux_image_drive" ).file( ),
-         debug = True
-      )
+   command: str = ""
+   if "aosp" == kw_mode:
+      command = build_emulator_parameters_trout( projects_map,  drive = kw_drive, debug = True )
+   elif "u-boot" == kw_mode or "kernel" == kw_mode:
+      command = qemu.build_parameters( arch = "arm64" )
+      command += f" -drive if=none,index=0,id=main,file={kw_drive}"
+      command += f" -device virtio-blk-pci,modern-pio-notify,drive=main"
+   else:
+      pass
 
-   qemu.run(
-         command,
-         arch = "arm64",
-         bios = projects_map["uboot"].dirs( ).product( "u-boot.bin" ),
-         # kernel = projects_map["aosp"].dirs( ).product( "kernel" ),
-         # initrd = projects_map["aosp"].dirs( ).experimental( "ramdisk.img" ),
-         # append = build_cmdline_trout( projects_map ),
-         gdb = kw_gdb,
-      )
-# def start_trout
+   kw_args: dict = { }
+   kw_args["arch"] = "arm64"
+   kw_args["gdb"] = kw_gdb
+   if "aosp" == kw_mode:
+      kw_args["bios"] = projects_map["uboot"].dirs( ).product( "u-boot.bin" )
+   elif "u-boot" == kw_mode:
+      kw_args["bios"] = projects_map["uboot"].dirs( ).product( "u-boot.bin" )
+   elif "kernel" == kw_mode:
+      kw_args["kernel"] = projects_map["kernel"].dirs( ).deploy( "Image" )
+      kw_args["initrd"] = projects_map["buildroot"].dirs( ).deploy( "rootfs.cpio" )
+      kw_args["append"] = "loglevel=7 debug printk.devkmsg=on drm.debug=0x0 console=ttyAMA0"
+      kw_args["dtb"] = configuration.value( "dtb_path" )
+   else:
+      pass
+
+   qemu.run( command, **kw_args )
+# def start
+
 
 
 

@@ -306,6 +306,39 @@ class UBoot:
       return True
    # def mkimage
 
+   # Function for building u-boot script from different u-boot scripts.
+   # This smaller u-boot scripts are used for decomposition and more convenient usage.
+   # There must be defined "main" u-boot script (mentioned in first parameter what uses "import" directive
+   # inside what will be directly substituted during its processing by this function.
+   # As a result complete u-boot script will be build and stored to the path mentioned in second parameter.
+   def build_uboot_script( self, script_in_file: str, script_out_file: str ):
+      script_in_dir = os.path.dirname( script_in_file )
+
+      script_in_file_names = os.listdir( script_in_dir )
+      script_in_files = [ os.path.join( script_in_dir, script_in_file_name ) for script_in_file_name in script_in_file_names ]
+
+      script_in_file_h = open( script_in_file, "r" )
+      pattern: str = r"^\s*import\s*\"(.*)\"\s*$"
+      script_out_file_lines: str = ""
+      for script_in_file_line in script_in_file_h:
+         match = re.match( pattern, script_in_file_line )
+         if match:
+            import_file_name = match.group( 1 )
+            import_file = os.path.join( script_in_dir, import_file_name )
+            import_file_h = open( import_file, "r" )
+            for import_file_line in import_file_h:
+               script_out_file_lines += import_file_line
+            import_file_h.close( )
+            script_out_file_lines += "\n\n\n"
+         else:
+            script_out_file_lines += script_in_file_line
+      script_in_file_h.close( )
+
+      script_out_file_h = open( script_out_file, "w+" )
+      script_out_file_h.write( script_out_file_lines )
+      script_out_file_h.close( )
+   # def build_uboot_script
+
 
 
    def dirs( self ):
