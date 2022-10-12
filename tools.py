@@ -116,7 +116,9 @@ def mkbootimg( projects_map: dict ):
 
 def prepare( projects_map: dict ):
    build_uboot_script( )
+
    mkimage( projects_map )
+
    bootconfig_file: str = None
    if "x86" == projects_map["aosp"].config( ).arch( ) or "x86_64" == projects_map["aosp"].config( ).arch( ):
       bootconfig_file = configuration.value( "android_bootconfig_x86" )
@@ -125,6 +127,7 @@ def prepare( projects_map: dict ):
    projects_map["aosp"].build_ramdisk(
          bootconfig = { "tool": projects_map["kernel"].bootconfig, "config": bootconfig_file }
       )
+
    mkbootimg( projects_map )
 # def prepare
 
@@ -229,13 +232,16 @@ def mkdrive( projects_map: dict ):
    boot_part_num = 1
    partitions = [
       pfw.image.Drive.Partition( clone_from = boot_image, label = "boot" ),
-      # pfw.image.Drive.Partition( clone_from = super_image, label = "super" ),
-      # pfw.image.Drive.Partition( clone_from = userdata_image, label = "userdata" ),
-      # pfw.image.Drive.Partition( size = pfw.size.SizeGigabyte, label = "cache", fs = "ext4" ),
-      # pfw.image.Drive.Partition( size = pfw.size.SizeGigabyte, label = "metadata", fs = "ext4" ),
-      # pfw.image.Drive.Partition( size = pfw.size.SizeGigabyte, label = "misc", fs = "ext4" ),
-      # pfw.image.Drive.Partition( clone_from = vbmeta_image, label = "vbmeta_a" ),
-      # pfw.image.Drive.Partition( clone_from = vbmeta_system_image, label = "vbmeta_system_a" ),
+
+      pfw.image.Drive.Partition( clone_from = super_image, label = "super" ),
+
+      pfw.image.Drive.Partition( clone_from = userdata_image, label = "userdata" ),
+      pfw.image.Drive.Partition( size = pfw.size.SizeGigabyte, label = "cache", fs = "ext4" ),
+      pfw.image.Drive.Partition( size = pfw.size.SizeGigabyte, label = "metadata", fs = "ext4" ),
+      pfw.image.Drive.Partition( size = pfw.size.SizeGigabyte, label = "misc", fs = "ext4" ),
+
+      pfw.image.Drive.Partition( clone_from = vbmeta_image, label = "vbmeta_a" ),
+      pfw.image.Drive.Partition( clone_from = vbmeta_system_image, label = "vbmeta_system_a" ),
    ]
 
    mmc: pfw.image.Drive = pfw.image.Drive( configuration.value( "linux_image_drive" ).file( ) )

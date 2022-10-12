@@ -4,7 +4,7 @@
 
 # Examples:
 # 
-# CONFIG=./configuration.cfg 
+# CONFIG=./configuration.cfg
 # PROJECT=u-boot
 # ARCH=arm64
 # PFW=/mnt/dev/TDA/python_fw
@@ -145,24 +145,36 @@ def init_actions( ):
    return actions_map
 # def init_actions
 
-def main( app_data: configuration.ConfigurationContainer ):
+def main( ):
    projects_map = generator.pdl.parser.parse( configuration.value( "pdl" ) )
    actions_map = init_actions( )
 
-   projects: list = [ ]
-   for project in app_data.get_values( "project" ):
-      if "all" == project:
-         projects = projects_map.values( )
-         break
-      projects.append( projects_map[ project ] )
 
-   actions: list = [ ]
-   for action in app_data.get_values( "action" ):
-      # Processing extended actions
-      if "gdb" == action:
+
+   actions: list = None
+   action_name = configuration.value( "action" )
+   if None == action_name:
+      pfw.console.debug.error( "undefined --action parameter" )
+      sys.exit( 253 )
+
+   project = None
+   project_name: str = configuration.value( "project" )
+   if None != project_name:
+      project = projects_map[ project_name ]
+
+   targets: list = configuration.values( "target" )
+
+
+
+   if None != project:
+      actions = actions_map[ action_name ]
+      kw: dict = { }
+      project.action( actions = actions, targets = targets, **kw )
+
+   else:
+      if "gdb" == action_name:
          tools.debug( projects_map, project_name = "uboot" )
-         sys.exit( )
-      elif "start" == action:
+      elif "start" == action_name:
          # tools.start_trout(
          tools.start(
                projects_map,
@@ -171,38 +183,17 @@ def main( app_data: configuration.ConfigurationContainer ):
             )
 
          # projects_map["aosp"].run( debug = True )
-
-         sys.exit( )
-      elif "mkimage" == action:
+      elif "mkimage" == action_name:
          tools.mkpartition( projects_map )
          tools.mkdrive( projects_map )
 
          # projects_map["aosp"].build_ramdisk( )
          # projects_map["aosp"].build_main_image( )
 
-         sys.exit( )
-      else:
-         # Collecting standart actions
-         actions.extend( actions_map[ action ] )
-
-   targets: list = app_data.get_values( "target" )
 
 
 
-   for project in projects:
-      kw: dict = { }
-      if type( project ) == type( projects_map["kernel"] ):
-         kw["configs"] = {
-               # "CONFIG_CMDLINE": "\"console=ttyAMA0\"",
-               # "CONFIG_INITRAMFS_SOURCE": "\"" + projects["buildroot"].dirs( ).product( "rootfs.cpio" ) + "\"",
-            }
-      elif type( project ) == type( projects_map["buildroot"] ) or type( project ) == type( projects_map["busybox"] ):
-         if "arm" == project.config( ).arch( ) or "arm32" == project.config( ).arch( ):
-            kernel_file = "zImage"
-         elif "arm64" == project.config( ).arch( ) or "aarch64" == project.config( ).arch( ):
-            kernel_file = "Image"
-         kw["kernel"] = os.path.join( projects_map["kernel"].dirs( ).product( ), kernel_file )
-      project.action( actions = actions, targets = targets, **kw )
+
 
 
 # def main
@@ -210,6 +201,6 @@ def main( app_data: configuration.ConfigurationContainer ):
 
 
 if __name__ == "__main__":
-   main( configuration.config )
+   main( )
 
    pfw.console.debug.error( "----- END -----" )

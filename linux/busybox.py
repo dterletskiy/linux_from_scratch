@@ -251,6 +251,8 @@ class BusyBox:
    # def post_build
 
    def run( self, **kwargs ):
+      kw_kernel = kwargs.get( "kernel", None )
+
       command: str = ""
 
       if "arm" == self.__config.arch( ):
@@ -270,9 +272,9 @@ class BusyBox:
       qemu.run(
             command,
             arch = self.__config.arch( ),
+            kernel = kw_kernel,
             initrd = self.__directories.deploy( "initramfs.cpio" ),
-            append = "root=/dev/ram rw rdinit=/sbin/init console=ttyAMA0",
-            **kwargs
+            append = "root=/dev/ram rw rdinit=/sbin/init console=ttyAMA0"
          )
    # def run
 

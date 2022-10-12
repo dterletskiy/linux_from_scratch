@@ -254,6 +254,8 @@ class Kernel:
    # def deploy
 
    def run( self, **kwargs ):
+      kw_initrd = kwargs.get( "initrd", None )
+
       command: str = ""
 
       if "arm" == self.__config.arch( ):
@@ -278,6 +280,7 @@ class Kernel:
             command,
             arch = self.__config.arch( ),
             kernel = kernel,
+            initrd = kw_initrd,
             append = "root=/dev/ram rw console=ttyAMA0",
             **kwargs
          )

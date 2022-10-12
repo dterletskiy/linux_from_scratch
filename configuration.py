@@ -262,7 +262,7 @@ def process_cmdline( app_data, argv ):
    parser.add_argument( "--arch", dest = "arch", type = str, action = "store", required = False, help = app_data.get_description( "arch" ) )
    parser.add_argument( "--action", dest = "action", type = str, action = "store", required = False, help = app_data.get_description( "action" ) )
    parser.add_argument( "--project", dest = "project", type = str, action = "store", required = False, help = app_data.get_description( "project" ) )
-   parser.add_argument( "--target", dest = "target", type = str, action = "store", required = False, help = app_data.get_description( "target" ) )
+   parser.add_argument( "--target", dest = "target", type = str, action = "append", required = False, help = app_data.get_description( "target" ) )
 
    parser.add_argument( "--antlr_jar", dest = "antlr_jar", type = str, action = "store", help = app_data.get_description( "antlr_jar" ) )
    parser.add_argument( "--antlr_outdir", dest = "antlr_outdir", type = str, action = "store", help = app_data.get_description( "antlr_outdir" ) )

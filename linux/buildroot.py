@@ -161,6 +161,19 @@ class BuildRoot:
       pfw.shell.run_and_wait_with_status( command, targets, output = pfw.shell.eOutput.PTY )
    # def clean
 
+   # https://stackoverflow.com/questions/47320800/how-to-clean-only-target-in-buildroot
+   # https://buildroot.uclibc.narkive.com/Kaw8KG7t/force-to-regenerate-the-output-target-directory-tree#post3
+   def soft_clean( self, **kwargs ):
+      command = f"rm -rf {self.__directories.build( 'target' )}"
+      pfw.shell.run_and_wait_with_status( command, targets, output = pfw.shell.eOutput.PTY )
+
+      command = f"find {self.__directories.build( )} -name '.stamp_target_installed' -delete"
+      pfw.shell.run_and_wait_with_status( command, targets, output = pfw.shell.eOutput.PTY )
+
+      command = f"rm -f {self.__directories.build( 'build/host-gcc-final-*/.stamp_host_installed' )}"
+      pfw.shell.run_and_wait_with_status( command, targets, output = pfw.shell.eOutput.PTY )
+   # def soft_clean
+
    def deploy( self, **kwargs ):
       deploy_path = kwargs.get( "deploy_path", None )
       is_create_structure = kwargs.get( "is_create_structure", False )
@@ -200,6 +213,8 @@ class BuildRoot:
    # def deploy
 
    def run( self, **kwargs ):
+      kw_kernel = kwargs.get( "kernel", None )
+
       command: str = ""
 
       if "arm" == self.__config.arch( ):
@@ -219,9 +234,9 @@ class BuildRoot:
       qemu.run(
             command,
             arch = self.__config.arch( ),
+            kernel = kw_kernel,
             initrd = self.__directories.deploy( "rootfs.cpio" ),
-            append = "root=/dev/ram rw console=ttyAMA0",
-            **kwargs
+            append = "root=/dev/ram rw console=ttyAMA0"
          )
    # def run
 
