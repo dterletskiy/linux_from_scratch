@@ -169,7 +169,7 @@ def deploy( projects_map: dict, mount_point: str, pause: bool = False ):
       pfw.console.debug.promt( )
 # def deploy
 
-def mkpartition( projects_map: dict ):
+def mkpartition_boot( projects_map: dict ):
    mmc: pfw.image.Partition = pfw.image.Partition( configuration.value( "boot_partition_image" ) )
    mmc.create( force = True )
    mmc.format( )
@@ -180,9 +180,10 @@ def mkpartition( projects_map: dict ):
 
    mmc.info( )
    mmc.umount( )
-# def mkpartition
+# def mkpartition_boot
 
 def mkdrive( projects_map: dict ):
+   mkpartition_boot( projects_map )
    boot_image = configuration.value( "boot_partition_image" ).file( )
 
    super_image = projects_map["aosp"].dirs( ).product( "super.img" )

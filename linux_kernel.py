@@ -112,8 +112,6 @@ pfw.shell.run_and_wait_with_status( "/bin/echo ${LFS_VERSION}", env = ENVIRONMEN
 
 
 
-# configuration.init( g_config_variables )
-
 ##########################################################################
 #                                                                        #
 #                           End configuration                            #
@@ -175,26 +173,15 @@ def main( ):
       if "gdb" == action_name:
          tools.debug( projects_map, project_name = "uboot" )
       elif "start" == action_name:
-         tools.start(
-               projects_map,
-               bios = "aosp",
-               gdb = False
-            )
+         tools.start( projects_map, bios = "aosp", gdb = False )
       elif "mkimage" == action_name:
-         tools.mkpartition( projects_map )
          tools.mkdrive( projects_map )
-
-
-
-
-
-
 
 # def main
 
 
 
 if __name__ == "__main__":
+   pfw.console.debug.header( "------------------------- BEGIN -------------------------" )
    main( )
-
-   pfw.console.debug.error( "----- END -----" )
+   pfw.console.debug.header( "-------------------------- END --------------------------" )
