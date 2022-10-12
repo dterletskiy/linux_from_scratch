@@ -175,20 +175,15 @@ def main( ):
       if "gdb" == action_name:
          tools.debug( projects_map, project_name = "uboot" )
       elif "start" == action_name:
-         # tools.start_trout(
-         tools.start(
+         tools.start_trout(
+         # tools.start(
                projects_map,
                bios = True,
                # gdb = True
             )
-
-         # projects_map["aosp"].run( debug = True )
       elif "mkimage" == action_name:
          tools.mkpartition( projects_map )
          tools.mkdrive( projects_map )
-
-         # projects_map["aosp"].build_ramdisk( )
-         # projects_map["aosp"].build_main_image( )
 
 
 
