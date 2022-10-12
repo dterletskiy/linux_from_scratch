@@ -234,36 +234,6 @@ class AOSP:
       return True
    # def simg_to_img
 
-   def build_ramdisk( self, **kwargs ):
-      kw_bootconfig = kwargs.get( "bootconfig", None )
-
-      EXPERIMENTAL_RAMDISK_DIR = self.__directories.experimental( "ramdisk" )
-      EXPERIMENTAL_RAMDISK_IMAGE = self.__directories.experimental( "ramdisk.img" )
-      # EXPERIMENTAL_RAMDISK = self.__directories.experimental( "ramdisk" )
-
-      ANDROID_PRODUCT_RAMDISK_DIR = self.__directories.product( "ramdisk" )
-      ANDROID_RAMDISK_IMAGE = self.__directories.product( "ramdisk.img" )
-
-      ANDROID_PRODUCT_VENDOR_RAMDISK_DIR = self.__directories.product( "vendor_ramdisk" )
-      ANDROID_VENDOR_RAMDISK_IMAGE = self.__directories.product( "vendor_ramdisk.img" )
-
-      command: str = "" \
-         + f" rm -r {EXPERIMENTAL_RAMDISK_DIR};" \
-         + f" mkdir -p {EXPERIMENTAL_RAMDISK_DIR};" \
-         + f" cd {EXPERIMENTAL_RAMDISK_DIR};" \
-         + f" cp -R {ANDROID_PRODUCT_RAMDISK_DIR}/* {EXPERIMENTAL_RAMDISK_DIR};" \
-         + f" cp -R {ANDROID_PRODUCT_VENDOR_RAMDISK_DIR}/* {EXPERIMENTAL_RAMDISK_DIR};" \
-         + f" find . ! -name . | LC_ALL=C sort | cpio -o -H newc -R root:root | lz4 -l -12 --favor-decSpeed > {EXPERIMENTAL_RAMDISK_IMAGE};" \
-
-      # command += f" cp {EXPERIMENTAL_RAMDISK_IMAGE} {EXPERIMENTAL_RAMDISK};"
-
-      self.__execute( command )
-
-      if None != kw_bootconfig and isinstance( kw_bootconfig, dict ):
-         pfw.console.debug.info( "Addint bootconfig to ramdisk" )
-         kw_bootconfig["tool"]( EXPERIMENTAL_RAMDISK_IMAGE, clear = True, add = kw_bootconfig["config"] )
-   # def build_ramdisk
-
    def extract_android_boot_image( self, **kwargs ):
       kw_boot_img = kwargs.get( "boot_img", self.__directories.product( "boot.img" ) )
       kw_out = kwargs.get( "out", self.__directories.experimental( "boot" ) )
@@ -314,22 +284,38 @@ class AOSP:
       self.__execute( command )
    # def create_android_boot_image
 
-   def build_main_image( self ):
-      partitions = self.__init_main_partitions( )
+   def build_ramdisk( self, **kwargs ):
+      kw_bootconfig = kwargs.get( "bootconfig", None )
 
-      mmc: pfw.image.Drive = pfw.image.Drive( self.__directories.experimental( "main.img" ) )
-      mmc.create( partitions = partitions, align = pfw.size.Size.eGran.G, force = True )
-      mmc.attach( )
+      EXPERIMENTAL_RAMDISK_DIR = self.__directories.experimental( "ramdisk" )
+      EXPERIMENTAL_RAMDISK_IMAGE = self.__directories.experimental( "ramdisk.img" )
+      # EXPERIMENTAL_RAMDISK = self.__directories.experimental( "ramdisk" )
 
-      mmc.init( partitions, bootable = 1 )
-      mmc.info( )
+      ANDROID_PRODUCT_RAMDISK_DIR = self.__directories.product( "ramdisk" )
+      ANDROID_RAMDISK_IMAGE = self.__directories.product( "ramdisk.img" )
 
-      mmc.detach( )
-   # def build_main_image
+      ANDROID_PRODUCT_VENDOR_RAMDISK_DIR = self.__directories.product( "vendor_ramdisk" )
+      ANDROID_VENDOR_RAMDISK_IMAGE = self.__directories.product( "vendor_ramdisk.img" )
+
+      command: str = "" \
+         + f" rm -r {EXPERIMENTAL_RAMDISK_DIR};" \
+         + f" mkdir -p {EXPERIMENTAL_RAMDISK_DIR};" \
+         + f" cd {EXPERIMENTAL_RAMDISK_DIR};" \
+         + f" cp -R {ANDROID_PRODUCT_RAMDISK_DIR}/* {EXPERIMENTAL_RAMDISK_DIR};" \
+         + f" cp -R {ANDROID_PRODUCT_VENDOR_RAMDISK_DIR}/* {EXPERIMENTAL_RAMDISK_DIR};" \
+         + f" find . ! -name . | LC_ALL=C sort | cpio -o -H newc -R root:root | lz4 -l -12 --favor-decSpeed > {EXPERIMENTAL_RAMDISK_IMAGE};" \
+
+      # command += f" cp {EXPERIMENTAL_RAMDISK_IMAGE} {EXPERIMENTAL_RAMDISK};"
+
+      self.__execute( command )
+
+      if None != kw_bootconfig and isinstance( kw_bootconfig, dict ):
+         pfw.console.debug.info( "Addint bootconfig to ramdisk" )
+         kw_bootconfig["tool"]( EXPERIMENTAL_RAMDISK_IMAGE, clear = True, add = kw_bootconfig["config"] )
+   # def build_ramdisk
 
    def run( self, **kwargs ):
-      if "trout" == self.__config.device( ):
-         self.__run_emulator_trout( **kwargs )
+      pass
    # def run
 
    def action( self, actions: list, **kwargs ):
@@ -357,161 +343,6 @@ class AOSP:
          else:
             pfw.console.debug.warning( "unsuported action: ", _action )
    # def action
-
-   def __init_main_partitions( self ):
-      super_image = self.__directories.product( "super.img" )
-      if "arm64" == self.__config.arch( ):
-         self.simg_to_img( self.__directories.product( "super.img" ), self.__directories.experimental( "super.raw" ) )
-         super_image = self.__directories.experimental( "super.raw" )
-
-      userdata_image = self.__directories.product( "userdata.img" )
-      if "arm64" == self.__config.arch( ):
-         self.simg_to_img( self.__directories.product( "userdata.img" ), self.__directories.experimental( "userdata.raw" ) )
-         userdata_image = self.__directories.experimental( "userdata.raw" )
-
-      boot_image = self.__directories.product( "boot.img" )
-      vendor_boot_image = self.__directories.product( "vendor_boot.img" )
-
-      vbmeta_image = self.__directories.product( "vbmeta.img" )
-      vbmeta_system_image = self.__directories.product( "vbmeta_system.img" )
-
-      partitions = [
-            pfw.image.Drive.Partition( clone_from = super_image, label = "super" ),
-            pfw.image.Drive.Partition( clone_from = boot_image, label = "boot" ),
-            pfw.image.Drive.Partition( clone_from = vendor_boot_image, label = "vendor_boot" ),
-            pfw.image.Drive.Partition( clone_from = userdata_image, label = "userdata" ),
-
-            pfw.image.Drive.Partition( size = pfw.size.SizeGigabyte, label = "cache", fs = "ext4" ),
-            pfw.image.Drive.Partition( size = pfw.size.SizeGigabyte, label = "metadata", fs = "ext4" ),
-            pfw.image.Drive.Partition( size = pfw.size.SizeGigabyte, label = "misc", fs = "ext4" ),
-
-            pfw.image.Drive.Partition( clone_from = vbmeta_image, label = "vbmeta_a" ),
-            pfw.image.Drive.Partition( clone_from = vbmeta_system_image, label = "vbmeta_system_a" ),
-         ]
-
-      return partitions
-   # def __init_main_partitions
-
-   def __build_bootconfig( self, **kwargs ):
-      kw_bootconfig_file = kwargs.get( "bootconfig", None )
-
-      if None == kw_bootconfig_file:
-         if "x86" == self.__config.arch( ) or "x86_64" == self.__config.arch( ):
-            kw_bootconfig_file = configuration.value( "android_bootconfig_x86" )
-         elif "arm64" == self.__config.arch( ) or "aarch64" == self.__config.arch( ):
-            kw_bootconfig_file = configuration.value( "android_bootconfig_arm64" )
-
-      bootcobfig: str = ""
-      file = open( kw_bootconfig_file, "r" )
-      for line in file:
-         bootcobfig += line + " "
-      file.close( )
-
-      return bootcobfig
-   # def __build_bootconfig
-
-   def __run_emulator_trout( self, **kwargs ):
-      kw_debug = kwargs.get( "debug", False )
-      kw_kernel = kwargs.get( "kernel", self.__directories.product( "kernel" ) )
-      kw_ramdisk = kwargs.get( "ramdisk", self.__directories.experimental( "ramdisk.img" ) )
-      kw_drive = kwargs.get( "drive", self.__directories.experimental( "main.img" ) )
-
-      APPEND = qemu.build_cmdline( arch = self.__config.arch( ), **kwargs )
-      BOOTCONFIG = self.__build_bootconfig( **kwargs )
-      PARAMETERS = qemu.build_parameters( arch = self.__config.arch( ), **kwargs )
-
-      IMAGE_DEVICE_TYPE = f"virtio-blk-pci,modern-pio-notify,iothread=disk-iothread"
-      IMAGE_DEVICES_MAIN = f"" \
-         + f" -drive if=none,index=0,id=main,file={kw_drive}" \
-         + f" -device {IMAGE_DEVICE_TYPE},drive=main"
-
-      NETWORK_NETDEV_USER = f"" \
-         + f" -netdev user,id=eth0_inet,hostfwd=tcp::5550-:5555,ipv6=off" \
-         + f" -device virtio-net-pci,netdev=eth0_inet,id=android"
-
-      NETWORK_NETDEV_BRIDGE = f"" \
-         + f" -netdev bridge,id=eth0_inet,br=virbr0,helper=/mnt/dev/git/qemu/build/qemu-bridge-helper" \
-         + f" -device virtio-net-pci,netdev=eth0_inet,id=android"
-
-      NETWORK_NETDEV_TAP = f"" \
-         + f" -netdev tap,id=eth0_inet,ifname=ethernet_tap,script=no,downscript=no,vhost=on" \
-         + f" -device virtio-net-pci-non-transitional,netdev=eth0_inet,id=android"
-
-      NETWORK_OBJECT_DUMP = f"" \
-         + f" -object filter-dump,id=f1,netdev=eth0_inet,file=/mnt/dev/android/logs/net_dump/eth0_inet_dump_$(date '+%Y-%m-%d_%H:%M:%S').dat" \
-
-      NETWORK_NET_USER = f"" \
-         + f" -net user" \
-         + f" -net nic" \
-
-      NETWORK_NET_BRIDGE = f"" \
-         + f" -net bridge,br=virbr0,helper=/mnt/dev/git/qemu/build/qemu-bridge-helper" \
-         + f" -net nic,model=virtio"
-
-      PCI_KBD_MOUSE = f"" \
-         + " -device virtio-keyboard-pci" \
-         + " -device virtio-mouse-pci"
-
-      USB_BUS = f"" \
-         + " -usb" \
-
-      USB_KBD_MOUSE = f"" \
-         + " -usb" \
-         + " -device usb-kbd" \
-         + " -device usb-mouse" \
-
-      AUDIO_DEVICES = f"" \
-         + " -device intel-hda" \
-         + " -device hda-duplex,audiodev=snd0" \
-         + " -audiodev alsa,id=snd0,out.dev=default" \
-         + " -device virtio-snd-pci,disable-legacy=on,audiodev=snd0"
-
-      CHAR_DEVICES = f"" \
-         + " -device virtio-serial-pci,ioeventfd=off" \
-         + " -chardev null,id=forhvc0" \
-         + " -device virtconsole,chardev=forhvc0" \
-         + " -chardev null,id=forhvc1" \
-         + " -device virtconsole,chardev=forhvc1"
-
-      OTHER_DEVICES = f"" \
-         + " -device virtio-gpu-gl-pci" \
-         + " -display gtk,gl=on,show-cursor=on" \
-         + " -device nec-usb-xhci,id=xhci" \
-         + " -device sdhci-pci" \
-         + " -object iothread,id=disk-iothread" \
-         + " -device virtio-rng-pci"
-
-      command: str = ""\
-         + f" {PARAMETERS}" \
-         + f" -kernel {kw_kernel}" \
-         + f" -initrd {kw_ramdisk}" \
-         + f" -append \"{APPEND} {BOOTCONFIG}\"" \
-         + f" {IMAGE_DEVICES_MAIN}" \
-         + f" {NETWORK_NETDEV_USER}" \
-         + f" {USB_BUS}" \
-         + f" {AUDIO_DEVICES}" \
-         + f" {CHAR_DEVICES}" \
-         + f" {OTHER_DEVICES}"
-
-      parameters: str = ""
-      parameters += f" {PARAMETERS}"
-      parameters += f" {IMAGE_DEVICES_MAIN}"
-      parameters += f" {NETWORK_NETDEV_USER}"
-      parameters += f" {USB_BUS}"
-      parameters += f" {AUDIO_DEVICES}"
-      parameters += f" {CHAR_DEVICES}"
-      parameters += f" {OTHER_DEVICES}"
-
-      qemu.run(
-            parameters,
-            arch = self.__config.arch( ),
-            kernel = kw_kernel,
-            initrd = kw_ramdisk,
-            append = f"{APPEND} {BOOTCONFIG}"
-         )
-
-      return command
-   # def __run_emulator_trout
 
    def __execute( self, command: str = "", **kwargs ):
       kw_output = kwargs.get( "output", pfw.shell.eOutput.PTY )
