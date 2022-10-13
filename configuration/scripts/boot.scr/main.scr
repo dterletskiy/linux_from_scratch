@@ -21,7 +21,7 @@ run command_update_boot_count
 #                                                                        #
 ##########################################################################
 setenv _device_ ${boot_device}
-setenv _names_ fdt xen kernel ramdisk abi
+setenv _names_ fdt_export fdt_dump xen kernel_uimg kernel ramdisk_uimg ramdisk abi
 run command_size_names
 
 
@@ -54,12 +54,16 @@ else
    setenv mode ${mode_none};
 fi
 
+
+
+
+
 if itest ${mode_none} == ${mode}; then
    echo "@TDA: Using 'none' mode"
 elif itest ${mode_kernel} == ${mode}; then
    echo "@TDA: Using 'kernel' mode"
 
-   setenv _names_ kernel ramdisk fdt
+   setenv _names_ kernel_uimg ramdisk_uimg fdt_export
    setenv _device_ ${boot_device}
    run command_load_names
 
@@ -69,14 +73,14 @@ elif itest ${mode_kernel} == ${mode}; then
 elif itest ${mode_xen} == ${mode}; then
    echo "@TDA: Using 'xen' mode"
 
-   setenv _names_ xen kernel ramdisk fdt
+   setenv _names_ xen kernel ramdisk fdt_dump
    setenv _device_ ${boot_device}
    run command_load_names
 
 
 
 
-   fdt addr ${fdt_address}
+   fdt addr ${fdt_dump_address}
 
    fdt resize
    fdt mknod / chosen
@@ -84,6 +88,8 @@ elif itest ${mode_xen} == ${mode}; then
    fdt set /chosen \#size-cells <1>
    # fdt set /chosen bootargs ${bootargs_xen}
    # fdt set /chosen xen,dom0-bootargs "${bootargs_dom0}"
+
+
 
    fdt resize
    fdt mknod /chosen module@0
@@ -120,16 +126,14 @@ elif itest ${mode_xen} == ${mode}; then
 
 
 
-
    # setenv bootargs "${bootargs_xen}"
-
-   booti ${xen_address} - ${fdt_address}
+   booti ${xen_address} - ${fdt_dump_address}
 
    # run command_boot_xen
 elif itest ${mode_abi} == ${mode}; then
    echo "@TDA: Using 'ABI' mode"
 
-   setenv _names_ abi fdt
+   setenv _names_ abi fdt_export
    setenv _device_ ${boot_device}
    run command_load_names
 

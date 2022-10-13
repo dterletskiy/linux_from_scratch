@@ -332,7 +332,8 @@ config: ConfigurationContainer = ConfigurationContainer(
          ConfigurationData( "uboot_script"                , True  , "u-boot script what will be used for booting" ),
          ConfigurationData( "uboot_script_source"         , True  , "u-boot source script file what will parsed and used for generating final u-boot script file" ),
          ConfigurationData( "syslinux_script"             , True  , "" ),
-         ConfigurationData( "dtb_path"                    , True  , "" ),
+         ConfigurationData( "dtb_export_path"             , True  , "" ),
+         ConfigurationData( "dtb_dump_path"               , True  , "" ),
 
          ConfigurationData( "android_bootconfig_x86"      , True  , "" ),
          ConfigurationData( "android_bootconfig_arm64"    , True  , "" ),

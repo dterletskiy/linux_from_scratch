@@ -60,7 +60,7 @@ def mkbootimg( projects_map: dict ):
          header_version = 2,
          kernel = projects_map["kernel"].dirs( ).deploy( "Image" ),
          ramdisk = projects_map["buildroot"].dirs( ).deploy( "rootfs.cpio" ),
-         dtb = configuration.value( "dtb_path" ),
+         dtb = configuration.value( "dtb_export_path" ),
          cmdline = cmdline,
          out = os.path.join( configuration.value( "tmp_path" ), "boot_linux.img" ),
          base = 0x50000000,
@@ -73,7 +73,7 @@ def mkbootimg( projects_map: dict ):
          header_version = 2,
          kernel = projects_map["aosp"].dirs( ).product( "kernel"),
          ramdisk = projects_map["aosp"].dirs( ).experimental( "ramdisk.img"),
-         dtb = configuration.value( "dtb_path" ),
+         dtb = configuration.value( "dtb_export_path" ),
          cmdline = cmdline,
          out = os.path.join( configuration.value( "tmp_path" ), "boot_aosp.img" ),
          base = 0x50000000,
@@ -111,8 +111,12 @@ def deploy( projects_map: dict, mount_point: str, pause: bool = False ):
             "dest": os.path.join( mount_point, "boot/boot.scr" )
          },
          {
-            "src": configuration.value( "dtb_path" ),
-            "dest": os.path.join( mount_point, "boot/dtb.dtb" )
+            "src": configuration.value( "dtb_export_path" ),
+            "dest": os.path.join( mount_point, "boot/export.dtb" )
+         },
+         {
+            "src": configuration.value( "dtb_dump_path" ),
+            "dest": os.path.join( mount_point, "boot/dump.dtb" )
          },
          {
             "src": projects_map["kernel"].dirs( ).deploy( "Image" ),
@@ -297,6 +301,7 @@ def debug( projects_map: dict, **kwargs ):
 def build_emulator_parameters_trout( projects_map, **kwargs ):
    kw_drive = kwargs.get( "drive", None )
    kw_arch = projects_map["aosp"].config( ).arch( )
+   kw_inet_dump = os.path.join( configuration.value( "tmp_path" ), "eth0_inet_dump_$(date '+%Y-%m-%d_%H:%M:%S').dat" )
 
    PARAMETERS = f"" \
       + f" -serial mon:stdio" \
@@ -310,6 +315,7 @@ def build_emulator_parameters_trout( projects_map, **kwargs ):
       PARAMETERS = PARAMETERS + f" -m 8192"
    elif "arm64" == kw_arch:
       PARAMETERS = PARAMETERS + f" -machine virt"
+      PARAMETERS = PARAMETERS + f" -machine virtualization=true"
       PARAMETERS = PARAMETERS + f" -cpu cortex-a53"
       PARAMETERS = PARAMETERS + f" -smp cores=4"
       PARAMETERS = PARAMETERS + f" -m 8192"
@@ -332,7 +338,7 @@ def build_emulator_parameters_trout( projects_map, **kwargs ):
       + f" -device virtio-net-pci-non-transitional,netdev=eth0_inet,id=android"
 
    NETWORK_OBJECT_DUMP = f"" \
-      + f" -object filter-dump,id=f1,netdev=eth0_inet,file=/mnt/dev/android/logs/net_dump/eth0_inet_dump_$(date '+%Y-%m-%d_%H:%M:%S').dat" \
+      + f" -object filter-dump,id=f1,netdev=eth0_inet,file={kw_inet_dump}" \
 
    NETWORK_NET_USER = f"" \
       + f" -net user" \
@@ -413,7 +419,7 @@ def start( projects_map: dict, **kwargs ):
       kw_args["kernel"] = projects_map["kernel"].dirs( ).deploy( "Image" )
       kw_args["initrd"] = projects_map["buildroot"].dirs( ).deploy( "rootfs.cpio" )
       kw_args["append"] = "loglevel=7 debug printk.devkmsg=on drm.debug=0x0 console=ttyAMA0"
-      kw_args["dtb"] = configuration.value( "dtb_path" )
+      kw_args["dtb"] = configuration.value( "dtb_export_path" )
    else:
       pass
 

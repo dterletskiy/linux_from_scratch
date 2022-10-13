@@ -3,23 +3,34 @@ setenv initrd_high                  0x66000000
 setenv boot_device                  ${devtype} ${devnum}:${distro_bootpart}
 
 setenv xen_location                 /boot/xen-4.16.2
-setenv kernel_location              /boot/kernel-5.19.uimg
-setenv buildroot_location           /boot/rootfs-2022.05.2.cpio.uimg
-setenv busybox_location             /boot/initramfs-1.35.0.cpio.uimg
+setenv kernel_uimg_location         /boot/kernel-5.19.uimg
+setenv kernel_location              /boot/kernel-5.19
+setenv buildroot_uimg_location      /boot/rootfs-2022.05.2.cpio.uimg
+setenv buildroot_location           /boot/rootfs-2022.05.2.cpio
+setenv busybox_uimg_location        /boot/initramfs-1.35.0.cpio.uimg
+setenv busybox_location             /boot/initramfs-1.35.0.cpio
+setenv ramdisk_uimg_location        ${buildroot_uimg_location}
 setenv ramdisk_location             ${buildroot_location}
-setenv fdt_location                 /boot/dtb.dtb
+setenv fdt_export_location          /boot/export.dtb
+setenv fdt_dump_location            /boot/dump.dtb
 setenv abi_location                 /boot/boot_aosp.img
 
 setenv xen_address                  ${kernel_addr_r}
+setenv kernel_uimg_address          ${kernel_addr_r}
 setenv kernel_address               ${kernel_addr_r}
+setenv ramdisk_uimg_address         ${ramdisk_addr_r}
 setenv ramdisk_address              ${ramdisk_addr_r}
-# setenv fdt_address                  ${fdt_addr_r}
-setenv fdt_address                  ${fdt_addr}
+# setenv fdt_export_address         ${fdt_addr_r}
+setenv fdt_export_address           ${fdt_addr}
+setenv fdt_dump_address             ${fdt_addr}
 setenv abi_address                  ${kernel_addr_r}
 
-setenv fdt_address                  0x40000000
+setenv fdt_export_address           0x40000000
+setenv fdt_dump_address             0x40000000
 setenv xen_address                  0x41000000
+setenv kernel_uimg_address          0x42000000
 setenv kernel_address               0x42000000
+setenv ramdisk_uimg_address         0x46000000
 setenv ramdisk_address              0x46000000
 setenv abi_address                  0x42000000
 

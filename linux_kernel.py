@@ -173,7 +173,7 @@ def main( ):
       if "gdb" == action_name:
          tools.debug( projects_map, project_name = "uboot" )
       elif "start" == action_name:
-         tools.start( projects_map, bios = "aosp", gdb = False )
+         tools.start( projects_map, mode = "aosp", gdb = False )
       elif "mkimage" == action_name:
          tools.mkdrive( projects_map )
 
@@ -182,6 +182,6 @@ def main( ):
 
 
 if __name__ == "__main__":
-   pfw.console.debug.header( "------------------------- BEGIN -------------------------" )
+   pfw.console.debug.ok( "------------------------- BEGIN -------------------------" )
    main( )
-   pfw.console.debug.header( "-------------------------- END --------------------------" )
+   pfw.console.debug.ok( "-------------------------- END --------------------------" )
