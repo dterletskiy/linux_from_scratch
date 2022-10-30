@@ -83,7 +83,7 @@ def mkbootimg( projects_map: dict ):
       )
 # def mkbootimg
 
-def prepare( projects_map: dict ):
+def prepare_boot( projects_map: dict ):
    projects_map["uboot"].build_uboot_script( configuration.value( "uboot_script_source" ), configuration.value( "uboot_script" ) )
 
    mkimage( projects_map )
@@ -98,9 +98,9 @@ def prepare( projects_map: dict ):
       )
 
    mkbootimg( projects_map )
-# def prepare
+# def prepare_boot
 
-def deploy( projects_map: dict, mount_point: str, pause: bool = False ):
+def deploy_boot( projects_map: dict, mount_point: str, pause: bool = False ):
    files_list: list = [
          # {
          #    "src": configuration.value( "syslinux_script" ),
@@ -171,24 +171,207 @@ def deploy( projects_map: dict, mount_point: str, pause: bool = False ):
    if True == pause:
       subprocess.Popen(['xdg-open', mount_point])
       pfw.console.debug.promt( )
-# def deploy
+# def deploy_boot
 
 def mkpartition_boot( projects_map: dict ):
-   mmc: pfw.image.Partition = pfw.image.Partition( configuration.value( "boot_partition_image" ) )
-   mmc.create( force = True )
-   mmc.format( )
-   mmc.mount( )
+   mmc: pfw.image.Partition = pfw.image.Partition( configuration.value( "boot_partition_image" ), build = True, force = True )
+   mount_point = mmc.mount( configuration.value( "tmp_path" ), True )
 
-   prepare( projects_map )
-   deploy( projects_map, configuration.value( "boot_partition_image" ).mount_point( ), pause = True )
+   prepare_boot( projects_map )
+   deploy_boot( projects_map, mount_point, pause = True )
 
    mmc.info( )
    mmc.umount( )
 # def mkpartition_boot
 
+def prepare_rootfs( projects_map: dict ):
+   pass
+# def prepare_rootfs
+
+def deploy_rootfs( projects_map: dict, mount_point: str, pause: bool = False ):
+   QEMU_BIN_DIR="/home/dmytro_terletskyi/Soft/qemu/bin/"
+   ARCH="aarch64"
+
+   ubuntu_archive="/mnt/dev/toolchain/ubuntu-base-20.04.5-base-arm64.tar.gz"
+   HOSTNAME="rootfs"
+   USERNAME="tda"
+   PASSWORD="adt"
+   SALT="tda"
+   command = f"perl -e " + "\"print crypt(\"" + PASSWORD + "\",\"" + SALT + "\");\""
+   USERNAME_HASHED_PASSWORD=pfw.shell.run_and_wait_with_status( command, print = False )["output"]
+   pfw.console.debug.info( USERNAME_HASHED_PASSWORD )
+
+   if True:
+      command = f"sudo tar -xf {ubuntu_archive} -C {mount_point}"
+      pfw.shell.run_and_wait_with_status( command, output = pfw.shell.eOutput.PTY )
+
+   if True:
+      # Mounting required host stuff
+      command = f"sudo mount -o bind /proc {mount_point}/proc"
+      pfw.shell.run_and_wait_with_status( command, output = pfw.shell.eOutput.PTY )
+      command = f"sudo mount -o bind /dev {mount_point}/dev"
+      pfw.shell.run_and_wait_with_status( command, output = pfw.shell.eOutput.PTY )
+      command = f"sudo mount -o bind /dev/pts {mount_point}/dev/pts"
+      pfw.shell.run_and_wait_with_status( command, output = pfw.shell.eOutput.PTY )
+      command = f"sudo mount -o bind /sys {mount_point}/sys"
+      pfw.shell.run_and_wait_with_status( command, output = pfw.shell.eOutput.PTY )
+      command = f"sudo mount -o bind /tmp {mount_point}/tmp"
+      pfw.shell.run_and_wait_with_status( command, output = pfw.shell.eOutput.PTY )
+
+   if False:
+      # Copying qemu-static to guest
+      command = f"sudo cp {QEMU_BIN_DIR}/qemu-{ARCH}-static {mount_point}/usr/bin/"
+      # pfw.shell.run_and_wait_with_status( command, output = pfw.shell.eOutput.PTY )
+
+      # Setup /etc/hostname
+      command = f"echo '{HOSTNAME}' > /etc/hostname"
+      pfw.shell.run_and_wait_with_status( command, chroot_bash = mount_point, output = pfw.shell.eOutput.PTY )
+
+      # Setup /etc/hosts
+      command = f"echo '127.0.0.1   localhost' > /etc/hosts"
+      pfw.shell.run_and_wait_with_status( command, chroot_bash = mount_point, output = pfw.shell.eOutput.PTY )
+      command = f"echo '127.0.1.1   {HOSTNAME}' >> /etc/hosts"
+      pfw.shell.run_and_wait_with_status( command, chroot_bash = mount_point, output = pfw.shell.eOutput.PTY )
+      command = f"echo '' >> /etc/hosts"
+      pfw.shell.run_and_wait_with_status( command, chroot_bash = mount_point, output = pfw.shell.eOutput.PTY )
+      command = f"echo '# The following lines are desirable for IPv6 capable hosts' >> /etc/hosts"
+      pfw.shell.run_and_wait_with_status( command, chroot_bash = mount_point, output = pfw.shell.eOutput.PTY )
+      command = f"echo '::1         ip6-localhost ip6-loopback' >> /etc/hosts"
+      pfw.shell.run_and_wait_with_status( command, chroot_bash = mount_point, output = pfw.shell.eOutput.PTY )
+      command = f"echo 'fe00::0     ip6-localnet' >> /etc/hosts"
+      pfw.shell.run_and_wait_with_status( command, chroot_bash = mount_point, output = pfw.shell.eOutput.PTY )
+      command = f"echo 'ff00::0     ip6-mcastprefix' >> /etc/hosts"
+      pfw.shell.run_and_wait_with_status( command, chroot_bash = mount_point, output = pfw.shell.eOutput.PTY )
+      command = f"echo 'ff02::1     ip6-allnodes' >> /etc/hosts"
+      pfw.shell.run_and_wait_with_status( command, chroot_bash = mount_point, output = pfw.shell.eOutput.PTY )
+      command = f"echo 'ff02::2     ip6-allrouters' >> /etc/hosts"
+      pfw.shell.run_and_wait_with_status( command, chroot_bash = mount_point, output = pfw.shell.eOutput.PTY )
+
+      # Setup /etc/fstab
+      command = f"echo 'proc        /proc       proc     defaults             0     0' > /etc/fstab"
+      pfw.shell.run_and_wait_with_status( command, chroot_bash = mount_point, output = pfw.shell.eOutput.PTY )
+      command = f"echo '/dev/vda1   /boot       vfat     defaults             0     2' >> /etc/fstab"
+      pfw.shell.run_and_wait_with_status( command, chroot_bash = mount_point, output = pfw.shell.eOutput.PTY )
+      command = f"echo '/dev/vda2   /           ext4     defaults,noatime     0     1' >> /etc/fstab"
+      pfw.shell.run_and_wait_with_status( command, chroot_bash = mount_point, output = pfw.shell.eOutput.PTY )
+
+      # Setup /etc/resolv.conf
+      # Setup internet connectivity in chroot
+      # /etc/resolv.conf is required for internet connectivity in chroot.
+      # It will get overwritten by dhcp, so don't get too attached to it.
+      command = f"echo 'nameserver 8.8.8.8' > /etc/resolv.conf"
+      pfw.shell.run_and_wait_with_status( command, chroot_bash = mount_point, output = pfw.shell.eOutput.PTY )
+      command = f"echo 'nameserver 2001:4860:4860::8888' >> /etc/resolv.conf"
+      pfw.shell.run_and_wait_with_status( command, chroot_bash = mount_point, output = pfw.shell.eOutput.PTY )
+
+      # Setup /etc/apt/sources.list
+      # Setup apt source list
+      command = "sed -i -e \"s/# deb /deb /\" /etc/apt/sources.list"
+      pfw.shell.run_and_wait_with_status( command, chroot = mount_point, output = pfw.shell.eOutput.PTY )
+
+      # Configure /tmp directory
+      command = f"chmod 1777 /tmp"
+      pfw.shell.run_and_wait_with_status( command, chroot = mount_point, output = pfw.shell.eOutput.PTY )
+
+      # Create user
+      command = f"useradd -s /bin/bash -G adm,sudo -m -p {USERNAME_HASHED_PASSWORD} {USERNAME}"
+      pfw.shell.run_and_wait_with_status( command, chroot = mount_point, output = pfw.shell.eOutput.PTY )
+
+   if False:
+      # Update and upgrade packages
+      command = f"apt update"
+      pfw.shell.run_and_wait_with_status( command, chroot = mount_point, output = pfw.shell.eOutput.PTY )
+      command = f"apt -y upgrade"
+      pfw.shell.run_and_wait_with_status( command, chroot = mount_point, output = pfw.shell.eOutput.PTY )
+
+      # Install and setup locales
+      command = f"apt -y install locales"
+      pfw.shell.run_and_wait_with_status( command, chroot = mount_point, output = pfw.shell.eOutput.PTY )
+      command = f"locale-gen en_US en_US.UTF-8"
+      pfw.shell.run_and_wait_with_status( command, chroot = mount_point, output = pfw.shell.eOutput.PTY )
+      command = f"dpkg-reconfigure locales"
+      # pfw.shell.run_and_wait_with_status( command, chroot = mount_point, output = pfw.shell.eOutput.PTY )
+      command = f"update-locale LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8"
+      # pfw.shell.run_and_wait_with_status( command, chroot = mount_point, output = pfw.shell.eOutput.PTY )
+
+      # Install required packages
+      command = f"apt -y install dialog"
+      # pfw.shell.run_and_wait_with_status( command, chroot = mount_point, output = pfw.shell.eOutput.PTY )
+      command = f"apt -y install apt-utils"
+      pfw.shell.run_and_wait_with_status( command, chroot = mount_point, output = pfw.shell.eOutput.PTY )
+      command = f"apt -y install systemd systemd-sysv libsystemd-dev sysvinit-utils"
+      pfw.shell.run_and_wait_with_status( command, chroot = mount_point, output = pfw.shell.eOutput.PTY, method = "system" )
+      command = f"apt -y install netbase dnsutils ifupdown isc-dhcp-client isc-dhcp-common net-tools iproute2 iputils-ping ssh dhcpcd5 tcpd bridge-utils ethtool iptables libnss-mdns iw "
+      pfw.shell.run_and_wait_with_status( command, chroot = mount_point, output = pfw.shell.eOutput.PTY )
+      command = f"apt -y install ser2net minicom"
+      pfw.shell.run_and_wait_with_status( command, chroot = mount_point, output = pfw.shell.eOutput.PTY )
+      command = f"apt -y install mc nano vim less sed bash-completion"
+      pfw.shell.run_and_wait_with_status( command, chroot = mount_point, output = pfw.shell.eOutput.PTY )
+      command = f"apt -y install tar zip unzip unrar rarcrack zlib1g-dev"
+      pfw.shell.run_and_wait_with_status( command, chroot = mount_point, output = pfw.shell.eOutput.PTY )
+      command = f"apt -y install autoconf lsb-base lsb-release sudo udev rsyslog kmod util-linux dmsetup hostname uuid uuid-dev pkg-config symlinks psmisc"
+      pfw.shell.run_and_wait_with_status( command, chroot = mount_point, output = pfw.shell.eOutput.PTY )
+      command = f"apt -y install strace ltrace"
+      pfw.shell.run_and_wait_with_status( command, chroot = mount_point, output = pfw.shell.eOutput.PTY )
+
+      command = f"apt -y install fakeroot build-essential ncurses-dev xz-utils bc flex bison libssl-dev libelf-dev libfdt-dev"
+      pfw.shell.run_and_wait_with_status( command, chroot = mount_point, output = pfw.shell.eOutput.PTY )
+      command = f"apt -y install python3 python3-dev"
+      pfw.shell.run_and_wait_with_status( command, chroot = mount_point, output = pfw.shell.eOutput.PTY )
+      command = f"apt -y install perl"
+      pfw.shell.run_and_wait_with_status( command, chroot = mount_point, output = pfw.shell.eOutput.PTY )
+      command = f"apt -y install libyajl-dev ninja-build iasl"
+      pfw.shell.run_and_wait_with_status( command, chroot = mount_point, output = pfw.shell.eOutput.PTY )
+      command = f"apt -y install git gitk patch"
+      pfw.shell.run_and_wait_with_status( command, chroot = mount_point, output = pfw.shell.eOutput.PTY )
+      command = f"apt -y install libglib2.0-dev libglib2.0-dev-bin libpixman-1-dev"
+      pfw.shell.run_and_wait_with_status( command, chroot = mount_point, output = pfw.shell.eOutput.PTY )
+
+   if True:
+      command = f"mkdir /projects"
+      pfw.shell.run_and_wait_with_status( command, chroot = mount_point, output = pfw.shell.eOutput.PTY )
+      command = f"git clone https://xenbits.xen.org/git-http/xen.git /projects/xen"
+      pfw.shell.run_and_wait_with_status( command, chroot = mount_point, output = pfw.shell.eOutput.PTY )
+      command = f"cd /projects/xen; git checkout origin/stable-4.15 --track"
+      pfw.shell.run_and_wait_with_status( command, chroot_bash = mount_point, output = pfw.shell.eOutput.PTY )
+      command = f"cd /projects/xen; ./configure --disable-docs --disable-stubdom --prefix=/usr/local --libdir=/usr/lib --enable-systemd"
+      pfw.shell.run_and_wait_with_status( command, chroot_bash = mount_point, output = pfw.shell.eOutput.PTY )
+      command = f"cd /projects/xen; CC=gcc make -j4 debball"
+      pfw.shell.run_and_wait_with_status( command, chroot_bash = mount_point, output = pfw.shell.eOutput.PTY )
+
+   if True:
+      # Unmounting required host stuff
+      pfw.shell.run_and_wait_with_status( f"sudo umount {mount_point}/tmp", output = pfw.shell.eOutput.PTY )
+      pfw.shell.run_and_wait_with_status( f"sudo umount {mount_point}/sys", output = pfw.shell.eOutput.PTY )
+      pfw.shell.run_and_wait_with_status( f"sudo umount {mount_point}/dev/pts", output = pfw.shell.eOutput.PTY )
+      pfw.shell.run_and_wait_with_status( f"sudo umount {mount_point}/dev", output = pfw.shell.eOutput.PTY )
+      pfw.shell.run_and_wait_with_status( f"sudo umount {mount_point}/proc", output = pfw.shell.eOutput.PTY )
+
+
+
+   if True == pause:
+      subprocess.Popen(['xdg-open', mount_point])
+      pfw.console.debug.promt( )
+# def deploy_rootfs
+
+
+def mkpartition_rootfs( projects_map: dict ):
+   mmc: pfw.image.Partition = pfw.image.Partition( configuration.value( "rootfs_partition_image" ), build = True, force = True )
+   mount_point = mmc.mount( configuration.value( "tmp_path" ), True )
+
+   prepare_rootfs( projects_map )
+   # deploy_rootfs( projects_map, mount_point, pause = True )
+
+   mmc.info( )
+   mmc.umount( )
+# def mkpartition_rootfs
+
 def mkdrive( projects_map: dict ):
    mkpartition_boot( projects_map )
    boot_image = configuration.value( "boot_partition_image" ).file( )
+
+   mkpartition_rootfs( projects_map )
+   rootfs_image = configuration.value( "rootfs_partition_image" ).file( )
 
    super_image = projects_map["aosp"].dirs( ).product( "super.img" )
    if "arm64" == projects_map["aosp"].config( ).arch( ):
@@ -205,20 +388,21 @@ def mkdrive( projects_map: dict ):
 
    boot_part_num = 1
    partitions = [
-      pfw.image.Drive.Partition( clone_from = boot_image, label = "boot" ),
+      pfw.image.Partition.Description( clone_from = boot_image, label = "boot" ),
+      pfw.image.Partition.Description( clone_from = rootfs_image, label = "rootfs" ),
 
-      pfw.image.Drive.Partition( clone_from = super_image, label = "super" ),
+      # pfw.image.Partition.Description( clone_from = super_image, label = "super" ),
 
-      pfw.image.Drive.Partition( clone_from = userdata_image, label = "userdata" ),
-      pfw.image.Drive.Partition( size = pfw.size.SizeGigabyte, label = "cache", fs = "ext4" ),
-      pfw.image.Drive.Partition( size = pfw.size.SizeGigabyte, label = "metadata", fs = "ext4" ),
-      pfw.image.Drive.Partition( size = pfw.size.SizeGigabyte, label = "misc", fs = "ext4" ),
+      # pfw.image.Partition.Description( clone_from = userdata_image, label = "userdata" ),
+      # pfw.image.Partition.Description( size = pfw.size.SizeGigabyte, label = "cache", fs = "ext4" ),
+      # pfw.image.Partition.Description( size = pfw.size.SizeGigabyte, label = "metadata", fs = "ext4" ),
+      # pfw.image.Partition.Description( size = pfw.size.SizeGigabyte, label = "misc", fs = "ext4" ),
 
-      pfw.image.Drive.Partition( clone_from = vbmeta_image, label = "vbmeta_a" ),
-      pfw.image.Drive.Partition( clone_from = vbmeta_system_image, label = "vbmeta_system_a" ),
+      # pfw.image.Partition.Description( clone_from = vbmeta_image, label = "vbmeta_a" ),
+      # pfw.image.Partition.Description( clone_from = vbmeta_system_image, label = "vbmeta_system_a" ),
    ]
 
-   mmc: pfw.image.Drive = pfw.image.Drive( configuration.value( "main_drive_image" ).file( ) )
+   mmc: pfw.image.Drive = pfw.image.Drive( configuration.value( "main_drive_image" ) )
    mmc.create( partitions = partitions, force = True )
    mmc.attach( )
    mmc.init( partitions, bootable = boot_part_num )
@@ -298,7 +482,7 @@ def debug( projects_map: dict, **kwargs ):
 
 
 
-def build_emulator_parameters_trout( projects_map, **kwargs ):
+def build_emulator_parameters( projects_map, **kwargs ):
    kw_drive = kwargs.get( "drive", None )
    kw_arch = projects_map["aosp"].config( ).arch( )
    kw_inet_dump = os.path.join( configuration.value( "tmp_path" ), "eth0_inet_dump_$(date '+%Y-%m-%d_%H:%M:%S').dat" )
@@ -391,20 +575,26 @@ def build_emulator_parameters_trout( projects_map, **kwargs ):
       + f" {OTHER_DEVICES}"
 
    return command
-# def build_emulator_parameters_trout
+# def build_emulator_parameters
 
 def start( projects_map: dict, **kwargs ):
    kw_mode = kwargs.get( "mode", "aosp" )
    kw_gdb = kwargs.get( "gdb", False )
-   kw_drive = kwargs.get( "drive", configuration.value( "main_drive_image" ).file( ) )
+   kw_drive = kwargs.get( "drive", configuration.value( "main_drive_image" ) )
 
    command: str = ""
    if "aosp" == kw_mode:
-      command = build_emulator_parameters_trout( projects_map,  drive = kw_drive, debug = True )
+      command = build_emulator_parameters( projects_map,  drive = kw_drive, debug = True )
    elif "u-boot" == kw_mode or "kernel" == kw_mode:
       command = qemu.build_parameters( arch = "arm64" )
       command += f" -drive if=none,index=0,id=main,file={kw_drive}"
       command += f" -device virtio-blk-pci,modern-pio-notify,drive=main"
+   if "test" == kw_mode:
+      # command = build_emulator_parameters( projects_map,  drive = kw_drive, debug = True )
+      command = qemu.build_parameters( arch = "arm64" )
+      command += f" -drive if=none,index=0,id=main,file={kw_drive}"
+      command += f" -device virtio-blk-pci,modern-pio-notify,drive=main"
+      command += f" -netdev user,id=net0,hostfwd=tcp::2222-:22 -device virtio-net-device,netdev=net0"
    else:
       pass
 
@@ -420,6 +610,9 @@ def start( projects_map: dict, **kwargs ):
       kw_args["initrd"] = projects_map["buildroot"].dirs( ).deploy( "rootfs.cpio" )
       kw_args["append"] = "loglevel=7 debug printk.devkmsg=on drm.debug=0x0 console=ttyAMA0"
       kw_args["dtb"] = configuration.value( "dtb_export_path" )
+   elif "test" == kw_mode:
+      kw_args["kernel"] = projects_map["kernel"].dirs( ).deploy( "Image" )
+      kw_args["append"] = "loglevel=7 debug printk.devkmsg=on drm.debug=0x0 console=ttyAMA0 root=/dev/vda2 rw"
    else:
       pass
 

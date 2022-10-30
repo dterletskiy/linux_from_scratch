@@ -9,17 +9,17 @@
 # ARCH=arm64
 # PFW=/mnt/dev/TDA/python_fw
 # 
-# ./linux_kernel.py --config=${CONFIG} --include=${PFW} --arch=${ARCH} --project=${PROJECT} --action=info
-# ./linux_kernel.py --config=${CONFIG} --include=${PFW} --arch=${ARCH} --project=${PROJECT} --action=sync
-# ./linux_kernel.py --config=${CONFIG} --include=${PFW} --arch=${ARCH} --project=${PROJECT} --action=clean
-# ./linux_kernel.py --config=${CONFIG} --include=${PFW} --arch=${ARCH} --project=${PROJECT} --action=config
-# ./linux_kernel.py --config=${CONFIG} --include=${PFW} --arch=${ARCH} --project=${PROJECT} --action=config --target=menuconfig
-# ./linux_kernel.py --config=${CONFIG} --include=${PFW} --arch=${ARCH} --project=${PROJECT} --action=build
-# ./linux_kernel.py --config=${CONFIG} --include=${PFW} --arch=${ARCH} --project=${PROJECT} --action=deploy
+# ./linux_kernel.py --config=${CONFIG} --include=${PFW} --project=${PROJECT} --action=info
+# ./linux_kernel.py --config=${CONFIG} --include=${PFW} --project=${PROJECT} --action=sync
+# ./linux_kernel.py --config=${CONFIG} --include=${PFW} --project=${PROJECT} --action=clean
+# ./linux_kernel.py --config=${CONFIG} --include=${PFW} --project=${PROJECT} --action=config
+# ./linux_kernel.py --config=${CONFIG} --include=${PFW} --project=${PROJECT} --action=config --target=menuconfig
+# ./linux_kernel.py --config=${CONFIG} --include=${PFW} --project=${PROJECT} --action=build
+# ./linux_kernel.py --config=${CONFIG} --include=${PFW} --project=${PROJECT} --action=deploy
 # 
-# ./linux_kernel.py --config=${CONFIG} --include=${PFW} --arch=${ARCH} --action=mkimage
-# ./linux_kernel.py --config=${CONFIG} --include=${PFW} --arch=${ARCH} --action=start
-# ./linux_kernel.py --config=${CONFIG} --include=${PFW} --arch=${ARCH} --action=gdb
+# ./linux_kernel.py --config=${CONFIG} --include=${PFW} --action=mkimage
+# ./linux_kernel.py --config=${CONFIG} --include=${PFW} --action=start
+# ./linux_kernel.py --config=${CONFIG} --include=${PFW} --action=gdb
 # 
 # In case if variable "INCLUDE" defined with path to "pfw" "--include" option could be omitted.
 # If "INCLUDE" variable defined several times in configuration file all mentioned values will be used.
@@ -28,6 +28,7 @@
 
 import os
 import sys
+import subprocess
 import copy
 
 import configuration
@@ -76,21 +77,20 @@ import aosp.aosp
 
 def extend_configuration( ):
    configuration.config.set_value( "boot_partition_image",
-      pfw.image.Description(
-           os.path.join( configuration.config.get_value( "tmp_path" ), "boot.img" )
-         , os.path.join( configuration.config.get_value( "tmp_path" ), "boot" )
-         , pfw.size.Size( 512, pfw.size.Size.eGran.M )
-         , "ext2"
+      pfw.image.Partition.Description(
+           file = os.path.join( configuration.config.get_value( "tmp_path" ), "boot.img" )
+         , size = pfw.size.Size( 512, pfw.size.Size.eGran.M )
+         , fs = "ext2"
       )
    )
-   configuration.config.set_value( "main_drive_image",
-      pfw.image.Description(
-           os.path.join( configuration.config.get_value( "tmp_path" ), "main.img" )
-         , os.path.join( configuration.config.get_value( "tmp_path" ), "main" )
-         , pfw.size.Size( 512, pfw.size.Size.eGran.M )
-         , "ext2"
+   configuration.config.set_value( "rootfs_partition_image",
+      pfw.image.Partition.Description(
+           file = os.path.join( configuration.config.get_value( "tmp_path" ), "rootfs.img" )
+         , size = pfw.size.Size( 5, pfw.size.Size.eGran.G )
+         , fs = "ext4"
       )
    )
+   configuration.config.set_value( "main_drive_image", os.path.join( configuration.config.get_value( "tmp_path" ), "main.img" ) )
 # def extend_configuration
 
 extend_configuration( )
@@ -173,7 +173,7 @@ def main( ):
       if "gdb" == action_name:
          tools.debug( projects_map, project_name = "uboot" )
       elif "start" == action_name:
-         tools.start( projects_map, mode = "aosp", gdb = False )
+         tools.start( projects_map, mode = "test", gdb = False )
       elif "mkimage" == action_name:
          tools.mkdrive( projects_map )
 
