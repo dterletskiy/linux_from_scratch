@@ -44,7 +44,7 @@ def gen_grammar( **kwargs ):
       command += f" -o {kw_outdir}"
       command += f" -listener"
       command += f" -visitor"
-      pfw.shell.run_and_wait_with_status( command )
+      pfw.shell.execute( command )
 
    if True == kw_extend_path:
       sys.path.insert( 0, kw_outdir )

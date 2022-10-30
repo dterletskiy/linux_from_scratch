@@ -67,7 +67,7 @@ def run( parameters, **kwargs ):
    if True == kw_gdb:
       command += f" -s -S"
 
-   result = pfw.shell.run_and_wait_with_status(
+   result = pfw.shell.execute(
          command,
          cwd = kw_cwd,
          output = kw_output

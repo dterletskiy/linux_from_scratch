@@ -72,7 +72,7 @@ class UBoot:
       if None != self.__version:
          command += f" -b {self.__version}"
       command += f" {self.__url_git} {self.__directories.source( )}"
-      pfw.shell.run_and_wait_with_status( command, output = pfw.shell.eOutput.PTY )
+      pfw.shell.execute( command, output = pfw.shell.eOutput.PTY )
 
       # repo = git.Repo.clone_from(
       #            self.__url_git
@@ -103,7 +103,7 @@ class UBoot:
       for target in kw_targets:
          if "defconfig" == target:
             target = self.defconfig( )
-         pfw.shell.run_and_wait_with_status( command, target, print = False, collect = False )
+         pfw.shell.execute( command, target, print = False, collect = False )
 
       # Applying configuration patched defined in code
       if 0 != len( kw_configs ):
@@ -144,7 +144,7 @@ class UBoot:
       command += f" -j{self.__config.cores( )}"
       # command += f" NO_SDL=1"
 
-      pfw.shell.run_and_wait_with_status( command, targets, output = pfw.shell.eOutput.PTY )
+      pfw.shell.execute( command, targets, output = pfw.shell.eOutput.PTY )
    # def build
 
    def clean( self, **kwargs ):
@@ -165,7 +165,7 @@ class UBoot:
       command += f" ARCH={self.__config.arch( )}"
       command += f" CROSS_COMPILE={self.__config.compiler( )}"
 
-      pfw.shell.run_and_wait_with_status( command, targets, output = pfw.shell.eOutput.PTY )
+      pfw.shell.execute( command, targets, output = pfw.shell.eOutput.PTY )
    # def clean
 
    def deploy( self, **kwargs ):
@@ -181,10 +181,10 @@ class UBoot:
 
          if True == is_create_structure:
             deploy_path = os.path.join( deploy_path, self.__config.arch( ), self.__name )
-            pfw.shell.run_and_wait_with_status( f"mkdir -p {deploy_path}" )
+            pfw.shell.execute( f"mkdir -p {deploy_path}" )
       pfw.console.debug.info( "deploy -> ", deploy_path )
-      pfw.shell.run_and_wait_with_status( f"rm -r {deploy_path}" )
-      pfw.shell.run_and_wait_with_status( f"mkdir -p {deploy_path}" )
+      pfw.shell.execute( f"rm -r {deploy_path}" )
+      pfw.shell.execute( f"mkdir -p {deploy_path}" )
 
       files_list: list = [
             os.path.join( self.__directories.product( ), "u-boot" ),
@@ -192,12 +192,12 @@ class UBoot:
          ]
 
       for file in files_list:
-         pfw.shell.run_and_wait_with_status( f"cp {file} {deploy_path}" )
+         pfw.shell.execute( f"cp {file} {deploy_path}" )
 
       directories_list: list = [ ]
 
       for directory in directories_list:
-         pfw.shell.run_and_wait_with_status( f"cp -r {directory} {deploy_path}" )
+         pfw.shell.execute( f"cp -r {directory} {deploy_path}" )
 
       return deploy_path
    # def deploy
@@ -290,7 +290,7 @@ class UBoot:
          pfw.console.debug.error( "undefined 'source' type" )
          return False
 
-      pfw.shell.run_and_wait_with_status(
+      pfw.shell.execute(
               self.__directories.product( "tools/mkimage" )
             , "-A", self.__config.arch( )
             , "-O", kw_os_type

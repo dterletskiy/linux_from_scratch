@@ -132,10 +132,10 @@ class Directories:
       self.__product = product
       self.__deploy = deploy
 
-      pfw.shell.run_and_wait_with_status( "mkdir", "-p", self.__download )
-      pfw.shell.run_and_wait_with_status( "mkdir", "-p", self.__source )
-      pfw.shell.run_and_wait_with_status( "mkdir", "-p", self.__build )
-      pfw.shell.run_and_wait_with_status( "mkdir", "-p", self.__deploy )
+      pfw.shell.execute( "mkdir", "-p", self.__download )
+      pfw.shell.execute( "mkdir", "-p", self.__source )
+      pfw.shell.execute( "mkdir", "-p", self.__build )
+      pfw.shell.execute( "mkdir", "-p", self.__deploy )
    # def __init__
 
    def __del__( self ):

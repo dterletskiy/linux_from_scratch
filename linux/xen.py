@@ -75,7 +75,7 @@ class Xen:
 
    def extract( self ):
       # pfw.archive.extract( os.path.join( self.__directories.download( ), self.__archive_name ), "xztar", self.__directories.source( ) )
-      pfw.shell.run_and_wait_with_status(
+      pfw.shell.execute(
               "tar", "-xvf"
             , self.__directories.download( self.__archive_name )
             , "--checkpoint=100"
@@ -98,7 +98,7 @@ class Xen:
       if None != self.__version:
          command += f" -b v{self.__version}"
       command += f" {self.__url_git} {self.__directories.source( )}"
-      pfw.shell.run_and_wait_with_status( command, output = pfw.shell.eOutput.PTY )
+      pfw.shell.execute( command, output = pfw.shell.eOutput.PTY )
 
       # repo = git.Repo.clone_from(
       #            self.__url_git
@@ -121,7 +121,7 @@ class Xen:
       for option in kw_options:
          command += f" {option}"
 
-      pfw.shell.run_and_wait_with_status( command, print = False, collect = False, cwd = self.__directories.source( ) )
+      pfw.shell.execute( command, print = False, collect = False, cwd = self.__directories.source( ) )
    # def configure
 
    def build( self, **kwargs ):
@@ -139,12 +139,12 @@ class Xen:
       command += f" CROSS_COMPILE={self.__config.compiler( )}"
       command += f" -j{self.__config.cores( )}"
 
-      pfw.shell.run_and_wait_with_status( command, targets, output = pfw.shell.eOutput.PTY, cwd = self.__directories.source( ) )
+      pfw.shell.execute( command, targets, output = pfw.shell.eOutput.PTY, cwd = self.__directories.source( ) )
 
       # xen does not allowed to change build directory, so we should manually copy all built artifacts
       # to build directory for compatibility with other projects
       command = f"cp -r {self.__directories.source( 'dist/install/*' )} {self.__directories.build( )}"
-      pfw.shell.run_and_wait_with_status( command, output = pfw.shell.eOutput.PTY )
+      pfw.shell.execute( command, output = pfw.shell.eOutput.PTY )
    # def build
 
    def clean( self, **kwargs ):
@@ -161,14 +161,14 @@ class Xen:
       command += f" XEN_TARGET_ARCH={self.__config.arch( )}"
       command += f" CROSS_COMPILE={self.__config.compiler( )}"
 
-      pfw.shell.run_and_wait_with_status( command, targets, output = pfw.shell.eOutput.PTY, cwd = self.__directories.source( ) )
+      pfw.shell.execute( command, targets, output = pfw.shell.eOutput.PTY, cwd = self.__directories.source( ) )
    # def clean
 
    def deploy( self, **kwargs ):
       deploy_path = kwargs.get( "deploy_path", self.__directories.deploy( ) )
 
       command = f"cp -r {self.__directories.source( 'dist/install/*' )} {deploy_path}"
-      pfw.shell.run_and_wait_with_status( command, output = pfw.shell.eOutput.PTY, cwd = self.__directories.source( ) )
+      pfw.shell.execute( command, output = pfw.shell.eOutput.PTY, cwd = self.__directories.source( ) )
 
       return deploy_path
    # def deploy

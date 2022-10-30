@@ -62,24 +62,24 @@ class Repo:
          return
 
       # https://stackoverflow.com/questions/14402425/how-do-i-know-the-current-version-in-an-android-repo
-      pfw.shell.run_and_wait_with_status(
+      pfw.shell.execute(
             "git", "--git-dir", os.path.join( self.__source_dir, ".repo/manifests.git" ), "log", "default"
          )
-      pfw.shell.run_and_wait_with_status(
+      pfw.shell.execute(
             "git", "--git-dir", os.path.join( self.__source_dir, ".repo/manifests.git" ), "tag"
          )
-      pfw.shell.run_and_wait_with_status(
+      pfw.shell.execute(
             "git", "--git-dir", os.path.join( self.__source_dir, ".repo/manifests.git" ), "branch", "-a"
          )
    # def info
 
    def install( self ):
       pfw.base.download( self.__url, self.__source_dir )
-      pfw.shell.run_and_wait_with_status( "chmod", "a+x", self.__repo_tool )
+      pfw.shell.execute( "chmod", "a+x", self.__repo_tool )
    # def install
 
    def init( self, branch: str ):
-      result_code = pfw.shell.run_and_wait_with_status(
+      result_code = pfw.shell.execute(
             self.__repo_tool, "init",
             "-u", ANDROID_MANIFEST_URL,
             "-b", branch,
@@ -96,7 +96,7 @@ class Repo:
    # def init
 
    def sync( self ):
-      result_code = pfw.shell.run_and_wait_with_status(
+      result_code = pfw.shell.execute(
             self.__repo_tool, "sync",
             cwd = self.__source_dir, output = pfw.shell.eOutput.PTY
          )["code"]
@@ -109,7 +109,7 @@ class Repo:
    # def sync
 
    def status( self ):
-      result_code = pfw.shell.run_and_wait_with_status(
+      result_code = pfw.shell.execute(
             self.__repo_tool, "status",
             cwd = self.__source_dir
          )["code"]
@@ -122,7 +122,7 @@ class Repo:
    # def status
 
    def revert( self ):
-      result_code = pfw.shell.run_and_wait_with_status(
+      result_code = pfw.shell.execute(
             self.__repo_tool, "forall -vc \"git reset --hard\"",
             cwd = self.__source_dir
          )["code"]
@@ -347,7 +347,7 @@ class AOSP:
    def __execute( self, command: str = "", **kwargs ):
       kw_output = kwargs.get( "output", pfw.shell.eOutput.PTY )
 
-      result_code = pfw.shell.run_and_wait_with_status(
+      result_code = pfw.shell.execute(
             self.__config_cmd_line + command,
             cwd = self.__directories.source( ),
             output = kw_output

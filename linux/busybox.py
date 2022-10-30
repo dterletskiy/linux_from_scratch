@@ -74,7 +74,7 @@ class BusyBox:
    # def download
 
    def extract( self ):
-      pfw.shell.run_and_wait_with_status(
+      pfw.shell.execute(
               "tar", "-xvf"
             , self.__directories.download( self.__archive_name )
             , "--checkpoint=100"
@@ -103,7 +103,7 @@ class BusyBox:
       for target in kw_targets:
          if "defconfig" == target:
             target = self.defconfig( )
-         pfw.shell.run_and_wait_with_status( command, target, print = False, collect = False )
+         pfw.shell.execute( command, target, print = False, collect = False )
 
       # Applying configuration patched defined in code
       if 0 != len( kw_configs ):
@@ -141,7 +141,7 @@ class BusyBox:
       command += f" CROSS_COMPILE={self.__config.compiler( )}"
       command += f" -j{self.__config.cores( )}"
 
-      pfw.shell.run_and_wait_with_status( command, targets, output = pfw.shell.eOutput.PTY )
+      pfw.shell.execute( command, targets, output = pfw.shell.eOutput.PTY )
 
       self.install( )
    # def build
@@ -154,7 +154,7 @@ class BusyBox:
       command += f" CROSS_COMPILE={self.__config.compiler( )}"
       command += f" -j{self.__config.cores( )}"
 
-      pfw.shell.run_and_wait_with_status( command, "install", output = pfw.shell.eOutput.PTY )
+      pfw.shell.execute( command, "install", output = pfw.shell.eOutput.PTY )
    # def build
 
    def clean( self, **kwargs ):
@@ -173,7 +173,7 @@ class BusyBox:
       command += f" ARCH={self.__config.arch( )}"
       command += f" CROSS_COMPILE={self.__config.compiler( )}"
 
-      pfw.shell.run_and_wait_with_status( command, targets, output = pfw.shell.eOutput.PTY )
+      pfw.shell.execute( command, targets, output = pfw.shell.eOutput.PTY )
    # def clean
 
    def deploy( self, **kwargs ):
@@ -189,63 +189,63 @@ class BusyBox:
 
          if True == is_create_structure:
             deploy_path = os.path.join( deploy_path, self.__config.arch( ), self.__name )
-            pfw.shell.run_and_wait_with_status( f"mkdir -p {deploy_path}" )
+            pfw.shell.execute( f"mkdir -p {deploy_path}" )
       pfw.console.debug.info( "deploy -> ", deploy_path )
-      pfw.shell.run_and_wait_with_status( f"rm -r {deploy_path}" )
-      pfw.shell.run_and_wait_with_status( f"mkdir -p {deploy_path}" )
+      pfw.shell.execute( f"rm -r {deploy_path}" )
+      pfw.shell.execute( f"mkdir -p {deploy_path}" )
 
 
 
       rootfs_path = os.path.join( deploy_path, "initramfs" )
-      pfw.shell.run_and_wait_with_status( f"mkdir -p {rootfs_path}" )
+      pfw.shell.execute( f"mkdir -p {rootfs_path}" )
 
       files_list: list = [ ]
 
       for file in files_list:
-         pfw.shell.run_and_wait_with_status( f"cp {file} {rootfs_path}" )
+         pfw.shell.execute( f"cp {file} {rootfs_path}" )
 
       directories_list: list = [
             os.path.join( self.__directories.product( ), "." )
          ]
 
       for directory in directories_list:
-         pfw.shell.run_and_wait_with_status( f"cp -r {directory} {rootfs_path}" )
+         pfw.shell.execute( f"cp -r {directory} {rootfs_path}" )
 
-      pfw.shell.run_and_wait_with_status( f"mkdir -p {os.path.join( rootfs_path, 'etc' )}" )
-      pfw.shell.run_and_wait_with_status( f"mkdir -p {os.path.join( rootfs_path, 'etc/init.d' )}" )
-      pfw.shell.run_and_wait_with_status( f"mkdir -p {os.path.join( rootfs_path, 'dev' )}" )
-      pfw.shell.run_and_wait_with_status( f"mkdir -p {os.path.join( rootfs_path, 'lib' )}" )
-      pfw.shell.run_and_wait_with_status( f"mkdir -p {os.path.join( rootfs_path, 'proc' )}" )
-      pfw.shell.run_and_wait_with_status( f"mkdir -p {os.path.join( rootfs_path, 'sys' )}" )
+      pfw.shell.execute( f"mkdir -p {os.path.join( rootfs_path, 'etc' )}" )
+      pfw.shell.execute( f"mkdir -p {os.path.join( rootfs_path, 'etc/init.d' )}" )
+      pfw.shell.execute( f"mkdir -p {os.path.join( rootfs_path, 'dev' )}" )
+      pfw.shell.execute( f"mkdir -p {os.path.join( rootfs_path, 'lib' )}" )
+      pfw.shell.execute( f"mkdir -p {os.path.join( rootfs_path, 'proc' )}" )
+      pfw.shell.execute( f"mkdir -p {os.path.join( rootfs_path, 'sys' )}" )
 
-      pfw.shell.run_and_wait_with_status( f"touch ./etc/init.d/rcS", cwd = rootfs_path )
-      pfw.shell.run_and_wait_with_status( f"echo '#! /bin/sh' > ./etc/init.d/rcS", cwd = rootfs_path )
-      pfw.shell.run_and_wait_with_status( f"echo 'mount -t proc proc /proc' >> ./etc/init.d/rcS", cwd = rootfs_path )
-      pfw.shell.run_and_wait_with_status( f"echo 'mount -t sysfs sysfs /sys' >> ./etc/init.d/rcS", cwd = rootfs_path )
-      # pfw.shell.run_and_wait_with_status( f"echo 'mount -t devtmpfs devtmpfs /dev' >> ./etc/init.d/rcS", cwd = rootfs_path )
-      pfw.shell.run_and_wait_with_status( f"echo '/sbin/mdev -s' >> ./etc/init.d/rcS", cwd = rootfs_path )
-      pfw.shell.run_and_wait_with_status( f"chmod +x ./etc/init.d/rcS", cwd = rootfs_path )
+      pfw.shell.execute( f"touch ./etc/init.d/rcS", cwd = rootfs_path )
+      pfw.shell.execute( f"echo '#! /bin/sh' > ./etc/init.d/rcS", cwd = rootfs_path )
+      pfw.shell.execute( f"echo 'mount -t proc proc /proc' >> ./etc/init.d/rcS", cwd = rootfs_path )
+      pfw.shell.execute( f"echo 'mount -t sysfs sysfs /sys' >> ./etc/init.d/rcS", cwd = rootfs_path )
+      # pfw.shell.execute( f"echo 'mount -t devtmpfs devtmpfs /dev' >> ./etc/init.d/rcS", cwd = rootfs_path )
+      pfw.shell.execute( f"echo '/sbin/mdev -s' >> ./etc/init.d/rcS", cwd = rootfs_path )
+      pfw.shell.execute( f"chmod +x ./etc/init.d/rcS", cwd = rootfs_path )
 
-      pfw.shell.run_and_wait_with_status(
+      pfw.shell.execute(
            f"cp -r {self.__config.compiler_path( 'lib/.' )} ./lib/", cwd = rootfs_path
          )
 
       for index in range( 1, 5 ):
-         pfw.shell.run_and_wait_with_status(
+         pfw.shell.execute(
               f"sudo mknod -m 666 ./dev/tty{str(index)} c 4 {str(index)}", cwd = rootfs_path
             )
-      pfw.shell.run_and_wait_with_status(
+      pfw.shell.execute(
            f"sudo mknod -m 666 ./dev/console c 5 1", cwd = rootfs_path
          )
-      pfw.shell.run_and_wait_with_status(
+      pfw.shell.execute(
             f"sudo mknod -m 666 ./dev/null c 1 3", cwd = rootfs_path
          )
 
-      pfw.shell.run_and_wait_with_status(
+      pfw.shell.execute(
             f"find . | cpio -H newc -ov --owner root:root > {os.path.join( deploy_path, 'initramfs.cpio' )}", cwd = rootfs_path
          )
 
-      pfw.shell.run_and_wait_with_status(
+      pfw.shell.execute(
             f"gzip -k {os.path.join( deploy_path, 'initramfs.cpio' )}"
          )
    # def post_build

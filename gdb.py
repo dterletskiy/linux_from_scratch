@@ -61,5 +61,5 @@ def run( **kwargs ):
    command += f" -ex \"info breakpoints\""
    command += f" -ex \"info files\""
 
-   pfw.shell.run_and_wait_with_status( command, output = pfw.shell.eOutput.PTY )
+   pfw.shell.execute( command, output = pfw.shell.eOutput.PTY )
 # run

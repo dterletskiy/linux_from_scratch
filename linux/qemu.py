@@ -69,16 +69,16 @@ class Qemu:
       if None != self.__version:
          command += f" -b {self.__version}"
       command += f" {self.__url_git} {self.__directories.source( )}"
-      pfw.shell.run_and_wait_with_status( command, output = pfw.shell.eOutput.PTY )
+      pfw.shell.execute( command, output = pfw.shell.eOutput.PTY )
 
       command = f"git submodule init"
-      pfw.shell.run_and_wait_with_status( command, output = pfw.shell.eOutput.PTY, cwd = self.__directories.source( ) )
+      pfw.shell.execute( command, output = pfw.shell.eOutput.PTY, cwd = self.__directories.source( ) )
 
       command = f"git submodule update --recursive"
-      pfw.shell.run_and_wait_with_status( command, output = pfw.shell.eOutput.PTY, cwd = self.__directories.source( ) )
+      pfw.shell.execute( command, output = pfw.shell.eOutput.PTY, cwd = self.__directories.source( ) )
 
       command = f"git submodule status --recursive"
-      pfw.shell.run_and_wait_with_status( command, output = pfw.shell.eOutput.PTY, cwd = self.__directories.source( ) )
+      pfw.shell.execute( command, output = pfw.shell.eOutput.PTY, cwd = self.__directories.source( ) )
 
    # def clone
 
@@ -97,7 +97,7 @@ class Qemu:
       for option in kw_options:
          command += f" {option}"
 
-      pfw.shell.run_and_wait_with_status( command, print = False, collect = False, cwd = self.__directories.build( ) )
+      pfw.shell.execute( command, print = False, collect = False, cwd = self.__directories.build( ) )
    # def configure
 
    def build( self, **kwargs ):
@@ -113,7 +113,7 @@ class Qemu:
       command = "make"
       command += f" -j{self.__config.cores( )}"
 
-      pfw.shell.run_and_wait_with_status( command, targets, output = pfw.shell.eOutput.PTY, cwd = self.__directories.build( ) )
+      pfw.shell.execute( command, targets, output = pfw.shell.eOutput.PTY, cwd = self.__directories.build( ) )
    # def build
 
    def clean( self, **kwargs ):
@@ -128,14 +128,14 @@ class Qemu:
 
       command = "make"
 
-      pfw.shell.run_and_wait_with_status( command, targets, output = pfw.shell.eOutput.PTY, cwd = self.__directories.build( ) )
+      pfw.shell.execute( command, targets, output = pfw.shell.eOutput.PTY, cwd = self.__directories.build( ) )
    # def clean
 
    def deploy( self, **kwargs ):
       deploy_path = kwargs.get( "deploy_path", None )
 
       command = "make install"
-      pfw.shell.run_and_wait_with_status( command, output = pfw.shell.eOutput.PTY, cwd = self.__directories.build( ) )
+      pfw.shell.execute( command, output = pfw.shell.eOutput.PTY, cwd = self.__directories.build( ) )
 
       return deploy_path
    # def deploy

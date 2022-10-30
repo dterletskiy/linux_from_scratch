@@ -108,7 +108,7 @@ import generator.pdl.parser
 
 ENVIRONMENT = dict( os.environ )
 ENVIRONMENT["LFS_VERSION"] = str(1.0)
-pfw.shell.run_and_wait_with_status( "/bin/echo ${LFS_VERSION}", env = ENVIRONMENT, shell = True )
+pfw.shell.execute( "/bin/echo ${LFS_VERSION}", env = ENVIRONMENT, shell = True )
 
 
 

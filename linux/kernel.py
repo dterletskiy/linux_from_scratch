@@ -76,7 +76,7 @@ class Kernel:
 
    def extract( self ):
       # pfw.archive.extract( os.path.join( self.__directories.download( ), self.__archive_name ), "xztar", self.__directories.source( ) )
-      pfw.shell.run_and_wait_with_status(
+      pfw.shell.execute(
               "tar", "-xvf"
             , self.__directories.download( self.__archive_name )
             , "--checkpoint=100"
@@ -99,7 +99,7 @@ class Kernel:
       if None != self.__version:
          command += f" -b v{self.__version}"
       command += f" {self.__url_git} {self.__directories.source( )}"
-      pfw.shell.run_and_wait_with_status( command, output = pfw.shell.eOutput.PTY )
+      pfw.shell.execute( command, output = pfw.shell.eOutput.PTY )
 
       # repo = git.Repo.clone_from(
       #            self.__url_git
@@ -130,7 +130,7 @@ class Kernel:
       for target in kw_targets:
          if "defconfig" == target:
             target = self.defconfig( )
-         pfw.shell.run_and_wait_with_status( command, target, print = False, collect = False )
+         pfw.shell.execute( command, target, print = False, collect = False )
 
       # Applying configuration patched defined in code
       if 0 != len( kw_configs ):
@@ -175,7 +175,7 @@ class Kernel:
       elif "uImage" in targets:
          command += f" LOADADDR=0x10000"
 
-      pfw.shell.run_and_wait_with_status( command, targets, output = pfw.shell.eOutput.PTY )
+      pfw.shell.execute( command, targets, output = pfw.shell.eOutput.PTY )
 
       # Building host tools
       self.build_tool( tool = "tools/bootconfig", host = True )
@@ -193,7 +193,7 @@ class Kernel:
          command += f" CROSS_COMPILE={self.__config.compiler( )}"
       command += f" -j{self.__config.cores( )}"
 
-      pfw.shell.run_and_wait_with_status( command, output = pfw.shell.eOutput.PTY )
+      pfw.shell.execute( command, output = pfw.shell.eOutput.PTY )
    # def build
 
    def clean( self, **kwargs ):
@@ -212,7 +212,7 @@ class Kernel:
       command += f" ARCH={self.__config.arch( )}"
       command += f" CROSS_COMPILE={self.__config.compiler( )}"
 
-      pfw.shell.run_and_wait_with_status( command, targets, output = pfw.shell.eOutput.PTY )
+      pfw.shell.execute( command, targets, output = pfw.shell.eOutput.PTY )
    # def clean
 
    def deploy( self, **kwargs ):
@@ -227,8 +227,8 @@ class Kernel:
          kw_deploy_path = os.path.join( kw_deploy_path, self.__config.arch( ), self.__name )
 
       pfw.console.debug.info( "deploy -> ", kw_deploy_path )
-      pfw.shell.run_and_wait_with_status( f"rm -rf {kw_deploy_path}" )
-      pfw.shell.run_and_wait_with_status( f"mkdir -p {kw_deploy_path}" )
+      pfw.shell.execute( f"rm -rf {kw_deploy_path}" )
+      pfw.shell.execute( f"mkdir -p {kw_deploy_path}" )
 
       files_list: list = [
             self.__directories.product( "Image" ),
@@ -240,7 +240,7 @@ class Kernel:
 
       for file in files_list:
          pfw.console.debug.trace( "file: '%s' ->\n     '%s'" % ( file, kw_deploy_path ) )
-         pfw.shell.run_and_wait_with_status( f"cp {file} {kw_deploy_path}" )
+         pfw.shell.execute( f"cp {file} {kw_deploy_path}" )
 
       directories_list: list = [ 
             os.path.join( self.__directories.product( ), "dts" )
@@ -248,7 +248,7 @@ class Kernel:
 
       for directory in directories_list:
          pfw.console.debug.trace( "directory: '%s' ->\n     '%s'" % ( directory, kw_deploy_path ) )
-         pfw.shell.run_and_wait_with_status( f"cp -r {directory} {kw_deploy_path}" )
+         pfw.shell.execute( f"cp -r {directory} {kw_deploy_path}" )
 
       return kw_deploy_path
    # def deploy
@@ -322,13 +322,13 @@ class Kernel:
       command = self.__directories.build( "tools/bootconfig/bootconfig " )
 
       if True == kw_clear:
-         pfw.shell.run_and_wait_with_status( command + f"-d {initrd}", output = pfw.shell.eOutput.PTY )
+         pfw.shell.execute( command + f"-d {initrd}", output = pfw.shell.eOutput.PTY )
 
       if None != kw_add:
-         pfw.shell.run_and_wait_with_status( command + f"-a {kw_add} {initrd}", output = pfw.shell.eOutput.PTY )
+         pfw.shell.execute( command + f"-a {kw_add} {initrd}", output = pfw.shell.eOutput.PTY )
 
       if True == kw_show:
-         pfw.shell.run_and_wait_with_status( command + f"-l {initrd}", output = pfw.shell.eOutput.PTY )
+         pfw.shell.execute( command + f"-l {initrd}", output = pfw.shell.eOutput.PTY )
    # def bootconfig
 
 

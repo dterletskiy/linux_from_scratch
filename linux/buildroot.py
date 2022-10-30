@@ -70,7 +70,7 @@ class BuildRoot:
       if None != self.__version:
          command += f" -b {self.__version}"
       command += f" {self.__url_git} {self.__directories.source( )}"
-      pfw.shell.run_and_wait_with_status( command, output = pfw.shell.eOutput.PTY )
+      pfw.shell.execute( command, output = pfw.shell.eOutput.PTY )
 
       # repo = git.Repo.clone_from(
       #            self.__url_git
@@ -100,7 +100,7 @@ class BuildRoot:
       for target in kw_targets:
          if "defconfig" == target:
             target = self.defconfig( )
-         pfw.shell.run_and_wait_with_status( command, target, print = False, collect = False )
+         pfw.shell.execute( command, target, print = False, collect = False )
 
       # Applying configuration patched defined in code
       if 0 != len( kw_configs ):
@@ -138,7 +138,7 @@ class BuildRoot:
       command += f" CROSS_COMPILE={self.__config.compiler( )}"
       command += f" -j{self.__config.cores( )}"
 
-      pfw.shell.run_and_wait_with_status( command, targets, output = pfw.shell.eOutput.PTY )
+      pfw.shell.execute( command, targets, output = pfw.shell.eOutput.PTY )
    # def build
 
    def clean( self, **kwargs ):
@@ -158,20 +158,20 @@ class BuildRoot:
       command += f" CROSS_COMPILE={self.__config.compiler( )}"
       command += f" -j{self.__config.cores( )}"
 
-      pfw.shell.run_and_wait_with_status( command, targets, output = pfw.shell.eOutput.PTY )
+      pfw.shell.execute( command, targets, output = pfw.shell.eOutput.PTY )
    # def clean
 
    # https://stackoverflow.com/questions/47320800/how-to-clean-only-target-in-buildroot
    # https://buildroot.uclibc.narkive.com/Kaw8KG7t/force-to-regenerate-the-output-target-directory-tree#post3
    def soft_clean( self, **kwargs ):
       command = f"rm -rf {self.__directories.build( 'target' )}"
-      pfw.shell.run_and_wait_with_status( command, targets, output = pfw.shell.eOutput.PTY )
+      pfw.shell.execute( command, targets, output = pfw.shell.eOutput.PTY )
 
       command = f"find {self.__directories.build( )} -name '.stamp_target_installed' -delete"
-      pfw.shell.run_and_wait_with_status( command, targets, output = pfw.shell.eOutput.PTY )
+      pfw.shell.execute( command, targets, output = pfw.shell.eOutput.PTY )
 
       command = f"rm -f {self.__directories.build( 'build/host-gcc-final-*/.stamp_host_installed' )}"
-      pfw.shell.run_and_wait_with_status( command, targets, output = pfw.shell.eOutput.PTY )
+      pfw.shell.execute( command, targets, output = pfw.shell.eOutput.PTY )
    # def soft_clean
 
    def deploy( self, **kwargs ):
@@ -187,10 +187,10 @@ class BuildRoot:
 
          if True == is_create_structure:
             deploy_path = os.path.join( deploy_path, self.__config.arch( ), self.__name )
-            pfw.shell.run_and_wait_with_status( "mkdir", "-p", deploy_path )
+            pfw.shell.execute( "mkdir", "-p", deploy_path )
       pfw.console.debug.info( "deploy -> ", deploy_path )
-      pfw.shell.run_and_wait_with_status( "rm", "-r", deploy_path )
-      pfw.shell.run_and_wait_with_status( "mkdir", "-p", deploy_path )
+      pfw.shell.execute( "rm", "-r", deploy_path )
+      pfw.shell.execute( "mkdir", "-p", deploy_path )
 
       files_list: list = [
             os.path.join( self.__directories.product( ), "rootfs.ext2" ),
@@ -201,13 +201,13 @@ class BuildRoot:
 
       for file in files_list:
          pfw.console.debug.trace( "file: '%s' ->\n     '%s'" % ( file, deploy_path ) )
-         pfw.shell.run_and_wait_with_status( "cp", file, deploy_path )
+         pfw.shell.execute( "cp", file, deploy_path )
 
       directories_list: list = [ ]
 
       for directory in directories_list:
          pfw.console.debug.trace( "directory: '%s' ->\n     '%s'" % ( directory, deploy_path ) )
-         pfw.shell.run_and_wait_with_status( "cp", "-r", directory, deploy_path )
+         pfw.shell.execute( "cp", "-r", directory, deploy_path )
 
       return deploy_path
    # def deploy

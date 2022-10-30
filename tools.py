@@ -164,9 +164,9 @@ def deploy_boot( projects_map: dict, mount_point: str, pause: bool = False ):
       if False == os.path.exists( item["src"] ):
          pfw.console.debug.warning( "file does not exist: ", item["src"] )
          continue
-      pfw.shell.run_and_wait_with_status( "sudo mkdir -p " + os.path.dirname( item["dest"] ), output = pfw.shell.eOutput.PTY )
+      pfw.shell.execute( "sudo mkdir -p " + os.path.dirname( item["dest"] ), output = pfw.shell.eOutput.PTY )
       pfw.console.debug.trace( "file: '%s' ->\n     '%s'" % ( item["src"], item["dest"] ) )
-      pfw.shell.run_and_wait_with_status( f"sudo cp " + item["src"] + " " + item["dest"], output = pfw.shell.eOutput.PTY )
+      pfw.shell.execute( f"sudo cp " + item["src"] + " " + item["dest"], output = pfw.shell.eOutput.PTY )
 
    if True == pause:
       subprocess.Popen(['xdg-open', mount_point])
@@ -198,154 +198,154 @@ def deploy_rootfs( projects_map: dict, mount_point: str, pause: bool = False ):
    PASSWORD="adt"
    SALT="tda"
    command = f"perl -e " + "\"print crypt(\"" + PASSWORD + "\",\"" + SALT + "\");\""
-   USERNAME_HASHED_PASSWORD=pfw.shell.run_and_wait_with_status( command, print = False )["output"]
+   USERNAME_HASHED_PASSWORD=pfw.shell.execute( command, print = False )["output"]
    pfw.console.debug.info( USERNAME_HASHED_PASSWORD )
 
    if True:
       command = f"sudo tar -xf {ubuntu_archive} -C {mount_point}"
-      pfw.shell.run_and_wait_with_status( command, output = pfw.shell.eOutput.PTY )
+      pfw.shell.execute( command, output = pfw.shell.eOutput.PTY )
 
    if True:
       # Mounting required host stuff
       command = f"sudo mount -o bind /proc {mount_point}/proc"
-      pfw.shell.run_and_wait_with_status( command, output = pfw.shell.eOutput.PTY )
+      pfw.shell.execute( command, output = pfw.shell.eOutput.PTY )
       command = f"sudo mount -o bind /dev {mount_point}/dev"
-      pfw.shell.run_and_wait_with_status( command, output = pfw.shell.eOutput.PTY )
+      pfw.shell.execute( command, output = pfw.shell.eOutput.PTY )
       command = f"sudo mount -o bind /dev/pts {mount_point}/dev/pts"
-      pfw.shell.run_and_wait_with_status( command, output = pfw.shell.eOutput.PTY )
+      pfw.shell.execute( command, output = pfw.shell.eOutput.PTY )
       command = f"sudo mount -o bind /sys {mount_point}/sys"
-      pfw.shell.run_and_wait_with_status( command, output = pfw.shell.eOutput.PTY )
+      pfw.shell.execute( command, output = pfw.shell.eOutput.PTY )
       command = f"sudo mount -o bind /tmp {mount_point}/tmp"
-      pfw.shell.run_and_wait_with_status( command, output = pfw.shell.eOutput.PTY )
+      pfw.shell.execute( command, output = pfw.shell.eOutput.PTY )
 
    if False:
       # Copying qemu-static to guest
       command = f"sudo cp {QEMU_BIN_DIR}/qemu-{ARCH}-static {mount_point}/usr/bin/"
-      # pfw.shell.run_and_wait_with_status( command, output = pfw.shell.eOutput.PTY )
+      # pfw.shell.execute( command, output = pfw.shell.eOutput.PTY )
 
       # Setup /etc/hostname
       command = f"echo '{HOSTNAME}' > /etc/hostname"
-      pfw.shell.run_and_wait_with_status( command, chroot_bash = mount_point, output = pfw.shell.eOutput.PTY )
+      pfw.shell.execute( command, chroot_bash = mount_point, output = pfw.shell.eOutput.PTY )
 
       # Setup /etc/hosts
       command = f"echo '127.0.0.1   localhost' > /etc/hosts"
-      pfw.shell.run_and_wait_with_status( command, chroot_bash = mount_point, output = pfw.shell.eOutput.PTY )
+      pfw.shell.execute( command, chroot_bash = mount_point, output = pfw.shell.eOutput.PTY )
       command = f"echo '127.0.1.1   {HOSTNAME}' >> /etc/hosts"
-      pfw.shell.run_and_wait_with_status( command, chroot_bash = mount_point, output = pfw.shell.eOutput.PTY )
+      pfw.shell.execute( command, chroot_bash = mount_point, output = pfw.shell.eOutput.PTY )
       command = f"echo '' >> /etc/hosts"
-      pfw.shell.run_and_wait_with_status( command, chroot_bash = mount_point, output = pfw.shell.eOutput.PTY )
+      pfw.shell.execute( command, chroot_bash = mount_point, output = pfw.shell.eOutput.PTY )
       command = f"echo '# The following lines are desirable for IPv6 capable hosts' >> /etc/hosts"
-      pfw.shell.run_and_wait_with_status( command, chroot_bash = mount_point, output = pfw.shell.eOutput.PTY )
+      pfw.shell.execute( command, chroot_bash = mount_point, output = pfw.shell.eOutput.PTY )
       command = f"echo '::1         ip6-localhost ip6-loopback' >> /etc/hosts"
-      pfw.shell.run_and_wait_with_status( command, chroot_bash = mount_point, output = pfw.shell.eOutput.PTY )
+      pfw.shell.execute( command, chroot_bash = mount_point, output = pfw.shell.eOutput.PTY )
       command = f"echo 'fe00::0     ip6-localnet' >> /etc/hosts"
-      pfw.shell.run_and_wait_with_status( command, chroot_bash = mount_point, output = pfw.shell.eOutput.PTY )
+      pfw.shell.execute( command, chroot_bash = mount_point, output = pfw.shell.eOutput.PTY )
       command = f"echo 'ff00::0     ip6-mcastprefix' >> /etc/hosts"
-      pfw.shell.run_and_wait_with_status( command, chroot_bash = mount_point, output = pfw.shell.eOutput.PTY )
+      pfw.shell.execute( command, chroot_bash = mount_point, output = pfw.shell.eOutput.PTY )
       command = f"echo 'ff02::1     ip6-allnodes' >> /etc/hosts"
-      pfw.shell.run_and_wait_with_status( command, chroot_bash = mount_point, output = pfw.shell.eOutput.PTY )
+      pfw.shell.execute( command, chroot_bash = mount_point, output = pfw.shell.eOutput.PTY )
       command = f"echo 'ff02::2     ip6-allrouters' >> /etc/hosts"
-      pfw.shell.run_and_wait_with_status( command, chroot_bash = mount_point, output = pfw.shell.eOutput.PTY )
+      pfw.shell.execute( command, chroot_bash = mount_point, output = pfw.shell.eOutput.PTY )
 
       # Setup /etc/fstab
       command = f"echo 'proc        /proc       proc     defaults             0     0' > /etc/fstab"
-      pfw.shell.run_and_wait_with_status( command, chroot_bash = mount_point, output = pfw.shell.eOutput.PTY )
+      pfw.shell.execute( command, chroot_bash = mount_point, output = pfw.shell.eOutput.PTY )
       command = f"echo '/dev/vda1   /boot       vfat     defaults             0     2' >> /etc/fstab"
-      pfw.shell.run_and_wait_with_status( command, chroot_bash = mount_point, output = pfw.shell.eOutput.PTY )
+      pfw.shell.execute( command, chroot_bash = mount_point, output = pfw.shell.eOutput.PTY )
       command = f"echo '/dev/vda2   /           ext4     defaults,noatime     0     1' >> /etc/fstab"
-      pfw.shell.run_and_wait_with_status( command, chroot_bash = mount_point, output = pfw.shell.eOutput.PTY )
+      pfw.shell.execute( command, chroot_bash = mount_point, output = pfw.shell.eOutput.PTY )
 
       # Setup /etc/resolv.conf
       # Setup internet connectivity in chroot
       # /etc/resolv.conf is required for internet connectivity in chroot.
       # It will get overwritten by dhcp, so don't get too attached to it.
       command = f"echo 'nameserver 8.8.8.8' > /etc/resolv.conf"
-      pfw.shell.run_and_wait_with_status( command, chroot_bash = mount_point, output = pfw.shell.eOutput.PTY )
+      pfw.shell.execute( command, chroot_bash = mount_point, output = pfw.shell.eOutput.PTY )
       command = f"echo 'nameserver 2001:4860:4860::8888' >> /etc/resolv.conf"
-      pfw.shell.run_and_wait_with_status( command, chroot_bash = mount_point, output = pfw.shell.eOutput.PTY )
+      pfw.shell.execute( command, chroot_bash = mount_point, output = pfw.shell.eOutput.PTY )
 
       # Setup /etc/apt/sources.list
       # Setup apt source list
       command = "sed -i -e \"s/# deb /deb /\" /etc/apt/sources.list"
-      pfw.shell.run_and_wait_with_status( command, chroot = mount_point, output = pfw.shell.eOutput.PTY )
+      pfw.shell.execute( command, chroot = mount_point, output = pfw.shell.eOutput.PTY )
 
       # Configure /tmp directory
       command = f"chmod 1777 /tmp"
-      pfw.shell.run_and_wait_with_status( command, chroot = mount_point, output = pfw.shell.eOutput.PTY )
+      pfw.shell.execute( command, chroot = mount_point, output = pfw.shell.eOutput.PTY )
 
       # Create user
       command = f"useradd -s /bin/bash -G adm,sudo -m -p {USERNAME_HASHED_PASSWORD} {USERNAME}"
-      pfw.shell.run_and_wait_with_status( command, chroot = mount_point, output = pfw.shell.eOutput.PTY )
+      pfw.shell.execute( command, chroot = mount_point, output = pfw.shell.eOutput.PTY )
 
    if False:
       # Update and upgrade packages
       command = f"apt update"
-      pfw.shell.run_and_wait_with_status( command, chroot = mount_point, output = pfw.shell.eOutput.PTY )
+      pfw.shell.execute( command, chroot = mount_point, output = pfw.shell.eOutput.PTY )
       command = f"apt -y upgrade"
-      pfw.shell.run_and_wait_with_status( command, chroot = mount_point, output = pfw.shell.eOutput.PTY )
+      pfw.shell.execute( command, chroot = mount_point, output = pfw.shell.eOutput.PTY )
 
       # Install and setup locales
       command = f"apt -y install locales"
-      pfw.shell.run_and_wait_with_status( command, chroot = mount_point, output = pfw.shell.eOutput.PTY )
+      pfw.shell.execute( command, chroot = mount_point, output = pfw.shell.eOutput.PTY )
       command = f"locale-gen en_US en_US.UTF-8"
-      pfw.shell.run_and_wait_with_status( command, chroot = mount_point, output = pfw.shell.eOutput.PTY )
+      pfw.shell.execute( command, chroot = mount_point, output = pfw.shell.eOutput.PTY )
       command = f"dpkg-reconfigure locales"
-      # pfw.shell.run_and_wait_with_status( command, chroot = mount_point, output = pfw.shell.eOutput.PTY )
+      # pfw.shell.execute( command, chroot = mount_point, output = pfw.shell.eOutput.PTY )
       command = f"update-locale LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8"
-      # pfw.shell.run_and_wait_with_status( command, chroot = mount_point, output = pfw.shell.eOutput.PTY )
+      # pfw.shell.execute( command, chroot = mount_point, output = pfw.shell.eOutput.PTY )
 
       # Install required packages
       command = f"apt -y install dialog"
-      # pfw.shell.run_and_wait_with_status( command, chroot = mount_point, output = pfw.shell.eOutput.PTY )
+      # pfw.shell.execute( command, chroot = mount_point, output = pfw.shell.eOutput.PTY )
       command = f"apt -y install apt-utils"
-      pfw.shell.run_and_wait_with_status( command, chroot = mount_point, output = pfw.shell.eOutput.PTY )
+      pfw.shell.execute( command, chroot = mount_point, output = pfw.shell.eOutput.PTY )
       command = f"apt -y install systemd systemd-sysv libsystemd-dev sysvinit-utils"
-      pfw.shell.run_and_wait_with_status( command, chroot = mount_point, output = pfw.shell.eOutput.PTY, method = "system" )
+      pfw.shell.execute( command, chroot = mount_point, output = pfw.shell.eOutput.PTY, method = "system" )
       command = f"apt -y install netbase dnsutils ifupdown isc-dhcp-client isc-dhcp-common net-tools iproute2 iputils-ping ssh dhcpcd5 tcpd bridge-utils ethtool iptables libnss-mdns iw "
-      pfw.shell.run_and_wait_with_status( command, chroot = mount_point, output = pfw.shell.eOutput.PTY )
+      pfw.shell.execute( command, chroot = mount_point, output = pfw.shell.eOutput.PTY )
       command = f"apt -y install ser2net minicom"
-      pfw.shell.run_and_wait_with_status( command, chroot = mount_point, output = pfw.shell.eOutput.PTY )
+      pfw.shell.execute( command, chroot = mount_point, output = pfw.shell.eOutput.PTY )
       command = f"apt -y install mc nano vim less sed bash-completion"
-      pfw.shell.run_and_wait_with_status( command, chroot = mount_point, output = pfw.shell.eOutput.PTY )
+      pfw.shell.execute( command, chroot = mount_point, output = pfw.shell.eOutput.PTY )
       command = f"apt -y install tar zip unzip unrar rarcrack zlib1g-dev"
-      pfw.shell.run_and_wait_with_status( command, chroot = mount_point, output = pfw.shell.eOutput.PTY )
+      pfw.shell.execute( command, chroot = mount_point, output = pfw.shell.eOutput.PTY )
       command = f"apt -y install autoconf lsb-base lsb-release sudo udev rsyslog kmod util-linux dmsetup hostname uuid uuid-dev pkg-config symlinks psmisc"
-      pfw.shell.run_and_wait_with_status( command, chroot = mount_point, output = pfw.shell.eOutput.PTY )
+      pfw.shell.execute( command, chroot = mount_point, output = pfw.shell.eOutput.PTY )
       command = f"apt -y install strace ltrace"
-      pfw.shell.run_and_wait_with_status( command, chroot = mount_point, output = pfw.shell.eOutput.PTY )
+      pfw.shell.execute( command, chroot = mount_point, output = pfw.shell.eOutput.PTY )
 
       command = f"apt -y install fakeroot build-essential ncurses-dev xz-utils bc flex bison libssl-dev libelf-dev libfdt-dev"
-      pfw.shell.run_and_wait_with_status( command, chroot = mount_point, output = pfw.shell.eOutput.PTY )
+      pfw.shell.execute( command, chroot = mount_point, output = pfw.shell.eOutput.PTY )
       command = f"apt -y install python3 python3-dev"
-      pfw.shell.run_and_wait_with_status( command, chroot = mount_point, output = pfw.shell.eOutput.PTY )
+      pfw.shell.execute( command, chroot = mount_point, output = pfw.shell.eOutput.PTY )
       command = f"apt -y install perl"
-      pfw.shell.run_and_wait_with_status( command, chroot = mount_point, output = pfw.shell.eOutput.PTY )
+      pfw.shell.execute( command, chroot = mount_point, output = pfw.shell.eOutput.PTY )
       command = f"apt -y install libyajl-dev ninja-build iasl"
-      pfw.shell.run_and_wait_with_status( command, chroot = mount_point, output = pfw.shell.eOutput.PTY )
+      pfw.shell.execute( command, chroot = mount_point, output = pfw.shell.eOutput.PTY )
       command = f"apt -y install git gitk patch"
-      pfw.shell.run_and_wait_with_status( command, chroot = mount_point, output = pfw.shell.eOutput.PTY )
+      pfw.shell.execute( command, chroot = mount_point, output = pfw.shell.eOutput.PTY )
       command = f"apt -y install libglib2.0-dev libglib2.0-dev-bin libpixman-1-dev"
-      pfw.shell.run_and_wait_with_status( command, chroot = mount_point, output = pfw.shell.eOutput.PTY )
+      pfw.shell.execute( command, chroot = mount_point, output = pfw.shell.eOutput.PTY )
 
    if True:
       command = f"mkdir /projects"
-      pfw.shell.run_and_wait_with_status( command, chroot = mount_point, output = pfw.shell.eOutput.PTY )
+      pfw.shell.execute( command, chroot = mount_point, output = pfw.shell.eOutput.PTY )
       command = f"git clone https://xenbits.xen.org/git-http/xen.git /projects/xen"
-      pfw.shell.run_and_wait_with_status( command, chroot = mount_point, output = pfw.shell.eOutput.PTY )
+      pfw.shell.execute( command, chroot = mount_point, output = pfw.shell.eOutput.PTY )
       command = f"cd /projects/xen; git checkout origin/stable-4.15 --track"
-      pfw.shell.run_and_wait_with_status( command, chroot_bash = mount_point, output = pfw.shell.eOutput.PTY )
+      pfw.shell.execute( command, chroot_bash = mount_point, output = pfw.shell.eOutput.PTY )
       command = f"cd /projects/xen; ./configure --disable-docs --disable-stubdom --prefix=/usr/local --libdir=/usr/lib --enable-systemd"
-      pfw.shell.run_and_wait_with_status( command, chroot_bash = mount_point, output = pfw.shell.eOutput.PTY )
+      pfw.shell.execute( command, chroot_bash = mount_point, output = pfw.shell.eOutput.PTY )
       command = f"cd /projects/xen; CC=gcc make -j4 debball"
-      pfw.shell.run_and_wait_with_status( command, chroot_bash = mount_point, output = pfw.shell.eOutput.PTY )
+      pfw.shell.execute( command, chroot_bash = mount_point, output = pfw.shell.eOutput.PTY )
 
    if True:
       # Unmounting required host stuff
-      pfw.shell.run_and_wait_with_status( f"sudo umount {mount_point}/tmp", output = pfw.shell.eOutput.PTY )
-      pfw.shell.run_and_wait_with_status( f"sudo umount {mount_point}/sys", output = pfw.shell.eOutput.PTY )
-      pfw.shell.run_and_wait_with_status( f"sudo umount {mount_point}/dev/pts", output = pfw.shell.eOutput.PTY )
-      pfw.shell.run_and_wait_with_status( f"sudo umount {mount_point}/dev", output = pfw.shell.eOutput.PTY )
-      pfw.shell.run_and_wait_with_status( f"sudo umount {mount_point}/proc", output = pfw.shell.eOutput.PTY )
+      pfw.shell.execute( f"sudo umount {mount_point}/tmp", output = pfw.shell.eOutput.PTY )
+      pfw.shell.execute( f"sudo umount {mount_point}/sys", output = pfw.shell.eOutput.PTY )
+      pfw.shell.execute( f"sudo umount {mount_point}/dev/pts", output = pfw.shell.eOutput.PTY )
+      pfw.shell.execute( f"sudo umount {mount_point}/dev", output = pfw.shell.eOutput.PTY )
+      pfw.shell.execute( f"sudo umount {mount_point}/proc", output = pfw.shell.eOutput.PTY )
 
 
 
@@ -649,5 +649,5 @@ def run_vexpress_ca9x4( projects_map: dict, **kwargs ):
    # parameters.append( "-drive file=rootfs.ext4,if=none,format=raw,id=hd0" )
    # parameters.append( "-device virtio-blk-device,drive=hd0" )
    # parameters.append( "-s -S" )
-   pfw.shell.run_and_wait_with_status( command, args = parameters, output = pfw.shell.eOutput.PTY )
+   pfw.shell.execute( command, args = parameters, output = pfw.shell.eOutput.PTY )
 # run_vexpress_ca9x4
