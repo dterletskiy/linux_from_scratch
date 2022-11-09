@@ -1,17 +1,16 @@
 import os
 import re
-import git
 from enum import Enum
 
 import pfw.base
 import pfw.console
 import pfw.archive
 import pfw.shell
-import pfw.git
 
 import base
 import qemu
 import linux.base
+import linux.git
 
 
 
@@ -104,7 +103,7 @@ class Xen:
       #            self.__url_git
       #          , os.path.join( self.__directories.source( ), "linux-stable" )
       #          , branch="v" + self.__version
-      #          , progress = pfw.git.CloneProgress( )
+      #          , progress = linux.git.CloneProgress( )
       #       )
    # def clone
 

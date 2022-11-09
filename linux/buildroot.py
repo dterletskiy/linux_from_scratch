@@ -7,11 +7,11 @@ import pfw.base
 import pfw.console
 import pfw.archive
 import pfw.shell
-import pfw.git
 
 import base
 import qemu
 import linux.base
+import linux.git
 
 
 
@@ -76,7 +76,7 @@ class BuildRoot:
       #            self.__url_git
       #          , self.__directories.source( )
       #          , branch = self.__version
-      #          , progress = pfw.git.CloneProgress( )
+      #          , progress = linux.git.CloneProgress( )
       #       )
    # def clone
 

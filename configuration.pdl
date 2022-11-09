@@ -63,10 +63,43 @@ project: qemu
 };
 
 
-project: aosp
+project: aosp_trout_arm64
 {
    type: android;
    version: android-12.1.0_r8;
    root_dir: "/mnt/dev/android/";
    arch: arm64;
+
+   lunch: aosp_trout_arm64;
+   variant: userdebug;
+   product_name: aosp_trout_arm64;
+   product_device: trout_arm64;
+};
+
+
+project: aosp_trout_x86
+{
+   type: android;
+   version: android-12.1.0_r8;
+   root_dir: "/mnt/dev/android/";
+   arch: arm64;
+
+   lunch: aosp_trout_x86;
+   variant: userdebug;
+   product_name: aosp_trout_x86;
+   product_device: trout_x86;
+};
+
+
+project: aosp_sdk_R136a1_x86_64
+{
+   type: android;
+   version: android-12.1.0_r8;
+   root_dir: "/mnt/dev/android/";
+   arch: arm64;
+
+   lunch: sdk_R136a1_x86_64;
+   variant: userdebug;
+   product_name: sdk_R136a1_x86_64;
+   product_device: R136a1;
 };

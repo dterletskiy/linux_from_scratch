@@ -30,6 +30,10 @@ def create_project( project_type: str, **kwargs ):
    kw_root_dir = kwargs.get( "root_dir", None )
    kw_version = kwargs.get( "version", None )
    kw_defconfig = kwargs.get( "defconfig", None )
+   kw_lunch = kwargs.get( "lunch", None )
+   kw_variant = kwargs.get( "variant", None )
+   kw_product_name = kwargs.get( "product_name", None )
+   kw_product_device = kwargs.get( "product_device", None )
 
    project = None
    if None == project_type:
@@ -78,7 +82,12 @@ def create_project( project_type: str, **kwargs ):
          )
    elif "android" == project_type:
       project = aosp.aosp.AOSP(
-            aosp.base.config[ kw_arch ],
+            aosp.base.Configuration(
+                    lunch = kw_lunch
+                  , variant = kw_variant
+                  , product_name = kw_product_name
+                  , product_device = kw_product_device
+               ),
             kw_root_dir,
             tag = kw_version,
          )
@@ -141,14 +150,36 @@ class PdlListener( PdlParserListener ):
 
       defconfig: str = ctx.defconfig( 0 ).IDENTIFIER( ).getText( ) if ctx.defconfig( ) else None
 
+      lunch: str = ctx.lunch( 0 ).IDENTIFIER( ).getText( ) if ctx.lunch( ) else None
+
+      variant: str = ctx.variant( 0 ).IDENTIFIER( ).getText( ) if ctx.variant( ) else None
+
+      product_name: str = ctx.product_name( 0 ).IDENTIFIER( ).getText( ) if ctx.product_name( ) else None
+
+      product_device: str = ctx.product_device( 0 ).IDENTIFIER( ).getText( ) if ctx.product_device( ) else None
+
       pfw.console.debug.info( "type: ", type_ )
       pfw.console.debug.info( "name: ", name )
       pfw.console.debug.info( "version: ", version )
       pfw.console.debug.info( "root_dir: ", root_dir )
       pfw.console.debug.info( "arch: ", arch )
       pfw.console.debug.info( "defconfig: ", defconfig )
+      pfw.console.debug.info( "lunch: ", lunch )
+      pfw.console.debug.info( "variant: ", variant )
+      pfw.console.debug.info( "product_name: ", product_name )
+      pfw.console.debug.info( "product_device: ", product_device )
 
-      self.__project_map[name] = create_project( type_, version = version, root_dir = root_dir, arch = arch, defconfig = defconfig )
+      self.__project_map[name] = create_project(
+              type_
+            , version = version
+            , root_dir = root_dir
+            , arch = arch
+            , defconfig = defconfig
+            , lunch = lunch
+            , variant = variant
+            , product_name = product_name
+            , product_device = product_device
+         )
 
    def exitProject( self, ctx: PdlParser.ProjectContext ):
       pfw.console.debug.trace( "exitProject" )
