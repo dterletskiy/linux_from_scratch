@@ -155,7 +155,7 @@ class BusyBox:
       command += f" -j{self.__config.cores( )}"
 
       pfw.shell.execute( command, "install", output = pfw.shell.eOutput.PTY )
-   # def build
+   # def install
 
    def clean( self, **kwargs ):
       kw_targets = kwargs.get( "targets", ["clean", "distclean", "mrproper"] )
@@ -248,7 +248,7 @@ class BusyBox:
       pfw.shell.execute(
             f"gzip -k {os.path.join( deploy_path, 'initramfs.cpio' )}"
          )
-   # def post_build
+   # def deploy
 
    def run( self, **kwargs ):
       kw_kernel = kwargs.get( "kernel", None )

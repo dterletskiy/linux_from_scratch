@@ -12,7 +12,6 @@ import pfw.git
 
 import base
 import configuration
-import tools
 import qemu
 import aosp.base
 
