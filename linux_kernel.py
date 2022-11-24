@@ -57,6 +57,8 @@ import pfw.console
 import pfw.shell
 import pfw.size
 import pfw.image
+import pfw.os.signal
+import signal
 
 import base
 import dt
@@ -68,6 +70,7 @@ import linux.uboot
 import linux.buildroot
 import linux.busybox
 import linux.kernel
+import linux.rootfs
 import linux.xen
 import linux.qemu
 import aosp.base
@@ -185,3 +188,81 @@ if __name__ == "__main__":
    pfw.console.debug.ok( "------------------------- BEGIN -------------------------" )
    main( )
    pfw.console.debug.ok( "-------------------------- END --------------------------" )
+
+
+
+
+
+
+   # packages = ubuntu.packages_all
+
+   # OS_ARCH="arm64v8"
+   # OS_NAME="ubuntu"
+   # OS_VERSION="20.04"
+   # CONTAINER_NAME=f"tda_{OS_NAME}-{OS_VERSION}-{OS_ARCH}"
+
+   # container: pfw.docker.Container = pfw.docker.Container(
+   #       name = f"{CONTAINER_NAME}",
+   #       hostname = "host",
+   #       image = f"{OS_ARCH}/{OS_NAME}:{OS_VERSION}",
+   #       volume_mapping = [
+   #          pfw.docker.Container.Mapping( f"/mnt/docker/{CONTAINER_NAME}", f"/mnt/host" )
+   #       ],
+   #       port_mapping = [
+   #          pfw.docker.Container.Mapping( "5000", "5000" )
+   #       ]
+   #    )
+   # container.create( )
+   # container.start( )
+   # container.exec( "apt update" )
+   # container.exec( "apt upgrade" )
+   # container.exec( "apt clean all" )
+   # for package in packages:
+   #    container.exec( f"apt install -y {package}" )
+   # container.stop( )
+
+
+
+
+
+
+
+
+   partition_image_file = os.path.join( configuration.config.get_value( "tmp_path" ), "partition.img" )
+   # partition_description = pfw.image.Partition.Description(
+   #      file = partition_image_file
+   #    , size = pfw.size.Size( 512, pfw.size.Size.eGran.M )
+   #    , fs = "ext2"
+   # )
+   # partition = pfw.image.Partition( partition_description, build = True, force = True )
+   # partition.mount( configuration.value( "tmp_path" ), True )
+
+   # partition.info( )
+   # partition.umount( )
+
+
+
+
+
+   # partitions = [
+   #    pfw.image.Partition.Description( size = pfw.size.SizeGigabyte, label = "boot", fs = "ext4" ),
+   #    pfw.image.Partition.Description( size = pfw.size.SizeGigabyte, label = "system", fs = "ext4" ),
+   #    pfw.image.Partition.Description( size = pfw.size.SizeGigabyte, label = "swap", fs = "ext4" ),
+   # ]
+
+   drive_image_file = os.path.join( configuration.config.get_value( "tmp_path" ), "drive.img" )
+   # drive = pfw.image.Drive( os.path.join( configuration.config.get_value( "tmp_path" ), "drive.img" ) )
+   # drive.create( partitions = partitions, force = True )
+   # drive.attach( )
+   # drive.init( partitions )
+
+   # drive.info( )
+   # drive.detach( )
+
+
+
+   # pfw.image.mounted_to( partition_image_file )
+   # pfw.image.attached_to( drive_image_file )
+
+   # pfw.image.info( partition_image_file )
+   # pfw.image.info( drive_image_file )
