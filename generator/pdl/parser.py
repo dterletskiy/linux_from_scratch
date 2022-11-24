@@ -18,6 +18,7 @@ import linux.uboot
 import linux.buildroot
 import linux.busybox
 import linux.kernel
+import linux.rootfs
 import linux.xen
 import linux.qemu
 import aosp.base
@@ -79,6 +80,12 @@ def create_project( project_type: str, **kwargs ):
             kw_root_dir,
             version = kw_version,
             defconfig = kw_defconfig
+         )
+   elif "rootfs" == project_type:
+      project = linux.rootfs.Rootfs(
+            linux.base.config[ kw_arch ],
+            kw_root_dir,
+            version = kw_version,
          )
    elif "android" == project_type:
       project = aosp.aosp.AOSP(

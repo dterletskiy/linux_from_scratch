@@ -45,6 +45,15 @@ project: kernel
 };
 
 
+project: rootfs
+{
+   type: rootfs;
+   version: 20.04.5;
+   root_dir: "/mnt/dev/linux_from_scratch/";
+   arch: arm64;
+};
+
+
 project: xen
 {
    type: xen;
