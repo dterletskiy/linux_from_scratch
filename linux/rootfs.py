@@ -113,7 +113,7 @@ class Rootfs:
    def configure( self, **kwargs ):
       kw_directory = kwargs.get( "directory", self.__directories.source( ) )
       kw_hostname = kwargs.get( "hostname", "HOSTNAME" )
-      # kw_user = kwargs.get( "user", { "name": "tda", "password": None, "hashed_password": "tdmKnqw7OFw2o" } )
+      kw_user = kwargs.get( "user", { "name": "tda", "password": None, "hashed_password": "tdmKnqw7OFw2o" } )
 
       self.init( )
 
@@ -184,7 +184,8 @@ class Rootfs:
 
    def build( self, **kwargs ):
       kw_directory = kwargs.get( "directory", self.__directories.source( ) )
-      kw_packages = kwargs.get( "packages", ubuntu.packages_all )
+      # kw_packages = kwargs.get( "packages", ubuntu.packages_all )
+      kw_packages = kwargs.get( "packages", ["nano"] )
 
       self.init( )
 
@@ -254,7 +255,10 @@ class Rootfs:
    def init( self, **kwargs ):
       kw_directory = kwargs.get( "directory", self.__directories.source( ) )
 
-      self.__image.mount( self.__directories.source( ), False )
+      mount_point = self.__image.mount( self.__directories.source( ), False )
+      if None == mount_point:
+         return False
+
       pfw.os.signal.add_handler( signal.SIGINT, signal_handler, object = self )
 
       # Mounting required host stuff
@@ -263,6 +267,8 @@ class Rootfs:
       pfw.shell.execute( f"sudo -S mount -o bind /dev/pts {kw_directory}/dev/pts", output = pfw.shell.eOutput.PTY )
       pfw.shell.execute( f"sudo -S mount -o bind /sys {kw_directory}/sys", output = pfw.shell.eOutput.PTY )
       pfw.shell.execute( f"sudo -S mount -o bind /tmp {kw_directory}/tmp", output = pfw.shell.eOutput.PTY )
+
+      return True
    # def init
 
    def deinit( self, **kwargs ):

@@ -184,11 +184,7 @@ def mkpartition_boot( projects_map: dict ):
    mmc.umount( )
 # def mkpartition_boot
 
-def prepare_rootfs( projects_map: dict ):
-   pass
-# def prepare_rootfs
-
-def deploy_rootfs( projects_map: dict, mount_point: str, pause: bool = False ):
+def mkpartition_rootfs( projects_map: dict ):
    rootfs_project = projects_map["rootfs"]
 
    rootfs_project.init( )
@@ -203,18 +199,6 @@ def deploy_rootfs( projects_map: dict, mount_point: str, pause: bool = False ):
    if True == pause:
       subprocess.Popen(['xdg-open', mount_point])
       pfw.console.debug.promt( )
-# def deploy_rootfs
-
-
-def mkpartition_rootfs( projects_map: dict ):
-   mmc: pfw.image.Partition = pfw.image.Partition( configuration.value( "rootfs_partition_image" ), build = True, force = True )
-   mount_point = mmc.mount( configuration.value( "tmp_path" ), True )
-
-   prepare_rootfs( projects_map )
-   # deploy_rootfs( projects_map, mount_point, pause = True )
-
-   mmc.info( )
-   mmc.umount( )
 # def mkpartition_rootfs
 
 def mkdrive( projects_map: dict ):
@@ -222,7 +206,7 @@ def mkdrive( projects_map: dict ):
    boot_image = configuration.value( "boot_partition_image" ).file( )
 
    mkpartition_rootfs( projects_map )
-   rootfs_image = configuration.value( "rootfs_partition_image" ).file( )
+   rootfs_image = projects_map["rootfs"].dirs( ).build( "rootfs.img" )
 
    super_image = projects_map["aosp"].dirs( ).product( "super.img" )
    if "arm64" == projects_map["aosp"].config( ).arch( ):
@@ -327,9 +311,6 @@ def debug( projects_map: dict, **kwargs ):
             none = None
          )
 # def debug
-
-
-
 
 
 
@@ -469,6 +450,45 @@ def start( projects_map: dict, **kwargs ):
 
    qemu.run( command, **kw_args )
 # def start
+
+
+
+
+
+import pfw.docker
+
+def docker( **kwargs ):
+   kw_packages = kwargs.get( "packages", [ ] )
+
+   OS_ARCH="arm64v8"
+   OS_NAME="ubuntu"
+   OS_VERSION="20.04"
+   CONTAINER_NAME=f"tda_{OS_NAME}-{OS_VERSION}-{OS_ARCH}"
+
+   container: pfw.docker.Container = pfw.docker.Container(
+         name = f"{CONTAINER_NAME}",
+         hostname = "host",
+         image = f"{OS_ARCH}/{OS_NAME}:{OS_VERSION}",
+         volume_mapping = [
+            pfw.docker.Container.Mapping( f"/mnt/docker/{CONTAINER_NAME}", f"/mnt/host" )
+         ],
+         port_mapping = [
+            pfw.docker.Container.Mapping( "5000", "5000" )
+         ]
+      )
+   container.create( )
+   container.start( )
+
+   container.exec( "apt update" )
+   container.exec( "apt upgrade" )
+   container.exec( "apt clean all" )
+   for package in kw_packages:
+      container.exec( f"apt install -y {package}" )
+
+   # Specific actions
+
+   container.stop( )
+# def docker
 
 
 

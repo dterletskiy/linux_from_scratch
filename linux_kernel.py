@@ -65,6 +65,7 @@ import dt
 import tools
 import qemu
 import antlr
+import ubuntu
 import linux.base
 import linux.uboot
 import linux.buildroot
@@ -179,6 +180,8 @@ def main( ):
          tools.start( projects_map, mode = "test", gdb = False )
       elif "mkimage" == action_name:
          tools.mkdrive( projects_map )
+      elif "docker" == action_name:
+         tools.docker( packages = ubuntu.packages_all )
 
 # def main
 
@@ -193,34 +196,12 @@ if __name__ == "__main__":
 
 
 
-
-   # packages = ubuntu.packages_all
-
-   # OS_ARCH="arm64v8"
-   # OS_NAME="ubuntu"
-   # OS_VERSION="20.04"
-   # CONTAINER_NAME=f"tda_{OS_NAME}-{OS_VERSION}-{OS_ARCH}"
-
-   # container: pfw.docker.Container = pfw.docker.Container(
-   #       name = f"{CONTAINER_NAME}",
-   #       hostname = "host",
-   #       image = f"{OS_ARCH}/{OS_NAME}:{OS_VERSION}",
-   #       volume_mapping = [
-   #          pfw.docker.Container.Mapping( f"/mnt/docker/{CONTAINER_NAME}", f"/mnt/host" )
-   #       ],
-   #       port_mapping = [
-   #          pfw.docker.Container.Mapping( "5000", "5000" )
-   #       ]
-   #    )
-   # container.create( )
-   # container.start( )
-   # container.exec( "apt update" )
-   # container.exec( "apt upgrade" )
-   # container.exec( "apt clean all" )
-   # for package in packages:
-   #    container.exec( f"apt install -y {package}" )
-   # container.stop( )
-
+   HOST: str = "testrpi3"
+   USER: str = "testrpi3"
+   PORT: str = "22"
+   command: str = "ls -la \"/home/testrpi3/tda/test\ dir/\""
+   # result = pfw.shell.execute( f"ssh {HOST}@{USER} -p {PORT} {command}", output = pfw.shell.eOutput.PTY )
+   # pfw.console.debug.info( result["output"] )
 
 
 

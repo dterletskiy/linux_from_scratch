@@ -19,16 +19,30 @@ packages_system: list = [
    "symlinks",
    "psmisc",
    "bc",
-
-   "htop",
-   "iotop",
-
+]
+packages_system_trace: list = [
    "blktrace",
    "fatrace",
    "latrace",
    "strace",
    "ltrace",
    "xtrace",
+]
+
+packages_system_top: list = [
+   "atop",
+   "htop",
+   "iotop",
+   "iftop",
+   "powertop",
+   "itop",
+   "kerneltop",
+   "dnstop",
+   "jnettop",
+   "sntop",
+   "latencytop",
+   "xrestop",
+   "slabtop",
 ]
 
 packages_systemd: list = [
@@ -39,7 +53,6 @@ packages_systemd: list = [
 ]
 
 packages_net: list = [
-
    "netbase",
    "dnsutils",
    "ifupdown",
@@ -61,20 +74,13 @@ packages_net: list = [
    "nfstrace-doc",
    "iptraf",
    "nload",
+   "nethogs",
+   "iptstate",
 
    "curl",
    "rsync",
    "ssh",
    "openssh-server",
-]
-
-packages_trace: list = [
-   "blktrace",
-   "fatrace",
-   "latrace",
-   "strace",
-   "ltrace",
-   "xtrace",
 ]
 
 packages_dev: list = [
@@ -104,7 +110,9 @@ packages_dev: list = [
    "patch",
 
    "ninja-build",
+]
 
+packages_dev_libs: list = [
    "libssl-dev",
    "libelf-dev",
    "libfdt-dev",
@@ -114,6 +122,8 @@ packages_dev: list = [
    "libyajl-dev",
    "libncurses-dev",
    "libcap-ng-dev",
+   "libiscsi-dev ",
+   "libibverbs-dev",
 ]
 
 packages_tools: list = [
@@ -146,10 +156,12 @@ packages_peripherals: list = [
 
 packages_all: list = \
      packages_system \
+   + packages_system_top \
+   + packages_system_trace \
    + packages_systemd \
    + packages_net \
-   + packages_trace \
    + packages_dev \
+   + packages_dev_libs \
    + packages_tools \
    + packages_compression \
    + packages_peripherals
