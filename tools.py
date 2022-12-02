@@ -205,7 +205,7 @@ def mkdrive( projects_map: dict ):
    mkpartition_boot( projects_map )
    boot_image = configuration.value( "boot_partition_image" ).file( )
 
-   mkpartition_rootfs( projects_map )
+   # mkpartition_rootfs( projects_map )
    rootfs_image = projects_map["rootfs"].dirs( ).build( "rootfs.img" )
 
    super_image = projects_map["aosp"].dirs( ).product( "super.img" )
@@ -224,7 +224,7 @@ def mkdrive( projects_map: dict ):
    boot_part_num = 1
    partitions = [
       pfw.image.Partition.Description( clone_from = boot_image, label = "boot" ),
-      pfw.image.Partition.Description( clone_from = rootfs_image, label = "rootfs" ),
+      # pfw.image.Partition.Description( clone_from = rootfs_image, label = "rootfs" ),
 
       # pfw.image.Partition.Description( clone_from = super_image, label = "super" ),
 
@@ -410,19 +410,20 @@ def build_emulator_parameters( projects_map, **kwargs ):
 # def build_emulator_parameters
 
 def start( projects_map: dict, **kwargs ):
-   kw_mode = kwargs.get( "mode", "aosp" )
+   kw_mode = kwargs.get( "mode", None )
    kw_gdb = kwargs.get( "gdb", False )
-   kw_drive = kwargs.get( "drive", configuration.value( "main_drive_image" ) )
+   kw_drive = kwargs.get( "drive", None )
+
+   if None == kw_drive:
+      if  kw_mode in [ "u-boot", "kernel_rd", "aosp" ]:
+         kw_drive = configuration.value( "main_drive_image" )
+      elif kw_mode in [ "kernel_rf" ]:
+         kw_drive = projects_map["rootfs"].dirs( ).build( "rootfs.img" )
 
    command: str = ""
    if "aosp" == kw_mode:
       command = build_emulator_parameters( projects_map,  drive = kw_drive, debug = True )
-   elif "u-boot" == kw_mode or "kernel" == kw_mode:
-      command = qemu.build_parameters( arch = "arm64" )
-      command += f" -drive if=none,index=0,id=main,file={kw_drive}"
-      command += f" -device virtio-blk-pci,modern-pio-notify,drive=main"
-   if "test" == kw_mode:
-      # command = build_emulator_parameters( projects_map,  drive = kw_drive, debug = True )
+   elif "u-boot" == kw_mode or "kernel_rd" == kw_mode or "kernel_rf" == kw_mode:
       command = qemu.build_parameters( arch = "arm64" )
       command += f" -drive if=none,index=0,id=main,file={kw_drive}"
       command += f" -device virtio-blk-pci,modern-pio-notify,drive=main"
@@ -437,14 +438,15 @@ def start( projects_map: dict, **kwargs ):
       kw_args["bios"] = projects_map["uboot"].dirs( ).product( "u-boot.bin" )
    elif "u-boot" == kw_mode:
       kw_args["bios"] = projects_map["uboot"].dirs( ).product( "u-boot.bin" )
-   elif "kernel" == kw_mode:
+   elif "kernel_rd" == kw_mode:
       kw_args["kernel"] = projects_map["kernel"].dirs( ).deploy( "Image" )
       kw_args["initrd"] = projects_map["buildroot"].dirs( ).deploy( "rootfs.cpio" )
       kw_args["append"] = "loglevel=7 debug printk.devkmsg=on drm.debug=0x0 console=ttyAMA0"
       kw_args["dtb"] = configuration.value( "dtb_export_path" )
-   elif "test" == kw_mode:
+   elif "kernel_rf" == kw_mode:
       kw_args["kernel"] = projects_map["kernel"].dirs( ).deploy( "Image" )
-      kw_args["append"] = "loglevel=7 debug printk.devkmsg=on drm.debug=0x0 console=ttyAMA0 root=/dev/vda2 rw"
+      kw_args["append"] = "loglevel=7 debug printk.devkmsg=on drm.debug=0x0 console=ttyAMA0 init=/bin/bash root=/dev/vda rw"
+      kw_args["dtb"] = configuration.value( "dtb_export_path" )
    else:
       pass
 

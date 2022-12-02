@@ -72,7 +72,8 @@ project: qemu
 };
 
 
-project: aosp_trout_arm64
+// project: aosp_trout_arm64
+project: aosp
 {
    type: android;
    version: android-12.1.0_r8;

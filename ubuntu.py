@@ -19,6 +19,7 @@ packages_system: list = [
    "symlinks",
    "psmisc",
    "bc",
+   "kmod",
 ]
 packages_system_trace: list = [
    "blktrace",

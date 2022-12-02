@@ -177,7 +177,8 @@ def main( ):
       if "gdb" == action_name:
          tools.debug( projects_map, project_name = "uboot" )
       elif "start" == action_name:
-         tools.start( projects_map, mode = "test", gdb = False )
+         # tools.start( projects_map, mode = "u-boot", gdb = False )
+         tools.start( projects_map, mode = "kernel_rf", gdb = False )
       elif "mkimage" == action_name:
          tools.mkdrive( projects_map )
       elif "docker" == action_name:
@@ -195,55 +196,62 @@ if __name__ == "__main__":
 
 
 
-
-   HOST: str = "testrpi3"
-   USER: str = "testrpi3"
-   PORT: str = "22"
-   command: str = "ls -la \"/home/testrpi3/tda/test\ dir/\""
-   # result = pfw.shell.execute( f"ssh {HOST}@{USER} -p {PORT} {command}", output = pfw.shell.eOutput.PTY )
-   # pfw.console.debug.info( result["output"] )
+   # pfw.shell.execute( f"ls -la", output = pfw.shell.eOutput.PTY )
+   # pfw.shell.execute( f"sudo -S losetup -f", output = pfw.shell.eOutput.PTY )
 
 
 
 
-
-
-
-   partition_image_file = os.path.join( configuration.config.get_value( "tmp_path" ), "partition.img" )
-   # partition_description = pfw.image.Partition.Description(
-   #      file = partition_image_file
-   #    , size = pfw.size.Size( 512, pfw.size.Size.eGran.M )
-   #    , fs = "ext2"
-   # )
-   # partition = pfw.image.Partition( partition_description, build = True, force = True )
-   # partition.mount( configuration.value( "tmp_path" ), True )
-
-   # partition.info( )
-   # partition.umount( )
+   if False:
+      HOST: str = "testrpi3"
+      USER: str = "testrpi3"
+      PORT: str = "22"
+      command: str = "ls -la \"/home/testrpi3/tda/test\ dir/\""
+      result = pfw.shell.execute( f"ssh {HOST}@{USER} -p {PORT} {command}", output = pfw.shell.eOutput.PTY )
+      pfw.console.debug.info( result["output"] )
 
 
 
 
 
-   # partitions = [
-   #    pfw.image.Partition.Description( size = pfw.size.SizeGigabyte, label = "boot", fs = "ext4" ),
-   #    pfw.image.Partition.Description( size = pfw.size.SizeGigabyte, label = "system", fs = "ext4" ),
-   #    pfw.image.Partition.Description( size = pfw.size.SizeGigabyte, label = "swap", fs = "ext4" ),
-   # ]
-
-   drive_image_file = os.path.join( configuration.config.get_value( "tmp_path" ), "drive.img" )
-   # drive = pfw.image.Drive( os.path.join( configuration.config.get_value( "tmp_path" ), "drive.img" ) )
-   # drive.create( partitions = partitions, force = True )
-   # drive.attach( )
-   # drive.init( partitions )
-
-   # drive.info( )
-   # drive.detach( )
 
 
+   if False:
+      partition_image_file = os.path.join( configuration.config.get_value( "tmp_path" ), "partition.img" )
+      # partition_description = pfw.image.Partition.Description(
+      #      file = partition_image_file
+      #    , size = pfw.size.Size( 512, pfw.size.Size.eGran.M )
+      #    , fs = "ext2"
+      # )
+      # partition = pfw.image.Partition( partition_description, build = True, force = True )
+      # partition.mount( configuration.value( "tmp_path" ), True )
 
-   # pfw.image.mounted_to( partition_image_file )
-   # pfw.image.attached_to( drive_image_file )
+      # partition.info( )
+      # partition.umount( )
 
-   # pfw.image.info( partition_image_file )
-   # pfw.image.info( drive_image_file )
+
+
+
+
+      # partitions = [
+      #    pfw.image.Partition.Description( size = pfw.size.SizeGigabyte, label = "boot", fs = "ext4" ),
+      #    pfw.image.Partition.Description( size = pfw.size.SizeGigabyte, label = "system", fs = "ext4" ),
+      #    pfw.image.Partition.Description( size = pfw.size.SizeGigabyte, label = "swap", fs = "ext4" ),
+      # ]
+
+      drive_image_file = os.path.join( configuration.config.get_value( "tmp_path" ), "drive.img" )
+      # drive = pfw.image.Drive( os.path.join( configuration.config.get_value( "tmp_path" ), "drive.img" ) )
+      # drive.create( partitions = partitions, force = True )
+      # drive.attach( )
+      # drive.init( partitions )
+
+      # drive.info( )
+      # drive.detach( )
+
+
+
+      # pfw.image.mounted_to( partition_image_file )
+      # pfw.image.attached_to( drive_image_file )
+
+      # pfw.image.info( partition_image_file )
+      # pfw.image.info( drive_image_file )
