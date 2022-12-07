@@ -20,6 +20,7 @@ packages_system: list = [
    "psmisc",
    "bc",
    "kmod",
+   "sysfsutils",
 ]
 packages_system_trace: list = [
    "blktrace",
