@@ -413,6 +413,7 @@ def start( projects_map: dict, **kwargs ):
    kw_mode = kwargs.get( "mode", None )
    kw_gdb = kwargs.get( "gdb", False )
    kw_drive = kwargs.get( "drive", None )
+   kw_arch = "arm64"
 
    if None == kw_drive:
       if  kw_mode in [ "u-boot", "kernel_rd", "aosp" ]:
@@ -424,15 +425,27 @@ def start( projects_map: dict, **kwargs ):
    if "aosp" == kw_mode:
       command = build_emulator_parameters( projects_map,  drive = kw_drive, debug = True )
    elif "u-boot" == kw_mode or "kernel_rd" == kw_mode or "kernel_rf" == kw_mode:
-      command = qemu.build_parameters( arch = "arm64" )
+      command = qemu.build_parameters( arch = kw_arch )
+
       command += f" -drive if=none,index=0,id=main,file={kw_drive}"
       command += f" -device virtio-blk-pci,modern-pio-notify,drive=main"
-      command += f" -netdev user,id=net0,hostfwd=tcp::2222-:22 -device virtio-net-device,netdev=net0"
+
+      command += f" -netdev user,id=net0,hostfwd=tcp::2222-:22"
+      command += f" -device virtio-net-device,netdev=net0"
+
+      command += f" -device virtio-serial-pci"
+      # command += f" -device virtio-gpu-pci"
+      command += f" -device virtio-gpu-gl-pci"
+      command += f" -display gtk,gl=on,show-cursor=on"
+      command += f" -device nec-usb-xhci,id=xhci"
+      command += f" -device sdhci-pci"
+      command += f" -object iothread,id=disk-iothread"
+      command += f" -device virtio-rng-pci"
    else:
       pass
 
    kw_args: dict = { }
-   kw_args["arch"] = "arm64"
+   kw_args["arch"] = kw_arch
    kw_args["gdb"] = kw_gdb
    if "aosp" == kw_mode:
       kw_args["bios"] = projects_map["uboot"].dirs( ).product( "u-boot.bin" )
@@ -461,21 +474,28 @@ import pfw.docker
 
 def docker( **kwargs ):
    kw_packages = kwargs.get( "packages", [ ] )
+   kw_os_arch = kwargs.get( "os_arch", None )
+   kw_os_name = kwargs.get( "os_name", None )
+   kw_os_version = kwargs.get( "os_version", None )
+   kw_name = kwargs.get( "name", None )
+   kw_image = kwargs.get( "image", None )
 
-   OS_ARCH="arm64v8"
-   OS_NAME="ubuntu"
-   OS_VERSION="20.04"
-   CONTAINER_NAME=f"tda_{OS_NAME}-{OS_VERSION}-{OS_ARCH}"
+   if None == kw_name:
+      kw_name=f"tda_{kw_os_name}-{kw_os_version}-{kw_os_arch}"
+   if None == kw_image:
+      kw_image=f"{kw_os_arch}/{kw_os_name}:{kw_os_version}"
 
    container: pfw.docker.Container = pfw.docker.Container(
-         name = f"{CONTAINER_NAME}",
+         name = f"{kw_name}",
          hostname = "host",
-         image = f"{OS_ARCH}/{OS_NAME}:{OS_VERSION}",
+         image = kw_image,
          volume_mapping = [
-            pfw.docker.Container.Mapping( f"/mnt/docker/{CONTAINER_NAME}", f"/mnt/host" )
+            pfw.docker.Container.Mapping( f"/mnt/docker/{kw_name}", f"/mnt/host" ),
+            # pfw.docker.Container.Mapping( f"~/.ssh", f"~/.ssh" ),
+            # pfw.docker.Container.Mapping( f"~/.gitconfig", f"~/.gitconfig" ),
          ],
          port_mapping = [
-            pfw.docker.Container.Mapping( "5000", "5000" )
+            pfw.docker.Container.Mapping( "5000", "5000" ),
          ]
       )
    container.create( )
@@ -483,9 +503,11 @@ def docker( **kwargs ):
 
    container.exec( "apt update" )
    container.exec( "apt upgrade" )
-   container.exec( "apt clean all" )
    for package in kw_packages:
       container.exec( f"apt install -y {package}" )
+   container.exec( "apt install --reinstall -y ca-certificates" )
+   container.exec( "apt clean all" )
+   container.exec( "rm -rf /tmp/* /var/tmp/*" )
 
    # Specific actions
 

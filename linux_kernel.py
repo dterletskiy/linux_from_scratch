@@ -178,11 +178,27 @@ def main( ):
          tools.debug( projects_map, project_name = "uboot" )
       elif "start" == action_name:
          # tools.start( projects_map, mode = "u-boot", gdb = False )
-         tools.start( projects_map, mode = "kernel_rf", gdb = False )
+         tools.start( projects_map, mode = "kernel_rd", gdb = False )
+         # tools.start( projects_map, mode = "kernel_rf", gdb = False )
       elif "mkimage" == action_name:
          tools.mkdrive( projects_map )
       elif "docker" == action_name:
-         tools.docker( packages = ubuntu.packages_all )
+         tools.docker(
+               image = None,
+               os_arch = "arm64v8",
+               os_name = "ubuntu",
+               os_version = "20.04",
+               packages = ubuntu.packages_all
+            )
+         tools.docker(
+               image = "ubuntu:20.04",
+               os_arch = "x86_64",
+               os_name = "ubuntu",
+               os_version = "20.04",
+               packages = ubuntu.packages_all
+            )
+      elif "test" == action_name:
+         pfw.docker.prune( )
 
 # def main
 

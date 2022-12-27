@@ -21,6 +21,7 @@ packages_system: list = [
    "bc",
    "kmod",
    "sysfsutils",
+   "software-properties-common",
 ]
 packages_system_trace: list = [
    "blktrace",
@@ -93,10 +94,18 @@ packages_dev: list = [
    "flex++",
    "bison",
    "iasl",
+
+   "python2",
+   "python2-dev",
+   "python2-doc",
+
    "python3",
    "python3-dev",
+   "python3-doc",
+
    "perl",
-   "device-tree-compiler",
+   "perl-doc",
+   "perl-doc-html",
 
    "binutils",
    "binutils-common",
@@ -104,6 +113,8 @@ packages_dev: list = [
    "binutils-doc",
    "binutils-for-build",
    "binutils-for-host",
+
+   "device-tree-compiler",
 
    "pkg-config",
 
@@ -118,14 +129,23 @@ packages_dev_libs: list = [
    "libssl-dev",
    "libelf-dev",
    "libfdt-dev",
-   "libglib2.0-dev",
-   "libglib2.0-dev-bin",
    "libpixman-1-dev",
    "libyajl-dev",
    "libncurses-dev",
    "libcap-ng-dev",
    "libiscsi-dev ",
    "libibverbs-dev",
+
+   "libglib2.0-dev",
+   "libglib2.0-dev-bin",
+
+   "libdrm-common",
+   "libdrm-dev",
+   "libdrm-tests",
+   # "libdrm2",
+
+   "libsdl2-dev",
+   "libsdl2-doc",
 ]
 
 packages_tools: list = [
