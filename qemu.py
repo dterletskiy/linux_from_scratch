@@ -117,7 +117,7 @@ def build_parameters( **kwargs ):
 
 def build_cmdline( **kwargs ):
    kw_arch = kwargs.get( "arch", "arm64" )
-   kw_max_loop = kwargs.get( "max_loop", 10 )
+   kw_max_loop = kwargs.get( "max_loop", 100 )
    kw_bootconfig = kwargs.get( "bootconfig", True )
    kw_debug = kwargs.get( "debug", True )
 
@@ -127,7 +127,7 @@ def build_cmdline( **kwargs ):
       cmdline += f" earlyprintk"
       cmdline += f" debug"
       cmdline += f" printk.devkmsg=on"
-      cmdline += f" drm.debug=0x0"
+      cmdline += f" drm.debug=0x1FF"
    else:
       cmdline += f" loglevel=1"
 

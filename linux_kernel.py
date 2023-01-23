@@ -63,6 +63,7 @@ import signal
 import base
 import dt
 import tools
+import docker.container
 import qemu
 import antlr
 import ubuntu
@@ -180,25 +181,26 @@ def main( ):
          # tools.start( projects_map, mode = "u-boot", gdb = False )
          tools.start( projects_map, mode = "kernel_rd", gdb = False )
          # tools.start( projects_map, mode = "kernel_rf", gdb = False )
+         # tools.start( projects_map, mode = "kernel_arch", gdb = False, arch = "x86_64" )
       elif "mkimage" == action_name:
          tools.mkdrive( projects_map )
       elif "docker" == action_name:
-         tools.docker(
-               image = None,
-               os_arch = "arm64v8",
-               os_name = "ubuntu",
-               os_version = "20.04",
-               packages = ubuntu.packages_all
-            )
-         tools.docker(
-               image = "ubuntu:20.04",
-               os_arch = "x86_64",
-               os_name = "ubuntu",
-               os_version = "20.04",
-               packages = ubuntu.packages_all
-            )
-      elif "test" == action_name:
-         pfw.docker.prune( )
+         if "ubuntu_x86_64" == target:
+            container = docker.container.build(
+                  image = "ubuntu:20.04",
+                  name = "ubuntu-20.04-x86_64",
+                  packages = ubuntu.packages_all
+               )
+            # docker.container.commit( container, image = "ubuntu/x86_64:20.04" )
+         elif "ubuntu_arm64v8" == action_name:
+            container = docker.container.build(
+                  image = "arm64v8/ubuntu:20.04",
+                  name = "ubuntu-20.04-arm64v8",
+                  packages = ubuntu.packages_all
+               )
+            # docker.container.commit( container, image = "ubuntu/arm64v8:20.04" )
+         elif "prune" == action_name:
+            pfw.docker.prune( )
 
 # def main
 
@@ -209,22 +211,6 @@ if __name__ == "__main__":
    main( )
    pfw.console.debug.ok( "-------------------------- END --------------------------" )
 
-
-
-
-   # pfw.shell.execute( f"ls -la", output = pfw.shell.eOutput.PTY )
-   # pfw.shell.execute( f"sudo -S losetup -f", output = pfw.shell.eOutput.PTY )
-
-
-
-
-   if False:
-      HOST: str = "testrpi3"
-      USER: str = "testrpi3"
-      PORT: str = "22"
-      command: str = "ls -la \"/home/testrpi3/tda/test\ dir/\""
-      result = pfw.shell.execute( f"ssh {HOST}@{USER} -p {PORT} {command}", output = pfw.shell.eOutput.PTY )
-      pfw.console.debug.info( result["output"] )
 
 
 

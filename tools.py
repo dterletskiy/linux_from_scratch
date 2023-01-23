@@ -413,13 +413,15 @@ def start( projects_map: dict, **kwargs ):
    kw_mode = kwargs.get( "mode", None )
    kw_gdb = kwargs.get( "gdb", False )
    kw_drive = kwargs.get( "drive", None )
-   kw_arch = "arm64"
+   kw_arch = kwargs.get( "arch", "arm64" )
 
    if None == kw_drive:
       if  kw_mode in [ "u-boot", "kernel_rd", "aosp" ]:
          kw_drive = configuration.value( "main_drive_image" )
       elif kw_mode in [ "kernel_rf" ]:
          kw_drive = projects_map["rootfs"].dirs( ).build( "rootfs.img" )
+      else:
+         pass
 
    command: str = ""
    if "aosp" == kw_mode:
@@ -427,20 +429,29 @@ def start( projects_map: dict, **kwargs ):
    elif "u-boot" == kw_mode or "kernel_rd" == kw_mode or "kernel_rf" == kw_mode:
       command = qemu.build_parameters( arch = kw_arch )
 
-      command += f" -drive if=none,index=0,id=main,file={kw_drive}"
-      command += f" -device virtio-blk-pci,modern-pio-notify,drive=main"
+      # command += f" -drive if=none,index=0,id=main,file={kw_drive}"
+      # command += f" -device virtio-blk-pci,modern-pio-notify,drive=main"
 
       command += f" -netdev user,id=net0,hostfwd=tcp::2222-:22"
       command += f" -device virtio-net-device,netdev=net0"
 
       command += f" -device virtio-serial-pci"
-      # command += f" -device virtio-gpu-pci"
-      command += f" -device virtio-gpu-gl-pci"
-      command += f" -display gtk,gl=on,show-cursor=on"
       command += f" -device nec-usb-xhci,id=xhci"
       command += f" -device sdhci-pci"
-      command += f" -object iothread,id=disk-iothread"
       command += f" -device virtio-rng-pci"
+
+      vc_pipe = "/tmp/virtio_console_chardev.pipe"
+      pfw.shell.execute( f"rm {vc_pipe}; mkfifo {vc_pipe}", output = pfw.shell.eOutput.PTY )
+      pfw.shell.execute( f"rm {vc_pipe}.in; mkfifo {vc_pipe}.in", output = pfw.shell.eOutput.PTY )
+      pfw.shell.execute( f"rm {vc_pipe}.out; mkfifo {vc_pipe}.out", output = pfw.shell.eOutput.PTY )
+      command += f" -chardev pipe,id=virtio_console_chardev,path={vc_pipe}"
+      command += f" -device virtconsole,chardev=virtio_console_chardev,id=virtio_console"
+
+      # command += f" -device virtio-gpu-pci"
+      # command += f" -device virtio-gpu-gl-pci"
+      # command += f" -display gtk,gl=on,show-cursor=on"
+      # command += f" -vga cirrus"
+      # command += f" -display gtk,show-cursor=on"
    else:
       pass
 
@@ -454,11 +465,11 @@ def start( projects_map: dict, **kwargs ):
    elif "kernel_rd" == kw_mode:
       kw_args["kernel"] = projects_map["kernel"].dirs( ).deploy( "Image" )
       kw_args["initrd"] = projects_map["buildroot"].dirs( ).deploy( "rootfs.cpio" )
-      kw_args["append"] = "loglevel=7 debug printk.devkmsg=on drm.debug=0x0 console=ttyAMA0"
+      kw_args["append"] = "loglevel=7 debug printk.devkmsg=on drm.debug=0x1FF console=ttyAMA0"
       kw_args["dtb"] = configuration.value( "dtb_export_path" )
    elif "kernel_rf" == kw_mode:
       kw_args["kernel"] = projects_map["kernel"].dirs( ).deploy( "Image" )
-      kw_args["append"] = "loglevel=7 debug printk.devkmsg=on drm.debug=0x0 console=ttyAMA0 init=/bin/bash root=/dev/vda rw"
+      kw_args["append"] = "loglevel=7 debug printk.devkmsg=on drm.debug=0x1FF console=ttyAMA0 init=/bin/bash root=/dev/vda rw"
       kw_args["dtb"] = configuration.value( "dtb_export_path" )
    else:
       pass
@@ -466,53 +477,6 @@ def start( projects_map: dict, **kwargs ):
    qemu.run( command, **kw_args )
 # def start
 
-
-
-
-
-import pfw.docker
-
-def docker( **kwargs ):
-   kw_packages = kwargs.get( "packages", [ ] )
-   kw_os_arch = kwargs.get( "os_arch", None )
-   kw_os_name = kwargs.get( "os_name", None )
-   kw_os_version = kwargs.get( "os_version", None )
-   kw_name = kwargs.get( "name", None )
-   kw_image = kwargs.get( "image", None )
-
-   if None == kw_name:
-      kw_name=f"tda_{kw_os_name}-{kw_os_version}-{kw_os_arch}"
-   if None == kw_image:
-      kw_image=f"{kw_os_arch}/{kw_os_name}:{kw_os_version}"
-
-   container: pfw.docker.Container = pfw.docker.Container(
-         name = f"{kw_name}",
-         hostname = "host",
-         image = kw_image,
-         volume_mapping = [
-            pfw.docker.Container.Mapping( f"/mnt/docker/{kw_name}", f"/mnt/host" ),
-            # pfw.docker.Container.Mapping( f"~/.ssh", f"~/.ssh" ),
-            # pfw.docker.Container.Mapping( f"~/.gitconfig", f"~/.gitconfig" ),
-         ],
-         port_mapping = [
-            pfw.docker.Container.Mapping( "5000", "5000" ),
-         ]
-      )
-   container.create( )
-   container.start( )
-
-   container.exec( "apt update" )
-   container.exec( "apt upgrade" )
-   for package in kw_packages:
-      container.exec( f"apt install -y {package}" )
-   container.exec( "apt install --reinstall -y ca-certificates" )
-   container.exec( "apt clean all" )
-   container.exec( "rm -rf /tmp/* /var/tmp/*" )
-
-   # Specific actions
-
-   container.stop( )
-# def docker
 
 
 
