@@ -181,7 +181,6 @@ def main( ):
          # tools.start( projects_map, mode = "u-boot", gdb = False )
          tools.start( projects_map, mode = "kernel_rd", gdb = False )
          # tools.start( projects_map, mode = "kernel_rf", gdb = False )
-         # tools.start( projects_map, mode = "kernel_arch", gdb = False, arch = "x86_64" )
       elif "mkimage" == action_name:
          tools.mkdrive( projects_map )
       elif "docker" == action_name:
