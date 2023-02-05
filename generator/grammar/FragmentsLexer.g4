@@ -71,3 +71,6 @@ fragment F_TRUE                  : 'true' ;
 fragment F_FALSE                 : 'false' ;
 
 fragment F_SELECTOR              : '->' ;
+
+fragment F_BLOCK_COMMENT         : '/*' .*? '*/' ;
+fragment F_LINE_COMMENT          : '//' ~[\r\n]* ('\r'? '\n' | '\r' | EOF) ;

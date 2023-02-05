@@ -70,11 +70,9 @@ NEWLINE                       : ('\r'? '\n' | '\r')+ -> skip ;
 
 NUMBER                        : F_DIGIT+ ;
 
-BLOCK_COMMENT                 : '/*' .*? '*/' ;
-LINE_COMMENT                  : '//' ~[\r\n]* ('\r'? '\n' | '\r' | EOF) ;
-COMMENT                       : (BLOCK_COMMENT | LINE_COMMENT) -> channel(HIDDEN) ;
+COMMENT                       : (F_BLOCK_COMMENT | F_LINE_COMMENT) -> channel(HIDDEN) ;
 
-IDENTIFIER                    : (F_LETTER | F_UNDERSCORE) (F_LETTER | F_DIGIT | F_UNDERSCORE)* ;
+IDENTIFIER                    : (F_LETTER | F_UNDERSCORE) (F_LETTER | F_DIGIT | F_UNDERSCORE | F_MINUS)* ;
 
 // NAMESPACE_NAME                : '::'? (IDENTIFIER '::')* IDENTIFIER ;
 NAMESPACE                     : '::'? (IDENTIFIER '::')+ ;

@@ -21,3 +21,4 @@ argument             : type name ;
 type                 : NAMESPACE? ( IDENTIFIER | IDENTIFIER LESS IDENTIFIER GREATER ) AMPERSAND? ;
 names                : name ( COMMA name )* ;
 name                 : IDENTIFIER ;
+comment              : COMMENT ;

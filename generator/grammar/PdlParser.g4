@@ -7,7 +7,7 @@ options { tokenVocab=PdlLexer; }
 
 content              : element+ EOF ;
 
-element              : ( author | version | project ) ;
+element              : ( author | version | project | comment ) ;
 
 project              : DEF_PROJECT IDENTIFIER LEFT_CURLY_BRACKET ( type | root_dir | version | arch | defconfig | lunch | variant | product_name | product_device )* RIGHT_CURLY_BRACKET SEMICOLON ;
 type                 : DEF_TYPE IDENTIFIER SEMICOLON ;

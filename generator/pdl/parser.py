@@ -92,6 +92,7 @@ def create_project( project_type: str, **kwargs ):
             aosp.base.Configuration(
                     lunch = kw_lunch
                   , variant = kw_variant
+                  , arch = kw_arch
                   , product_name = kw_product_name
                   , product_device = kw_product_device
                ),
@@ -175,6 +176,24 @@ class PdlListener( PdlParserListener ):
       pfw.console.debug.info( "variant: ", variant )
       pfw.console.debug.info( "product_name: ", product_name )
       pfw.console.debug.info( "product_device: ", product_device )
+
+      # @TDA: Temporary aliases for project name for backward compatibility with old implementation.
+      # Needed because of several project convigurations could be defined in configuration file
+      # with the same project type and different project names.
+      # Must be fixed later.
+      arch_alias: str = "arm64"
+      # arch_alias: str = "x86_64"
+      names_aliases: dict = {
+         f"uboot_{arch_alias}": "uboot",
+         f"busybox_{arch_alias}": "busybox",
+         f"buildroot_{arch_alias}": "buildroot",
+         f"kernel_{arch_alias}": "kernel",
+         f"rootfs_{arch_alias}": "rootfs",
+         f"xen_{arch_alias}": "xen",
+         f"qemu_{arch_alias}": "qemu",
+         f"aosp_trout_{arch_alias}": "aosp",
+      }
+      name = names_aliases.get( name, name )
 
       self.__project_map[name] = create_project(
               type_

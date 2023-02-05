@@ -4,7 +4,8 @@ version: v2022.10-rc1;
 
 
 
-project: uboot
+// uboot_arm64
+project: uboot_arm64
 {
    type: uboot;
    version: v2022.07;
@@ -13,9 +14,18 @@ project: uboot
    defconfig: qemu_arm64_defconfig;
 };
 
+// uboot_x86_64
+project: uboot_x86_64
+{
+   type: uboot;
+   version: v2022.07;
+   root_dir: "/mnt/dev/linux_from_scratch/";
+   arch: x86_64;
+   defconfig: qemu-x86_64_defconfig;
+};
 
-
-project: busybox
+// busybox_arm64
+project: busybox_arm64
 {
    type: busybox;
    version: 1.35.0;
@@ -24,8 +34,18 @@ project: busybox
    defconfig: defconfig;
 };
 
+// busybox_x86_64
+project: busybox_x86_64
+{
+   type: busybox;
+   version: 1.35.0;
+   root_dir: "/mnt/dev/linux_from_scratch/";
+   arch: x86_64;
+   defconfig: defconfig;
+};
 
-project: buildroot
+// buildroot_arm64
+project: buildroot_arm64
 {
    type: buildroot;
    version: 2022.05.2;
@@ -34,8 +54,18 @@ project: buildroot
    defconfig: qemu_aarch64_virt_defconfig;
 };
 
+// buildroot_x86_64
+project: buildroot_x86_64
+{
+   type: buildroot;
+   version: 2022.05.2;
+   root_dir: "/mnt/dev/linux_from_scratch/";
+   arch: x86_64;
+   defconfig: qemu_x86_64_defconfig;
+};
 
-project: kernel
+// kernel_arm64
+project: kernel_arm64
 {
    type: kernel;
    version: 5.19;
@@ -44,8 +74,18 @@ project: kernel
    defconfig: defconfig;
 };
 
+// kernel_x86_64
+project: kernel_x86_64
+{
+   type: kernel;
+   version: 5.19;
+   root_dir: "/mnt/dev/linux_from_scratch/";
+   arch: x86_64;
+   defconfig: x86_64_defconfig;
+};
 
-project: rootfs
+// rootfs_arm64
+project: rootfs_arm64
 {
    type: rootfs;
    version: 20.04.5;
@@ -53,8 +93,17 @@ project: rootfs
    arch: arm64;
 };
 
+// rootfs_x86_64
+project: rootfs_x86_64
+{
+   type: rootfs;
+   version: 20.04.5;
+   root_dir: "/mnt/dev/linux_from_scratch/";
+   arch: x86_64;
+};
 
-project: xen
+// xen_arm64
+project: xen_arm64
 {
    type: xen;
    version: 4.16.2;
@@ -62,8 +111,17 @@ project: xen
    arch: arm64;
 };
 
+// xen_x86_64
+project: xen_x86_64
+{
+   type: xen;
+   version: 4.16.2;
+   root_dir: "/mnt/dev/linux_from_scratch/";
+   arch: x86_64;
+};
 
-project: qemu
+// qemu_x86_64
+project: qemu_x86_64
 {
    type: qemu;
    version: v7.0.0;
@@ -71,9 +129,8 @@ project: qemu
    arch: x86_64;
 };
 
-
-// project: aosp_trout_arm64
-project: aosp
+// aosp_trout_arm64
+project: aosp_trout_arm64
 {
    type: android;
    version: android-12.1.0_r8;
@@ -86,13 +143,13 @@ project: aosp
    product_device: trout_arm64;
 };
 
-
-project: aosp_trout_x86
+// aosp_trout_x86_64
+project: aosp_trout_x86_64
 {
    type: android;
    version: android-12.1.0_r8;
    root_dir: "/mnt/dev/android/";
-   arch: arm64;
+   arch: x86_64;
 
    lunch: aosp_trout_x86;
    variant: userdebug;
@@ -100,7 +157,7 @@ project: aosp_trout_x86
    product_device: trout_x86;
 };
 
-
+// aosp_sdk_R136a1_x86_64
 project: aosp_sdk_R136a1_x86_64
 {
    type: android;

@@ -77,7 +77,7 @@ class ConfigurationData:
       values_to_add: list = [ ]
       if isinstance( value, list ) or isinstance( value, tuple ):
          values_to_add = value
-      elif isinstance( value, dict ):
+      elif isinstance( value, dict ) or isinstance( value, set ):
          return
       else:
          values_to_add = [ value ]
@@ -85,11 +85,9 @@ class ConfigurationData:
       self.__values.extend( values_to_add )
    # def set_value
 
-   def reset_value( self, name: str, value = None ):
+   def reset_value( self, value = None ):
       self.__values.clear( )
-
-      if None == value:
-         self.__values.append( value )
+      self.set_value( value )
    # def reset_value
 
    def test_value( self, value ):
@@ -99,7 +97,7 @@ class ConfigurationData:
       values_to_test: list = [ ]
       if isinstance( value, list ) or isinstance( value, tuple ):
          values_to_test = value
-      elif isinstance( value, dict ):
+      elif isinstance( value, dict ) or isinstance( value, set ):
          return
       else:
          values_to_test = [ value ]
@@ -120,7 +118,7 @@ class ConfigurationData:
    # def get_description
 
    def is_satisfy( self ):
-      result: bool = 0 < len( self.__values ) if True == self.__required else True
+      result: bool = 0 < len( self.__values ) if self.__required else True
 
       if False == result:
          print( "configuration variable '%s' is not defined in command line paramenters and configuration file" % ( self.__name ) )
