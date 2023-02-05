@@ -100,11 +100,11 @@ def build_parameters( **kwargs ):
    if True == kw_nographic:
       parameters += f" -nographic"
 
-   if "x86" == kw_arch or "x86_64" == kw_arch:
+   if kw_arch in [ "x86", "x86_64" ]:
       parameters += f" -enable-kvm"
       parameters += f" -smp cores=2"
       parameters += f" -m 8192"
-   elif "arm" == kw_arch or "arm32" == kw_arch or "arm64" == kw_arch or "aarch64" == kw_arch:
+   elif kw_arch in [ "arm", "arm32", "arm64", "aarch64" ]:
       parameters += f" -machine virt"
       parameters += f" -machine virtualization=true"
       parameters += f" -cpu cortex-a53"
@@ -134,9 +134,9 @@ def build_cmdline( **kwargs ):
    if True == kw_bootconfig:
       cmdline += f" bootconfig"
 
-   if "x86" == kw_arch or "x86_64" == kw_arch:
+   if kw_arch in [ "x86", "x86_64" ]:
       cmdline += f" console=ttyS0,38400"
-   elif "arm" == kw_arch or "arm32" == kw_arch or "arm64" == kw_arch or "aarch64" == kw_arch:
+   elif kw_arch in [ "arm", "arm32", "arm64", "aarch64" ]:
       cmdline += f" console=ttyAMA0"
 
 

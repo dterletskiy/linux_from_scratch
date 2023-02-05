@@ -160,7 +160,7 @@ class Kernel:
       targets: str = ""
       for target in kw_targets:
          targets += f"{target} "
-      targets += f"vmlinux "
+      # targets += f"vmlinux "
 
       command = "make"
       command += f" O={self.__directories.build( )}"
@@ -184,6 +184,8 @@ class Kernel:
    def build_tool( self, **kwargs ):
       kw_tool = kwargs.get( "tool", "tools/bootconfig" )
       kw_host = kwargs.get( "host", True )
+
+      pfw.shell.execute( f"mkdir -p {self.__directories.build( kw_tool )}", output = pfw.shell.eOutput.PTY )
 
       command = "make"
       command += f" O={self.__directories.build( kw_tool )}"
@@ -231,9 +233,14 @@ class Kernel:
       pfw.shell.execute( f"mkdir -p {kw_deploy_path}" )
 
       files_list: list = [
-            self.__directories.product( "Image" ),
+            # arm
             self.__directories.product( "zImage" ),
+            # arm64
+            self.__directories.product( "Image" ),
             self.__directories.product( "Image.gz" ),
+            # x86, x86_64
+            self.__directories.product( "bzImage" ),
+            # common
             self.__directories.product( "compressed/vmlinux" ),
             self.__directories.build( "vmlinux" ),
          ]

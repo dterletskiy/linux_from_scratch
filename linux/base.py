@@ -99,13 +99,13 @@ config: dict = {
    "x86": Configuration(
            arch = "x86"
          , compiler = ""
-         , compiler_path = "/ust"
+         , compiler_path = "/usr"
          , cores = "8"
       ),
    "x86_64": Configuration(
            arch = "x86_64"
          , compiler = ""
-         , compiler_path = "to_do"
+         , compiler_path = "/usr"
          , cores = "8"
       )
 }

@@ -205,7 +205,7 @@ class BusyBox:
          pfw.shell.execute( f"cp {file} {rootfs_path}" )
 
       directories_list: list = [
-            os.path.join( self.__directories.product( ), "." )
+            self.__directories.product( "." )
          ]
 
       for directory in directories_list:

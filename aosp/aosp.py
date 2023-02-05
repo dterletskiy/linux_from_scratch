@@ -238,7 +238,8 @@ class AOSP:
       kw_out = kwargs.get( "out", self.__directories.experimental( "boot" ) )
       kw_format = kwargs.get( "format", "mkbootimg" ) # info,mkbootimg
 
-      command: str = f"mkdir -p {kw_out}; unpack_bootimg"
+      command: str = f"mkdir -p {kw_out};"
+      command += f" unpack_bootimg"
       command += f" --boot_img {kw_boot_img}"
       command += f" --out {kw_out}"
       command += f" --format {kw_format}"
@@ -266,18 +267,12 @@ class AOSP:
       command += f" --os_patch_level {kw_os_patch_level}"
       command += f" --kernel {kw_kernel}"
       command += f" --ramdisk {kw_ramdisk}"
-      if None != kw_dtb:
-         command += f" --dtb {kw_dtb}"
-      if None != kw_cmdline:
-         command += f" --cmdline \"{kw_cmdline}\""
-      if None != kw_base:
-         command += f" --base {kw_base}"
-      if None != kw_kernel_offset:
-         command += f" --kernel_offset {kw_kernel_offset}"
-      if None != kw_ramdisk_offset:
-         command += f" --ramdisk_offset {kw_ramdisk_offset}"
-      if None != kw_dtb_offset:
-         command += f" --dtb_offset {kw_dtb_offset}"
+      command += f" --dtb {kw_dtb}" if kw_dtb else ""
+      command += f" --cmdline \"{kw_cmdline}\"" if kw_cmdline else ""
+      command += f" --base {kw_base}" if kw_base else ""
+      command += f" --kernel_offset {kw_kernel_offset}" if kw_kernel_offset else ""
+      command += f" --ramdisk_offset {kw_ramdisk_offset}" if kw_ramdisk_offset else ""
+      command += f" --dtb_offset {kw_dtb_offset}" if kw_dtb_offset else ""
       command += f" --out {kw_out}"
 
       self.__execute( command )
@@ -288,7 +283,6 @@ class AOSP:
 
       EXPERIMENTAL_RAMDISK_DIR = self.__directories.experimental( "ramdisk" )
       EXPERIMENTAL_RAMDISK_IMAGE = self.__directories.experimental( "ramdisk.img" )
-      # EXPERIMENTAL_RAMDISK = self.__directories.experimental( "ramdisk" )
 
       ANDROID_PRODUCT_RAMDISK_DIR = self.__directories.product( "ramdisk" )
       ANDROID_RAMDISK_IMAGE = self.__directories.product( "ramdisk.img" )
@@ -296,22 +290,39 @@ class AOSP:
       ANDROID_PRODUCT_VENDOR_RAMDISK_DIR = self.__directories.product( "vendor_ramdisk" )
       ANDROID_VENDOR_RAMDISK_IMAGE = self.__directories.product( "vendor_ramdisk.img" )
 
-      command: str = "" \
-         + f" rm -r {EXPERIMENTAL_RAMDISK_DIR};" \
-         + f" mkdir -p {EXPERIMENTAL_RAMDISK_DIR};" \
-         + f" cd {EXPERIMENTAL_RAMDISK_DIR};" \
-         + f" cp -R {ANDROID_PRODUCT_RAMDISK_DIR}/* {EXPERIMENTAL_RAMDISK_DIR};" \
-         + f" cp -R {ANDROID_PRODUCT_VENDOR_RAMDISK_DIR}/* {EXPERIMENTAL_RAMDISK_DIR};" \
-         + f" find . ! -name . | LC_ALL=C sort | cpio -o -H newc -R root:root | lz4 -l -12 --favor-decSpeed > {EXPERIMENTAL_RAMDISK_IMAGE};" \
-
-      # command += f" cp {EXPERIMENTAL_RAMDISK_IMAGE} {EXPERIMENTAL_RAMDISK};"
-
+      command: str = ""
+      command += f" rm -r {EXPERIMENTAL_RAMDISK_DIR};"
+      command += f" mkdir -p {EXPERIMENTAL_RAMDISK_DIR};"
+      command += f" cp -R {ANDROID_PRODUCT_RAMDISK_DIR}/* {EXPERIMENTAL_RAMDISK_DIR};"
+      command += f" cp -R {ANDROID_PRODUCT_VENDOR_RAMDISK_DIR}/* {EXPERIMENTAL_RAMDISK_DIR};"
       self.__execute( command )
 
-      if None != kw_bootconfig and isinstance( kw_bootconfig, dict ):
-         pfw.console.debug.info( "Addint bootconfig to ramdisk" )
-         kw_bootconfig["tool"]( EXPERIMENTAL_RAMDISK_IMAGE, clear = True, add = kw_bootconfig["config"] )
+      self.pack_ramdisk( source = EXPERIMENTAL_RAMDISK_DIR, ramdisk = EXPERIMENTAL_RAMDISK_IMAGE, bootconfig = kw_bootconfig )
    # def build_ramdisk
+
+   def pack_ramdisk( self, **kwargs ):
+      kw_source = kwargs.get( "source", None )
+      kw_ramdisk = kwargs.get( "ramdisk", None )
+      kw_bootconfig = kwargs.get( "bootconfig", None )
+
+      command = f"find . ! -name . | LC_ALL=C sort | cpio -o -H newc -R root:root | lz4 -l -12 --favor-decSpeed > {kw_ramdisk};"
+      pfw.shell.execute( command, cwd = kw_source, output = pfw.shell.eOutput.PTY )
+
+      if None != kw_bootconfig and isinstance( kw_bootconfig, dict ):
+         pfw.console.debug.info( "Adding bootconfig to ramdisk" )
+         kw_bootconfig["tool"]( kw_ramdisk, clear = True, add = kw_bootconfig["config"] )
+   # def pack_ramdisk
+
+   def extract_ramdisk( self, **kwargs ):
+      kw_ramdisk = kwargs.get( "ramdisk", None )
+      kw_destination = kwargs.get( "destination", None )
+
+      command = f"rm -r {kw_destination}; mkdir -p {kw_destination}"
+      pfw.shell.execute( command, output = pfw.shell.eOutput.PTY )
+
+      command = f" lz4 -d -c {kw_ramdisk} | cpio -i"
+      pfw.shell.execute( command, cwd = kw_destination, output = pfw.shell.eOutput.PTY )
+   # def extract_ramdisk
 
    def run( self, **kwargs ):
       pass
