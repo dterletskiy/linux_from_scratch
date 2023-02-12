@@ -12,9 +12,8 @@ import pfw.archive
 import pfw.shell
 import pfw.file
 import pfw.size
-import pfw.image
+import pfw.linux.image
 import pfw.os.signal
-import pfw.git
 
 import base
 import qemu
@@ -47,12 +46,12 @@ class Rootfs:
       self.__archive_name = UBUNTU_ARCHIVE_PATTERN.replace( "VERSION", self.__version ).replace( "ARCH", self.__config.arch( ) )
       self.__directories = linux.base.Directories( self.__config, root_dir, self.__name )
 
-      description = pfw.image.Partition.Description(
+      description = pfw.linux.image.Partition.Description(
            file = self.__directories.build( "rootfs.img" )
          , size = pfw.size.Size( 3, pfw.size.Size.eGran.G, align = pfw.size.Size.eGran.G )
          , fs = "ext4"
       )
-      self.__image = pfw.image.Partition( description, build = True, force = False )
+      self.__image = pfw.linux.image.Partition( description, build = True, force = False )
    # def __init__
 
    def __del__( self ):
@@ -173,7 +172,7 @@ class Rootfs:
          if None != kw_user['hashed_password']:
             command += f" -p {kw_user['hashed_password']}"
          elif None != kw_user['password']:
-            pwd = pfw.password.build_hashed_password( kw_user['password'] )
+            pwd = pfw.linux.password.build_hashed_password( kw_user['password'] )
             if None != pwd:
                command += f" -p {pwd}"
          command += f" {kw_user['name']}"
@@ -314,7 +313,7 @@ class Rootfs:
    __name: str = None
    __url: str = None
    __archive_name: str = None
-   __image: pfw.image.Partition = None
+   __image: pfw.linux.image.Partition = None
    __directories: linux.base.Directories = None
    __config: linux.base.Configuration = None
 # class Rootfs

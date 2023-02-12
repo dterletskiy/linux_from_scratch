@@ -56,7 +56,7 @@ configuration.configure( sys.argv[1:] )
 import pfw.console
 import pfw.shell
 import pfw.size
-import pfw.image
+import pfw.linux.image
 import pfw.os.signal
 import signal
 
@@ -82,14 +82,14 @@ import aosp.aosp
 
 def extend_configuration( ):
    configuration.config.set_value( "boot_partition_image",
-      pfw.image.Partition.Description(
+      pfw.linux.image.Partition.Description(
            file = os.path.join( configuration.config.get_value( "tmp_path" ), "boot.img" )
          , size = pfw.size.Size( 512, pfw.size.Size.eGran.M )
          , fs = "ext2"
       )
    )
    configuration.config.set_value( "rootfs_partition_image",
-      pfw.image.Partition.Description(
+      pfw.linux.image.Partition.Description(
            file = os.path.join( configuration.config.get_value( "tmp_path" ), "rootfs.img" )
          , size = pfw.size.Size( 5, pfw.size.Size.eGran.G )
          , fs = "ext4"
@@ -178,8 +178,11 @@ def main( ):
       if "gdb" == action_name:
          tools.debug( projects_map, project_name = "uboot" )
       elif "start" == action_name:
+         # tools.start( projects_map, mode = "aosp", arch = "x86_64", gdb = False )
+         tools.start( projects_map, mode = "aosp-uboot", arch = "arm64", gdb = False )
+         tools.start( projects_map, mode = "aosp-kernel", arch = "arm64", gdb = False )
          # tools.start( projects_map, mode = "u-boot", gdb = False )
-         tools.start( projects_map, mode = "kernel_rd", gdb = False )
+         # tools.start( projects_map, mode = "kernel_rd", gdb = False )
          # tools.start( projects_map, mode = "kernel_rf", gdb = False )
       elif "mkimage" == action_name:
          tools.mkdrive( projects_map )
@@ -199,7 +202,13 @@ def main( ):
                )
             # docker.container.commit( container, image = "ubuntu/arm64v8:20.04" )
          elif "prune" == action_name:
-            pfw.docker.prune( )
+            pfw.linux.docker.prune( )
+      elif "dummy" == action_name:
+         projects_map["aosp"].extract_android_boot_image(
+               boot_img = "/mnt/dev/android/deploy/kernel/common-android14-6.1/virtual_device_aarch64/boot.img",
+               out = "/mnt/dev/android/deploy/kernel/common-android14-6.1/virtual_device_aarch64/extracted/boot.img",
+               format = "mkbootimg"
+            )
 
 # def main
 
@@ -219,12 +228,12 @@ if __name__ == "__main__":
 
    if False:
       partition_image_file = os.path.join( configuration.config.get_value( "tmp_path" ), "partition.img" )
-      # partition_description = pfw.image.Partition.Description(
+      # partition_description = pfw.linux.image.Partition.Description(
       #      file = partition_image_file
       #    , size = pfw.size.Size( 512, pfw.size.Size.eGran.M )
       #    , fs = "ext2"
       # )
-      # partition = pfw.image.Partition( partition_description, build = True, force = True )
+      # partition = pfw.linux.image.Partition( partition_description, build = True, force = True )
       # partition.mount( configuration.value( "tmp_path" ), True )
 
       # partition.info( )
@@ -235,13 +244,13 @@ if __name__ == "__main__":
 
 
       # partitions = [
-      #    pfw.image.Partition.Description( size = pfw.size.SizeGigabyte, label = "boot", fs = "ext4" ),
-      #    pfw.image.Partition.Description( size = pfw.size.SizeGigabyte, label = "system", fs = "ext4" ),
-      #    pfw.image.Partition.Description( size = pfw.size.SizeGigabyte, label = "swap", fs = "ext4" ),
+      #    pfw.linux.image.Partition.Description( size = pfw.size.SizeGigabyte, label = "boot", fs = "ext4" ),
+      #    pfw.linux.image.Partition.Description( size = pfw.size.SizeGigabyte, label = "system", fs = "ext4" ),
+      #    pfw.linux.image.Partition.Description( size = pfw.size.SizeGigabyte, label = "swap", fs = "ext4" ),
       # ]
 
       drive_image_file = os.path.join( configuration.config.get_value( "tmp_path" ), "drive.img" )
-      # drive = pfw.image.Drive( os.path.join( configuration.config.get_value( "tmp_path" ), "drive.img" ) )
+      # drive = pfw.linux.image.Drive( os.path.join( configuration.config.get_value( "tmp_path" ), "drive.img" ) )
       # drive.create( partitions = partitions, force = True )
       # drive.attach( )
       # drive.init( partitions )
@@ -251,8 +260,8 @@ if __name__ == "__main__":
 
 
 
-      # pfw.image.mounted_to( partition_image_file )
-      # pfw.image.attached_to( drive_image_file )
+      # pfw.linux.image.mounted_to( partition_image_file )
+      # pfw.linux.image.attached_to( drive_image_file )
 
-      # pfw.image.info( partition_image_file )
-      # pfw.image.info( drive_image_file )
+      # pfw.linux.image.info( partition_image_file )
+      # pfw.linux.image.info( drive_image_file )

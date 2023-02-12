@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 import os
+import datetime
 
 import pfw.console
 import pfw.shell
@@ -36,8 +37,11 @@ def run( parameters, **kwargs ):
    kw_arch = kwargs.get( "arch", None )
    kw_gdb = kwargs.get( "gdb", False )
    kw_dump_dtb = kwargs.get( "dump_dtb", False )
-   kw_dump_dtb_path = kwargs.get( "dump_dtb_path", "/tmp/dump.dtb" )
+   kw_dump_dtb_path = kwargs.get( "dump_dtb_path", f"/tmp/dtb/{str(datetime.datetime.now( ))}.dtb" )
    kw_output = kwargs.get( "output", pfw.shell.eOutput.PTY )
+
+   if kw_dump_dtb:
+      pfw.shell.execute( f"mkdir -p {os.path.dirname( kw_dump_dtb_path )}", output = kw_output )
 
    if "x86" == kw_arch:
       kw_emulator = qemu( f"qemu-system-x86_64", qemu_path = kw_emulator )
@@ -49,29 +53,15 @@ def run( parameters, **kwargs ):
       kw_emulator = qemu( f"qemu-system-aarch64", qemu_path = kw_emulator )
 
    command: str = f"{kw_emulator} {parameters}"
+   command += f" -bios {kw_bios}" if kw_bios else ""
+   command += f" -kernel {kw_kernel}" if kw_kernel else ""
+   command += f" -initrd {kw_initrd}" if kw_initrd else ""
+   command += f" -append \"{kw_append}\"" if kw_append else ""
+   command += f" -dtb {kw_dtb}" if kw_dtb else ""
+   command += f" -machine dumpdtb={kw_dump_dtb_path}" if kw_dump_dtb else ""
+   command += f" -s -S" if kw_gdb else ""
 
-   if None != kw_bios:
-      command += f" -bios {kw_bios}"
-   if None != kw_kernel:
-      command += f" -kernel {kw_kernel}"
-   if None != kw_initrd:
-      command += f" -initrd {kw_initrd}"
-   if None != kw_append:
-      command += f" -append \"{kw_append}\""
-   if None != kw_dtb:
-      command += f" -dtb {kw_dtb}"
-
-   if True == kw_dump_dtb:
-      command += f" -machine dumpdtb={kw_dump_dtb_path}"
-
-   if True == kw_gdb:
-      command += f" -s -S"
-
-   result = pfw.shell.execute(
-         command,
-         cwd = kw_cwd,
-         output = kw_output
-      )
+   result = pfw.shell.execute( command, cwd = kw_cwd, sudo = False, output = kw_output )
 
    if True == kw_dump_dtb:
       dt.decompile( kw_dump_dtb_path, kw_dump_dtb_path + ".dts" )
@@ -115,7 +105,7 @@ def build_parameters( **kwargs ):
 # def build_parameters
 
 
-def build_cmdline( **kwargs ):
+def build_kernel_parameters( **kwargs ):
    kw_arch = kwargs.get( "arch", "arm64" )
    kw_max_loop = kwargs.get( "max_loop", 100 )
    kw_bootconfig = kwargs.get( "bootconfig", True )
@@ -124,10 +114,10 @@ def build_cmdline( **kwargs ):
    cmdline = f"loop.max_loop={kw_max_loop}"
    if True == kw_debug:
       cmdline += f" loglevel=7"
-      cmdline += f" earlyprintk"
-      cmdline += f" debug"
       cmdline += f" printk.devkmsg=on"
-      cmdline += f" drm.debug=0x1FF"
+      # cmdline += f" earlyprintk"
+      # cmdline += f" debug"
+      # cmdline += f" drm.debug=0x1FF"
    else:
       cmdline += f" loglevel=1"
 
@@ -142,4 +132,4 @@ def build_cmdline( **kwargs ):
 
    pfw.console.debug.trace( "cmdline = '%s'" % (cmdline) )
    return cmdline
-# def build_cmdline
+# def build_kernel_parameters

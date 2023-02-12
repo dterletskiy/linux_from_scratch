@@ -7,7 +7,6 @@ import pfw.base
 import pfw.console
 import pfw.archive
 import pfw.shell
-import pfw.git
 
 import base
 import qemu

@@ -53,7 +53,7 @@ def mkimage( projects_map: dict ):
 def mkbootimg( projects_map: dict ):
    mkbootimg_tool = projects_map["aosp"].create_android_boot_image
 
-   cmdline = qemu.build_cmdline( arch = projects_map["aosp"].config( ).arch( ) )
+   cmdline = qemu.build_kernel_parameters( arch = projects_map["aosp"].config( ).arch( ), debug = True )
    # cmdline += " root=/dev/ram rw"
 
    mkbootimg_tool(
@@ -72,6 +72,7 @@ def mkbootimg( projects_map: dict ):
    mkbootimg_tool(
          header_version = 2,
          kernel = projects_map["aosp"].dirs( ).product( "kernel"),
+         # kernel = "/mnt/dev/android/deploy/kernel/common-android14-6.1/virtual_device_aarch64/extracted/boot.img/kernel",
          ramdisk = projects_map["aosp"].dirs( ).experimental( "ramdisk.img"),
          dtb = configuration.value( "dtb_export_path" ),
          cmdline = cmdline,
@@ -89,10 +90,11 @@ def prepare_boot( projects_map: dict ):
    mkimage( projects_map )
 
    bootconfig_file: str = None
-   if "x86" == projects_map["aosp"].config( ).arch( ) or "x86_64" == projects_map["aosp"].config( ).arch( ):
+   if projects_map["aosp"].config( ).arch( ) in [ "x86", "x86_64" ]:
       bootconfig_file = configuration.value( "android_bootconfig_x86" )
-   elif "arm64" == projects_map["aosp"].config( ).arch( ) or "aarch64" == projects_map["aosp"].config( ).arch( ):
+   elif projects_map["aosp"].config( ).arch( ) in [ "arm64", "aarch64" ]:
       bootconfig_file = configuration.value( "android_bootconfig_arm64" )
+
    projects_map["aosp"].build_ramdisk(
          bootconfig = { "tool": projects_map["kernel"].bootconfig, "config": bootconfig_file }
       )
@@ -174,7 +176,7 @@ def deploy_boot( projects_map: dict, mount_point: str, pause: bool = False ):
 # def deploy_boot
 
 def mkpartition_boot( projects_map: dict ):
-   mmc: pfw.image.Partition = pfw.image.Partition( configuration.value( "boot_partition_image" ), build = True, force = True )
+   mmc: pfw.linux.image.Partition = pfw.linux.image.Partition( configuration.value( "boot_partition_image" ), build = True, force = True )
    mount_point = mmc.mount( configuration.value( "tmp_path" ), True )
 
    prepare_boot( projects_map )
@@ -206,38 +208,38 @@ def mkdrive( projects_map: dict ):
    boot_image = configuration.value( "boot_partition_image" ).file( )
 
    # mkpartition_rootfs( projects_map )
-   rootfs_image = projects_map["rootfs"].dirs( ).build( "rootfs.img" )
+   # rootfs_image = projects_map["rootfs"].dirs( ).build( "rootfs.img" )
 
    super_image = projects_map["aosp"].dirs( ).product( "super.img" )
    if "arm64" == projects_map["aosp"].config( ).arch( ):
-      projects_map["aosp"].simg_to_img( projects_map["aosp"].dirs( ).product( "super.img" ), projects_map["aosp"].dirs( ).experimental( "super.raw" ) )
       super_image = projects_map["aosp"].dirs( ).experimental( "super.raw" )
+      projects_map["aosp"].simg_to_img( projects_map["aosp"].dirs( ).product( "super.img" ), super_image )
 
    userdata_image = projects_map["aosp"].dirs( ).product( "userdata.img" )
    if "arm64" == projects_map["aosp"].config( ).arch( ):
-      projects_map["aosp"].simg_to_img( projects_map["aosp"].dirs( ).product( "userdata.img" ), projects_map["aosp"].dirs( ).experimental( "userdata.raw" ) )
       userdata_image = projects_map["aosp"].dirs( ).experimental( "userdata.raw" )
+      projects_map["aosp"].simg_to_img( projects_map["aosp"].dirs( ).product( "userdata.img" ), userdata_image )
 
    vbmeta_image = projects_map["aosp"].dirs( ).product( "vbmeta.img" )
    vbmeta_system_image = projects_map["aosp"].dirs( ).product( "vbmeta_system.img" )
 
    boot_part_num = 1
    partitions = [
-      pfw.image.Partition.Description( clone_from = boot_image, label = "boot" ),
-      # pfw.image.Partition.Description( clone_from = rootfs_image, label = "rootfs" ),
+      pfw.linux.image.Partition.Description( clone_from = boot_image, label = "boot" ),
+      # pfw.linux.image.Partition.Description( clone_from = rootfs_image, label = "rootfs" ),
 
-      # pfw.image.Partition.Description( clone_from = super_image, label = "super" ),
+      pfw.linux.image.Partition.Description( clone_from = super_image, label = "super" ),
 
-      # pfw.image.Partition.Description( clone_from = userdata_image, label = "userdata" ),
-      # pfw.image.Partition.Description( size = pfw.size.SizeGigabyte, label = "cache", fs = "ext4" ),
-      # pfw.image.Partition.Description( size = pfw.size.SizeGigabyte, label = "metadata", fs = "ext4" ),
-      # pfw.image.Partition.Description( size = pfw.size.SizeGigabyte, label = "misc", fs = "ext4" ),
+      pfw.linux.image.Partition.Description( clone_from = userdata_image, label = "userdata" ),
+      pfw.linux.image.Partition.Description( size = pfw.size.SizeGigabyte, label = "cache", fs = "ext4" ),
+      pfw.linux.image.Partition.Description( size = pfw.size.SizeGigabyte, label = "metadata", fs = "ext4" ),
+      pfw.linux.image.Partition.Description( size = pfw.size.SizeGigabyte, label = "misc", fs = "ext4" ),
 
-      # pfw.image.Partition.Description( clone_from = vbmeta_image, label = "vbmeta_a" ),
-      # pfw.image.Partition.Description( clone_from = vbmeta_system_image, label = "vbmeta_system_a" ),
+      pfw.linux.image.Partition.Description( clone_from = vbmeta_image, label = "vbmeta_a" ),
+      pfw.linux.image.Partition.Description( clone_from = vbmeta_system_image, label = "vbmeta_system_a" ),
    ]
 
-   mmc: pfw.image.Drive = pfw.image.Drive( configuration.value( "main_drive_image" ) )
+   mmc: pfw.linux.image.Drive = pfw.linux.image.Drive( configuration.value( "main_drive_image" ) )
    mmc.create( partitions = partitions, force = True )
    mmc.attach( )
    mmc.init( partitions, bootable = boot_part_num )
@@ -318,35 +320,36 @@ def build_emulator_parameters( projects_map, **kwargs ):
    kw_drive = kwargs.get( "drive", None )
    kw_arch = projects_map["aosp"].config( ).arch( )
    kw_inet_dump = os.path.join( configuration.value( "tmp_path" ), "eth0_inet_dump_$(date '+%Y-%m-%d_%H:%M:%S').dat" )
+   # For using qemu-bridge-helper
+   # https://mike42.me/blog/2019-08-how-to-use-the-qemu-bridge-helper-on-debian-10
+   kw_qemu_bridge_helper = "/usr/lib/qemu/qemu-bridge-helper"
 
-   PARAMETERS = f"" \
-      + f" -serial mon:stdio" \
-      + f" -nodefaults" \
-      + f" -no-reboot" \
-      + f" -d guest_errors"
-
+   PARAMETERS = f""
+   PARAMETERS =+ f" -serial mon:stdio"
+   PARAMETERS =+ f" -nodefaults"
+   PARAMETERS =+ f" -no-reboot"
+   PARAMETERS =+ f" -d guest_errors"
    if "x86" == kw_arch:
       PARAMETERS = PARAMETERS + f" -enable-kvm"
       PARAMETERS = PARAMETERS + f" -smp cores=2"
       PARAMETERS = PARAMETERS + f" -m 8192"
    elif "arm64" == kw_arch:
       PARAMETERS = PARAMETERS + f" -machine virt"
-      PARAMETERS = PARAMETERS + f" -machine virtualization=true"
+      # PARAMETERS = PARAMETERS + f" -machine virtualization=true"
       PARAMETERS = PARAMETERS + f" -cpu cortex-a53"
       PARAMETERS = PARAMETERS + f" -smp cores=4"
       PARAMETERS = PARAMETERS + f" -m 8192"
 
-   IMAGE_DEVICE_TYPE = f"virtio-blk-pci,modern-pio-notify,iothread=disk-iothread"
    IMAGE_DEVICES_MAIN = f"" \
       + f" -drive if=none,index=0,id=main,file={kw_drive}" \
-      + f" -device {IMAGE_DEVICE_TYPE},drive=main"
+      + f" -device virtio-blk-pci,modern-pio-notify=on,drive=main"
 
    NETWORK_NETDEV_USER = f"" \
       + f" -netdev user,id=eth0_inet,hostfwd=tcp::5550-:5555,ipv6=off" \
       + f" -device virtio-net-pci,netdev=eth0_inet,id=android"
 
    NETWORK_NETDEV_BRIDGE = f"" \
-      + f" -netdev bridge,id=eth0_inet,br=virbr0,helper=/mnt/dev/git/qemu/build/qemu-bridge-helper" \
+      + f" -netdev bridge,id=eth0_inet,br=virbr0,helper={kw_qemu_bridge_helper}" \
       + f" -device virtio-net-pci,netdev=eth0_inet,id=android"
 
    NETWORK_NETDEV_TAP = f"" \
@@ -361,7 +364,7 @@ def build_emulator_parameters( projects_map, **kwargs ):
       + f" -net nic" \
 
    NETWORK_NET_BRIDGE = f"" \
-      + f" -net bridge,br=virbr0,helper=/mnt/dev/git/qemu/build/qemu-bridge-helper" \
+      + f" -net bridge,br=virbr0,helper={kw_qemu_bridge_helper}" \
       + f" -net nic,model=virtio"
 
    PCI_KBD_MOUSE = f"" \
@@ -369,18 +372,24 @@ def build_emulator_parameters( projects_map, **kwargs ):
       + " -device virtio-mouse-pci"
 
    USB_BUS = f"" \
-      + " -usb" \
+      + " -usb"
 
    USB_KBD_MOUSE = f"" \
-      + " -usb" \
       + " -device usb-kbd" \
-      + " -device usb-mouse" \
+      + " -device usb-mouse"
 
-   AUDIO_DEVICES = f"" \
-      + " -device intel-hda" \
-      + " -device hda-duplex,audiodev=snd0" \
+   GRAPHIC_DEVICES = f"" \
+      + " -display gtk,gl=on,show-cursor=on" \
+      + " -device virtio-gpu-gl-pci"
+
+   DEVICES_AUDIO_VIRTIO = f"" \
       + " -audiodev alsa,id=snd0,out.dev=default" \
       + " -device virtio-snd-pci,disable-legacy=on,audiodev=snd0"
+
+   DEVICES_AUDIO_INTEL = f"" \
+      + " -audiodev alsa,id=snd0,out.dev=default" \
+      + " -device intel-hda" \
+      + " -device hda-duplex,audiodev=snd0"
 
    CHAR_DEVICES = f"" \
       + " -device virtio-serial-pci,ioeventfd=off" \
@@ -390,21 +399,19 @@ def build_emulator_parameters( projects_map, **kwargs ):
       + " -device virtconsole,chardev=forhvc1"
 
    OTHER_DEVICES = f"" \
-      + " -device virtio-gpu-gl-pci" \
-      + " -display gtk,gl=on,show-cursor=on" \
       + " -device nec-usb-xhci,id=xhci" \
       + " -device sdhci-pci" \
-      + " -object iothread,id=disk-iothread" \
       + " -device virtio-rng-pci"
 
-   command: str = ""\
-      + f" {PARAMETERS}" \
-      + f" {IMAGE_DEVICES_MAIN}" \
-      + f" {NETWORK_NETDEV_USER}" \
-      + f" {USB_BUS}" \
-      + f" {AUDIO_DEVICES}" \
-      + f" {CHAR_DEVICES}" \
-      + f" {OTHER_DEVICES}"
+   command: str = f" {PARAMETERS}"
+   command += f" {IMAGE_DEVICES_MAIN}"
+   command += f" {NETWORK_NETDEV_USER}"
+   command += f" {GRAPHIC_DEVICES}"
+   command += f" {DEVICES_AUDIO_INTEL}"
+   # command += f" {USB_BUS}"
+   # command += f" {USB_KBD_MOUSE}"
+   # command += f" {CHAR_DEVICES}"
+   # command += f" {OTHER_DEVICES}"
 
    return command
 # def build_emulator_parameters
@@ -425,12 +432,12 @@ def start( projects_map: dict, **kwargs ):
 
    command: str = ""
    if "aosp" == kw_mode:
-      command = build_emulator_parameters( projects_map,  drive = kw_drive, debug = True )
-   elif "u-boot" == kw_mode or "kernel_rd" == kw_mode or "kernel_rf" == kw_mode:
+      command = build_emulator_parameters( projects_map,  drive = kw_drive )
+   elif kw_mode in [ "u-boot", "kernel_rd", "kernel_rf" ]:
       command = qemu.build_parameters( arch = kw_arch )
 
-      # command += f" -drive if=none,index=0,id=main,file={kw_drive}"
-      # command += f" -device virtio-blk-pci,modern-pio-notify,drive=main"
+      command += f" -drive if=none,index=0,id=main,file={kw_drive}"
+      command += f" -device virtio-blk-pci,modern-pio-notify,drive=main"
 
       command += f" -netdev user,id=net0,hostfwd=tcp::2222-:22"
       command += f" -device virtio-net-device,netdev=net0"
@@ -440,12 +447,12 @@ def start( projects_map: dict, **kwargs ):
       command += f" -device sdhci-pci"
       command += f" -device virtio-rng-pci"
 
-      vc_pipe = "/tmp/virtio_console_chardev.pipe"
-      pfw.shell.execute( f"rm {vc_pipe}; mkfifo {vc_pipe}", output = pfw.shell.eOutput.PTY )
-      pfw.shell.execute( f"rm {vc_pipe}.in; mkfifo {vc_pipe}.in", output = pfw.shell.eOutput.PTY )
-      pfw.shell.execute( f"rm {vc_pipe}.out; mkfifo {vc_pipe}.out", output = pfw.shell.eOutput.PTY )
-      command += f" -chardev pipe,id=virtio_console_chardev,path={vc_pipe}"
-      command += f" -device virtconsole,chardev=virtio_console_chardev,id=virtio_console"
+      # vc_pipe = "/tmp/virtio_console_chardev.pipe"
+      # pfw.shell.execute( f"rm {vc_pipe}; mkfifo {vc_pipe}", output = pfw.shell.eOutput.PTY )
+      # pfw.shell.execute( f"rm {vc_pipe}.in; mkfifo {vc_pipe}.in", output = pfw.shell.eOutput.PTY )
+      # pfw.shell.execute( f"rm {vc_pipe}.out; mkfifo {vc_pipe}.out", output = pfw.shell.eOutput.PTY )
+      # command += f" -chardev pipe,id=virtio_console_chardev,path={vc_pipe}"
+      # command += f" -device virtconsole,chardev=virtio_console_chardev,id=virtio_console"
 
       # command += f" -device virtio-gpu-pci"
       # command += f" -device virtio-gpu-gl-pci"
@@ -458,10 +465,21 @@ def start( projects_map: dict, **kwargs ):
    kw_args: dict = { }
    kw_args["arch"] = kw_arch
    kw_args["gdb"] = kw_gdb
-   if "aosp" == kw_mode:
-      kw_args["bios"] = projects_map["uboot"].dirs( ).product( "u-boot.bin" )
+   if "aosp-uboot" == kw_mode:
+      if kw_arch in [ "x86", "x86_64" ]:
+         kw_args["bios"] = projects_map["uboot"].dirs( ).product( "u-boot.rom" )
+      elif kw_arch in [ "arm", "arm32", "arm64", "aarch64" ]:
+         kw_args["bios"] = projects_map["uboot"].dirs( ).product( "u-boot.bin" )
+   elif "aosp-kernel" == kw_mode:
+      kw_args["kernel"] = projects_map["aosp"].dirs( ).product( "kernel" )
+      kw_args["initrd"] = projects_map["aosp"].dirs( ).experimental( "ramdisk.img")
+      kw_args["append"] = "loglevel=7 debug printk.devkmsg=on drm.debug=0x1FF console=ttyAMA0"
+      kw_args["dtb"] = configuration.value( "dtb_export_path" )
    elif "u-boot" == kw_mode:
-      kw_args["bios"] = projects_map["uboot"].dirs( ).product( "u-boot.bin" )
+      if kw_arch in [ "x86", "x86_64" ]:
+         kw_args["bios"] = projects_map["uboot"].dirs( ).product( "u-boot.rom" )
+      elif kw_arch in [ "arm", "arm32", "arm64", "aarch64" ]:
+         kw_args["bios"] = projects_map["uboot"].dirs( ).product( "u-boot.bin" )
    elif "kernel_rd" == kw_mode:
       kw_args["kernel"] = projects_map["kernel"].dirs( ).deploy( "Image" )
       kw_args["initrd"] = projects_map["buildroot"].dirs( ).deploy( "rootfs.cpio" )

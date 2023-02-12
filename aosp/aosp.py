@@ -7,12 +7,11 @@ from enum import Enum
 import pfw.base
 import pfw.console
 import pfw.shell
-import pfw.image
-import pfw.git
 
 import base
 import configuration
 import qemu
+import ramdisk
 import aosp.base
 
 
@@ -23,10 +22,12 @@ ANDROID_MANIFEST_URL = "https://android.googlesource.com/platform/manifest"
 
 
 class Repo:
-   def __init__( self, destination: str ):
+   def __init__( self, destination: str, **kwargs ):
+      kw_manifest: int = kwargs.get( "manifest", ANDROID_MANIFEST_URL )
+
       self.__repo_tool = os.path.join( destination, "repo" )
       self.__source_dir = destination
-      pass
+      self.__manifest = kw_manifest
    # def __init__
 
    def __del__( self ):
@@ -61,29 +62,25 @@ class Repo:
          return
 
       # https://stackoverflow.com/questions/14402425/how-do-i-know-the-current-version-in-an-android-repo
-      pfw.shell.execute(
-            "git", "--git-dir", os.path.join( self.__source_dir, ".repo/manifests.git" ), "log", "default"
-         )
-      pfw.shell.execute(
-            "git", "--git-dir", os.path.join( self.__source_dir, ".repo/manifests.git" ), "tag"
-         )
-      pfw.shell.execute(
-            "git", "--git-dir", os.path.join( self.__source_dir, ".repo/manifests.git" ), "branch", "-a"
-         )
+      manifest_git_path = os.path.join( self.__source_dir, ".repo/manifests.git" )
+      pfw.shell.execute( f"git --git-dir {manifest_git_path} log default" )
+      pfw.shell.execute( f"git --git-dir {manifest_git_path} tag" )
+      pfw.shell.execute( f"git --git-dir {manifest_git_path} branch -a" )
    # def info
 
    def install( self ):
       pfw.base.download( self.__url, self.__source_dir )
-      pfw.shell.execute( "chmod", "a+x", self.__repo_tool )
+      pfw.shell.execute( f"chmod a+x {self.__repo_tool}" )
    # def install
 
-   def init( self, branch: str ):
-      result_code = pfw.shell.execute(
-            self.__repo_tool, "init",
-            "-u", ANDROID_MANIFEST_URL,
-            "-b", branch,
-            cwd = self.__source_dir, output = pfw.shell.eOutput.PTY
-         )["code"]
+   def init( self, branch: str, **kwargs ):
+      kw_depth: int = kwargs.get( "depth", 1 )
+
+      command: str = f"{self.__repo_tool} init"
+      command += f" -u {self.__manifest}"
+      command += f" -b {branch}"
+      command += f" --depth={kw_depth}"
+      result_code = pfw.shell.execute( command, cwd = self.__source_dir, output = pfw.shell.eOutput.PTY )["code"]
 
       if 0 != result_code:
          pfw.console.debug.error( "repo init error: ", result_code )
@@ -95,10 +92,11 @@ class Repo:
    # def init
 
    def sync( self ):
-      result_code = pfw.shell.execute(
-            self.__repo_tool, "sync",
-            cwd = self.__source_dir, output = pfw.shell.eOutput.PTY
-         )["code"]
+      command: str = f"{self.__repo_tool} sync"
+      command += f" --current-branch"
+      command += f" --no-clone-bundle"
+      command += f" --no-tags"
+      result_code = pfw.shell.execute( command, cwd = self.__source_dir, output = pfw.shell.eOutput.PTY )["code"]
 
       if 0 != result_code:
          pfw.console.debug.error( "repo sync error: ", result_code )
@@ -108,10 +106,8 @@ class Repo:
    # def sync
 
    def status( self ):
-      result_code = pfw.shell.execute(
-            self.__repo_tool, "status",
-            cwd = self.__source_dir
-         )["code"]
+      command: str = f"{self.__repo_tool} status"
+      result_code = pfw.shell.execute( command, cwd = self.__source_dir, output = pfw.shell.eOutput.PTY )["code"]
 
       if 0 != result_code:
          pfw.console.debug.error( "repo status error: ", result_code )
@@ -121,10 +117,9 @@ class Repo:
    # def status
 
    def revert( self ):
-      result_code = pfw.shell.execute(
-            self.__repo_tool, "forall -vc \"git reset --hard\"",
-            cwd = self.__source_dir
-         )["code"]
+
+      command: str = f"{self.__repo_tool} forall -vc \"git reset --hard\""
+      result_code = pfw.shell.execute( command, cwd = self.__source_dir )["code"]
 
       if 0 != result_code:
          pfw.console.debug.error( "repo revert error: ", result_code )
@@ -139,6 +134,7 @@ class Repo:
    __repo_tool: str = None
    __source_dir: str = None
    __branch: str = None
+   __manifest: str = None
 # class Repo
 
 
@@ -152,9 +148,9 @@ class AOSP:
       self.__directories = aosp.base.Directories( root_dir, self.__name, self.__config )
       self.__repo = Repo( self.__directories.source( ) )
 
-      self.__config_cmd_line = "export OUT_DIR_COMMON_BASE=" + self.__directories.build( ) + "/..; " + \
-            "source build/envsetup.sh; " + \
-            "lunch " + self.__config.lunch( ) + "; "
+      self.__config_cmd_line = f"export OUT_DIR_COMMON_BASE={self.__directories.build( '..' )};"
+      self.__config_cmd_line += f" source build/envsetup.sh;"
+      self.__config_cmd_line += f" lunch {self.__config.lunch( )};"
    # def __init__
 
    def __del__( self ):
@@ -295,34 +291,12 @@ class AOSP:
       command += f" mkdir -p {EXPERIMENTAL_RAMDISK_DIR};"
       command += f" cp -R {ANDROID_PRODUCT_RAMDISK_DIR}/* {EXPERIMENTAL_RAMDISK_DIR};"
       command += f" cp -R {ANDROID_PRODUCT_VENDOR_RAMDISK_DIR}/* {EXPERIMENTAL_RAMDISK_DIR};"
+      # command += f" rm -r {EXPERIMENTAL_RAMDISK_DIR}/lib/modules/*; cp -R /mnt/dev/android/deploy/kernel/common-android14-6.1/virtual_device_aarch64/extracted/initramfs.img/lib/modules/6.1.8-maybe-dirty/* {EXPERIMENTAL_RAMDISK_DIR}/lib/modules;"
       self.__execute( command )
 
-      self.pack_ramdisk( source = EXPERIMENTAL_RAMDISK_DIR, ramdisk = EXPERIMENTAL_RAMDISK_IMAGE, bootconfig = kw_bootconfig )
+      # ramdisk.pack( source = EXPERIMENTAL_RAMDISK_DIR, destination = EXPERIMENTAL_RAMDISK_IMAGE, bootconfig = kw_bootconfig )
+      ramdisk.pack( source = EXPERIMENTAL_RAMDISK_DIR, destination = EXPERIMENTAL_RAMDISK_IMAGE, bootconfig = None )
    # def build_ramdisk
-
-   def pack_ramdisk( self, **kwargs ):
-      kw_source = kwargs.get( "source", None )
-      kw_ramdisk = kwargs.get( "ramdisk", None )
-      kw_bootconfig = kwargs.get( "bootconfig", None )
-
-      command = f"find . ! -name . | LC_ALL=C sort | cpio -o -H newc -R root:root | lz4 -l -12 --favor-decSpeed > {kw_ramdisk};"
-      pfw.shell.execute( command, cwd = kw_source, output = pfw.shell.eOutput.PTY )
-
-      if None != kw_bootconfig and isinstance( kw_bootconfig, dict ):
-         pfw.console.debug.info( "Adding bootconfig to ramdisk" )
-         kw_bootconfig["tool"]( kw_ramdisk, clear = True, add = kw_bootconfig["config"] )
-   # def pack_ramdisk
-
-   def extract_ramdisk( self, **kwargs ):
-      kw_ramdisk = kwargs.get( "ramdisk", None )
-      kw_destination = kwargs.get( "destination", None )
-
-      command = f"rm -r {kw_destination}; mkdir -p {kw_destination}"
-      pfw.shell.execute( command, output = pfw.shell.eOutput.PTY )
-
-      command = f" lz4 -d -c {kw_ramdisk} | cpio -i"
-      pfw.shell.execute( command, cwd = kw_destination, output = pfw.shell.eOutput.PTY )
-   # def extract_ramdisk
 
    def run( self, **kwargs ):
       pass
@@ -357,11 +331,7 @@ class AOSP:
    def __execute( self, command: str = "", **kwargs ):
       kw_output = kwargs.get( "output", pfw.shell.eOutput.PTY )
 
-      result_code = pfw.shell.execute(
-            self.__config_cmd_line + command,
-            cwd = self.__directories.source( ),
-            output = kw_output
-         )["code"]
+      result_code = pfw.shell.execute( f"{self.__config_cmd_line} {command}", cwd = self.__directories.source( ), output = kw_output )["code"]
    # def __execute
 
 

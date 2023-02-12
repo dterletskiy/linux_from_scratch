@@ -170,3 +170,17 @@ project: aosp_sdk_R136a1_x86_64
    product_name: sdk_R136a1_x86_64;
    product_device: R136a1;
 };
+
+// aosp_trout_arm64
+project: aosp_13
+{
+   type: android;
+   version: android-13.0.0_r31;
+   root_dir: "/mnt/dev/android/";
+   arch: arm64;
+
+   lunch: aosp_trout_arm64;
+   variant: userdebug;
+   product_name: aosp_trout_arm64;
+   product_device: trout_arm64;
+};

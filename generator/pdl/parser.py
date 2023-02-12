@@ -195,6 +195,10 @@ class PdlListener( PdlParserListener ):
       }
       name = names_aliases.get( name, name )
 
+      if name in self.__project_map:
+         pfw.console.debug.error( f"Multiple projects with the same name: {name}" )
+         sys.exit( 100 )
+
       self.__project_map[name] = create_project(
               type_
             , version = version

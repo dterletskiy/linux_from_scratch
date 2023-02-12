@@ -6,8 +6,8 @@ import re
 
 import pfw.console
 import pfw.shell
-import pfw.docker
-import pfw.password
+import pfw.linux.docker
+import pfw.linux.password
 
 import configuration
 
@@ -18,15 +18,15 @@ def create( **kwargs ):
    kw_image = kwargs.get( "image", None )
    kw_user = kwargs.get( "user", "builder" )
    kw_volume_mapping = [
-            pfw.docker.Container.Mapping( f"/mnt/docker/{kw_name}", f"/mnt/host" ),
-            pfw.docker.Container.Mapping( f"~/.ssh", f"/home/{kw_user}/.ssh" ),
-            pfw.docker.Container.Mapping( f"~/.gitconfig", f"/home/{kw_user}/.gitconfig" ),
+            pfw.linux.docker.Container.Mapping( f"/mnt/docker/{kw_name}", f"/mnt/host" ),
+            pfw.linux.docker.Container.Mapping( f"~/.ssh", f"/home/{kw_user}/.ssh" ),
+            pfw.linux.docker.Container.Mapping( f"~/.gitconfig", f"/home/{kw_user}/.gitconfig" ),
          ]
    kw_port_mapping = [
-            pfw.docker.Container.Mapping( "5000", "5000" ),
+            pfw.linux.docker.Container.Mapping( "5000", "5000" ),
          ]
 
-   container: pfw.docker.Container = pfw.docker.Container(
+   container: pfw.linux.docker.Container = pfw.linux.docker.Container(
          name = f"{kw_name}",
          hostname = "host",
          image = kw_image,
@@ -38,11 +38,11 @@ def create( **kwargs ):
    return container
 # def create
 
-def init( container: pfw.docker.Container, **kwargs ):
+def init( container: pfw.linux.docker.Container, **kwargs ):
    kw_packages = kwargs.get( "packages", [ ] )
    kw_user = kwargs.get( "user", "builder" )
    kw_pwd = kwargs.get( "pwd", "builder" )
-   kw_pwd_hashed = pfw.password.build_hashed_password( {kw_pwd}, "tda" ) if kw_pwd else None
+   kw_pwd_hashed = pfw.linux.password.build_hashed_password( {kw_pwd}, "tda" ) if kw_pwd else None
 
    container.exec( "apt update" )
    container.exec( "apt upgrade" )
@@ -61,15 +61,15 @@ def init( container: pfw.docker.Container, **kwargs ):
       command += " {kw_user}"
 # def init
 
-def start( container: pfw.docker.Container, **kwargs ):
+def start( container: pfw.linux.docker.Container, **kwargs ):
    container.start( )
 # def start
 
-def stop( container: pfw.docker.Container, **kwargs ):
+def stop( container: pfw.linux.docker.Container, **kwargs ):
    container.stop( )
 # def stop
 
-def commit( container: pfw.docker.Container, **kwargs ):
+def commit( container: pfw.linux.docker.Container, **kwargs ):
    kw_image = kwargs.get( "image", None )
    kw_user = kwargs.get( "user", "builder" )
 
@@ -80,7 +80,7 @@ def commit( container: pfw.docker.Container, **kwargs ):
 # def stop
 
 def build( **kwargs ):
-   container: pfw.docker.Container = create( **kwargs )
+   container: pfw.linux.docker.Container = create( **kwargs )
    start( container, **kwargs )
    init( container, **kwargs )
    stop( container, **kwargs )
