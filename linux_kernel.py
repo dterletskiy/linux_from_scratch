@@ -178,23 +178,25 @@ def main( ):
       if "gdb" == action_name:
          tools.debug( projects_map, project_name = "uboot" )
       elif "start" == action_name:
-         # tools.start( projects_map, mode = "aosp", arch = "x86_64", gdb = False )
-         tools.start( projects_map, mode = "aosp-uboot", arch = "arm64", gdb = False )
-         tools.start( projects_map, mode = "aosp-kernel", arch = "arm64", gdb = False )
-         # tools.start( projects_map, mode = "u-boot", gdb = False )
-         # tools.start( projects_map, mode = "kernel_rd", gdb = False )
-         # tools.start( projects_map, mode = "kernel_rf", gdb = False )
+         if "aosp-uboot" == targets[0]:
+            tools.start( projects_map, mode = "aosp-uboot", arch = "arm64", gdb = False )
+         elif "aosp-kernel" == targets[0]:
+            tools.start( projects_map, mode = "aosp-kernel", arch = "arm64", gdb = False )
+         else:
+            tools.start( projects_map, mode = "u-boot", gdb = False )
+            tools.start( projects_map, mode = "kernel_rd", gdb = False )
+            tools.start( projects_map, mode = "kernel_rf", gdb = False )
       elif "mkimage" == action_name:
          tools.mkdrive( projects_map )
       elif "docker" == action_name:
-         if "ubuntu_x86_64" == target:
+         if "ubuntu_x86_64" == targets[0]:
             container = docker.container.build(
                   image = "ubuntu:20.04",
                   name = "ubuntu-20.04-x86_64",
                   packages = ubuntu.packages_all
                )
             # docker.container.commit( container, image = "ubuntu/x86_64:20.04" )
-         elif "ubuntu_arm64v8" == action_name:
+         elif "ubuntu_arm64v8" == targets[0]:
             container = docker.container.build(
                   image = "arm64v8/ubuntu:20.04",
                   name = "ubuntu-20.04-arm64v8",

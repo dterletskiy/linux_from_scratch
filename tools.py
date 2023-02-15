@@ -325,10 +325,10 @@ def build_emulator_parameters( projects_map, **kwargs ):
    kw_qemu_bridge_helper = "/usr/lib/qemu/qemu-bridge-helper"
 
    PARAMETERS = f""
-   PARAMETERS =+ f" -serial mon:stdio"
-   PARAMETERS =+ f" -nodefaults"
-   PARAMETERS =+ f" -no-reboot"
-   PARAMETERS =+ f" -d guest_errors"
+   PARAMETERS += f" -serial mon:stdio"
+   PARAMETERS += f" -nodefaults"
+   PARAMETERS += f" -no-reboot"
+   PARAMETERS += f" -d guest_errors"
    if "x86" == kw_arch:
       PARAMETERS = PARAMETERS + f" -enable-kvm"
       PARAMETERS = PARAMETERS + f" -smp cores=2"
@@ -383,11 +383,11 @@ def build_emulator_parameters( projects_map, **kwargs ):
       + " -device virtio-gpu-gl-pci"
 
    DEVICES_AUDIO_VIRTIO = f"" \
-      + " -audiodev alsa,id=snd0,out.dev=default" \
+      + " -audiodev alsa,id=snd0,in.dev=default,out.dev=default" \
       + " -device virtio-snd-pci,disable-legacy=on,audiodev=snd0"
 
    DEVICES_AUDIO_INTEL = f"" \
-      + " -audiodev alsa,id=snd0,out.dev=default" \
+      + " -audiodev alsa,id=snd0,in.dev=default,out.dev=default" \
       + " -device intel-hda" \
       + " -device hda-duplex,audiodev=snd0"
 
@@ -407,7 +407,8 @@ def build_emulator_parameters( projects_map, **kwargs ):
    command += f" {IMAGE_DEVICES_MAIN}"
    command += f" {NETWORK_NETDEV_USER}"
    command += f" {GRAPHIC_DEVICES}"
-   command += f" {DEVICES_AUDIO_INTEL}"
+   command += f" {DEVICES_AUDIO_VIRTIO}"
+   command += f" {PCI_KBD_MOUSE}"
    # command += f" {USB_BUS}"
    # command += f" {USB_KBD_MOUSE}"
    # command += f" {CHAR_DEVICES}"
@@ -423,7 +424,7 @@ def start( projects_map: dict, **kwargs ):
    kw_arch = kwargs.get( "arch", "arm64" )
 
    if None == kw_drive:
-      if  kw_mode in [ "u-boot", "kernel_rd", "aosp" ]:
+      if  kw_mode in [ "u-boot", "kernel_rd", "aosp-uboot", "aosp-kernel" ]:
          kw_drive = configuration.value( "main_drive_image" )
       elif kw_mode in [ "kernel_rf" ]:
          kw_drive = projects_map["rootfs"].dirs( ).build( "rootfs.img" )
@@ -431,7 +432,7 @@ def start( projects_map: dict, **kwargs ):
          pass
 
    command: str = ""
-   if "aosp" == kw_mode:
+   if kw_mode in [ "aosp-uboot", "aosp-kernel" ]:
       command = build_emulator_parameters( projects_map,  drive = kw_drive )
    elif kw_mode in [ "u-boot", "kernel_rd", "kernel_rf" ]:
       command = qemu.build_parameters( arch = kw_arch )
@@ -473,7 +474,7 @@ def start( projects_map: dict, **kwargs ):
    elif "aosp-kernel" == kw_mode:
       kw_args["kernel"] = projects_map["aosp"].dirs( ).product( "kernel" )
       kw_args["initrd"] = projects_map["aosp"].dirs( ).experimental( "ramdisk.img")
-      kw_args["append"] = "loglevel=7 debug printk.devkmsg=on drm.debug=0x1FF console=ttyAMA0"
+      kw_args["append"] = "loglevel=7 debug printk.devkmsg=on drm.debug=0x1FF console=ttyAMA0 bootconfig"
       kw_args["dtb"] = configuration.value( "dtb_export_path" )
    elif "u-boot" == kw_mode:
       if kw_arch in [ "x86", "x86_64" ]:
