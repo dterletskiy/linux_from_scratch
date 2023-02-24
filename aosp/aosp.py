@@ -166,6 +166,7 @@ class AOSP:
       command += f" cp -R {ANDROID_PRODUCT_RAMDISK_DIR}/* {EXPERIMENTAL_RAMDISK_DIR};"
       command += f" cp -R {ANDROID_PRODUCT_VENDOR_RAMDISK_DIR}/* {EXPERIMENTAL_RAMDISK_DIR};"
       # command += f" rm -r {EXPERIMENTAL_RAMDISK_DIR}/lib/modules/*; cp -R /mnt/dev/android/deploy/kernel/common-android14-6.1/virtual_device_aarch64/extracted/initramfs.img/lib/modules/6.1.8-maybe-dirty/* {EXPERIMENTAL_RAMDISK_DIR}/lib/modules;"
+      # command += f" rm -r {EXPERIMENTAL_RAMDISK_DIR}/lib/modules/*; cp -R /mnt/dev/android/deploy/kernel/common-android14-6.1/virtual_device_aarch64/extracted/system_dlkm_staging_archive/lib/modules/6.1.8-maybe-dirty/* {EXPERIMENTAL_RAMDISK_DIR}/lib/modules;"
       self.__execute( command )
 
       ramdisk.pack( source = EXPERIMENTAL_RAMDISK_DIR, destination = EXPERIMENTAL_RAMDISK_IMAGE, bootconfig = kw_bootconfig )

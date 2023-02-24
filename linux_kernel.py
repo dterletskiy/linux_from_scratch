@@ -62,6 +62,7 @@ import signal
 
 import base
 import dt
+import ramdisk
 import tools
 import docker.container
 import qemu
@@ -206,9 +207,14 @@ def main( ):
          elif "prune" == action_name:
             pfw.linux.docker.prune( )
       elif "dummy" == action_name:
+         # ramdisk.extract(
+         #       source = "/mnt/dev/android/build/android-12.1.0_r8/target/product/trout_arm64/experimental/ramdisk.img",
+         #       destination = "/mnt/dev/android/build/android-12.1.0_r8/target/product/trout_arm64/experimental/tmp",
+         #    )
+
          projects_map["aosp"].extract_android_boot_image(
-               boot_img = "/mnt/dev/android/deploy/kernel/common-android14-6.1/virtual_device_aarch64/boot.img",
-               out = "/mnt/dev/android/deploy/kernel/common-android14-6.1/virtual_device_aarch64/extracted/boot.img",
+               boot_img = "/mnt/dev/android/build/android-12.1.0_r8/target/product/trout_arm64/vendor_boot.img",
+               out = "/mnt/dev/android/build/android-12.1.0_r8/target/product/trout_arm64/experimental/extracted/vendor_boot.img",
                format = "mkbootimg"
             )
 
@@ -216,9 +222,26 @@ def main( ):
 
 
 
+import pfw.linux.img.base
+import pfw.linux.ping
 if __name__ == "__main__":
    pfw.console.debug.ok( "------------------------- BEGIN -------------------------" )
    main( )
+
+   # pfw.linux.ping.ping( processor = pfw.linux.ping.processor )
+
+   # image_file = "/mnt/img/tmp/tmp.img"
+   # # pfw.linux.img.base.create( image_file, pfw.size.SizeGigabyte )
+   # # attached_to = pfw.linux.img.base.attach( image_file )
+   # # attached_to_test = pfw.linux.img.base.attached_to( image_file )
+   # # if attached_to != attached_to_test:
+   # #    pfw.console.debug.error( f"{attached_to} != {attached_to_test}" )
+   # # attached_to = pfw.linux.img.base.detach( attached_to )
+
+   # image = pfw.linux.img.base.info( image_file )
+   # image.info( )
+   # pfw.linux.img.base.init_device( "/mnt/img/tmp/main.img", image )
+
    pfw.console.debug.ok( "-------------------------- END --------------------------" )
 
 

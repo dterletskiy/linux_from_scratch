@@ -31,6 +31,6 @@ def extract( source: str, destination: str, **kwargs ):
    command = f"rm -rf {destination}; mkdir -p {destination}"
    pfw.shell.execute( command, output = pfw.shell.eOutput.PTY )
 
-   command = f" lz4 -d -c {source} | cpio -i"
+   command = f"lz4 -d -c {source} | cpio -i"
    pfw.shell.execute( command, cwd = destination, output = pfw.shell.eOutput.PTY )
 # def extract

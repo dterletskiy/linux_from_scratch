@@ -180,7 +180,7 @@ def mkpartition_boot( projects_map: dict ):
    mount_point = mmc.mount( configuration.value( "tmp_path" ), True )
 
    prepare_boot( projects_map )
-   deploy_boot( projects_map, mount_point, pause = True )
+   deploy_boot( projects_map, mount_point, pause = False )
 
    mmc.info( )
    mmc.umount( )
