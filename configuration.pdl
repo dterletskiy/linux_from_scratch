@@ -171,16 +171,13 @@ project: aosp_sdk_R136a1_x86_64
    product_device: R136a1;
 };
 
-// aosp_trout_arm64
-project: aosp_13
+// uboot_arm64
+project: uboot_android
 {
-   type: android;
-   version: android-13.0.0_r31;
-   root_dir: "/mnt/dev/android/";
+   type: uboot;
+   version: android;
+   root_dir: "/mnt/dev/linux_from_scratch/";
    arch: arm64;
-
-   lunch: aosp_trout_arm64;
-   variant: userdebug;
-   product_name: aosp_trout_arm64;
-   product_device: trout_arm64;
+   defconfig: qemu_arm64_defconfig;
 };
+
