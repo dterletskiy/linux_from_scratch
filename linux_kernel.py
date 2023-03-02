@@ -57,6 +57,7 @@ import pfw.console
 import pfw.shell
 import pfw.size
 import pfw.linux.image
+import pfw.linux.img.base
 import pfw.os.signal
 import signal
 
@@ -97,6 +98,8 @@ def extend_configuration( ):
       )
    )
    configuration.config.set_value( "main_drive_image", os.path.join( configuration.config.get_value( "tmp_path" ), "main.img" ) )
+   configuration.config.set_value( "device_0_image", os.path.join( configuration.config.get_value( "tmp_path" ), "device_0.img" ) )
+   configuration.config.set_value( "device_1_image", os.path.join( configuration.config.get_value( "tmp_path" ), "device_1.img" ) )
 # def extend_configuration
 
 extend_configuration( )
@@ -212,81 +215,23 @@ def main( ):
          #       destination = "/mnt/dev/android/build/android-12.1.0_r8/target/product/trout_arm64/experimental/tmp",
          #    )
 
-         projects_map["aosp"].extract_android_boot_image(
-               boot_img = "/mnt/dev/android/build/android-12.1.0_r8/target/product/trout_arm64/vendor_boot.img",
-               out = "/mnt/dev/android/build/android-12.1.0_r8/target/product/trout_arm64/experimental/extracted/vendor_boot.img",
-               format = "mkbootimg"
+         # projects_map["aosp"].extract_android_boot_image(
+         #       boot_img = "/mnt/dev/android/build/android-12.1.0_r8/target/product/trout_arm64/vendor_boot.img",
+         #       out = "/mnt/dev/android/build/android-12.1.0_r8/target/product/trout_arm64/experimental/extracted/vendor_boot.img",
+         #       format = "mkbootimg"
+         #    )
+
+         pfw.linux.img.base.map(
+               "/mnt/img/tmp/device_0.img",
+               mount_point = "/mnt/img/tmp/loop/",
+               processor = lambda: pfw.console.debug.promt( )
             )
 
 # def main
 
 
 
-import pfw.linux.img.base
-import pfw.linux.ping
 if __name__ == "__main__":
    pfw.console.debug.ok( "------------------------- BEGIN -------------------------" )
    main( )
-
-   # pfw.linux.ping.ping( processor = pfw.linux.ping.processor )
-
-   # image_file = "/mnt/img/tmp/tmp.img"
-   # # pfw.linux.img.base.create( image_file, pfw.size.SizeGigabyte )
-   # # attached_to = pfw.linux.img.base.attach( image_file )
-   # # attached_to_test = pfw.linux.img.base.attached_to( image_file )
-   # # if attached_to != attached_to_test:
-   # #    pfw.console.debug.error( f"{attached_to} != {attached_to_test}" )
-   # # attached_to = pfw.linux.img.base.detach( attached_to )
-
-   # image = pfw.linux.img.base.info( image_file )
-   # image.info( )
-   # pfw.linux.img.base.init_device( "/mnt/img/tmp/main.img", image )
-
    pfw.console.debug.ok( "-------------------------- END --------------------------" )
-
-
-
-
-
-
-
-
-   if False:
-      partition_image_file = os.path.join( configuration.config.get_value( "tmp_path" ), "partition.img" )
-      # partition_description = pfw.linux.image.Partition.Description(
-      #      file = partition_image_file
-      #    , size = pfw.size.Size( 512, pfw.size.Size.eGran.M )
-      #    , fs = "ext2"
-      # )
-      # partition = pfw.linux.image.Partition( partition_description, build = True, force = True )
-      # partition.mount( configuration.value( "tmp_path" ), True )
-
-      # partition.info( )
-      # partition.umount( )
-
-
-
-
-
-      # partitions = [
-      #    pfw.linux.image.Partition.Description( size = pfw.size.SizeGigabyte, label = "boot", fs = "ext4" ),
-      #    pfw.linux.image.Partition.Description( size = pfw.size.SizeGigabyte, label = "system", fs = "ext4" ),
-      #    pfw.linux.image.Partition.Description( size = pfw.size.SizeGigabyte, label = "swap", fs = "ext4" ),
-      # ]
-
-      drive_image_file = os.path.join( configuration.config.get_value( "tmp_path" ), "drive.img" )
-      # drive = pfw.linux.image.Drive( os.path.join( configuration.config.get_value( "tmp_path" ), "drive.img" ) )
-      # drive.create( partitions = partitions, force = True )
-      # drive.attach( )
-      # drive.init( partitions )
-
-      # drive.info( )
-      # drive.detach( )
-
-
-
-      # pfw.linux.image.mounted_to( partition_image_file )
-      # pfw.linux.image.attached_to( drive_image_file )
-
-      # pfw.linux.image.info( partition_image_file )
-      # pfw.linux.image.info( drive_image_file )

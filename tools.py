@@ -203,7 +203,7 @@ def mkpartition_rootfs( projects_map: dict ):
       pfw.console.debug.promt( )
 # def mkpartition_rootfs
 
-def mkdrive( projects_map: dict ):
+def mkdrive_linux( projects_map: dict ):
    mkpartition_boot( projects_map )
    boot_image = configuration.value( "boot_partition_image" ).file( )
 
@@ -240,11 +240,85 @@ def mkdrive( projects_map: dict ):
    ]
 
    mmc: pfw.linux.image.Drive = pfw.linux.image.Drive( configuration.value( "main_drive_image" ) )
-   mmc.create( partitions = partitions, force = True )
-   mmc.attach( )
-   mmc.init( partitions, bootable = boot_part_num )
-   mmc.info( )
-   mmc.detach( )
+   mmc.build( partitions, force = True, bootable = boot_part_num )
+# def mkdrive_linux
+
+def mkdrive_android( projects_map: dict ):
+   boot_image = projects_map["aosp"].dirs( ).product( "boot.img" )
+   vendor_boot_image = projects_map["aosp"].dirs( ).product( "vendor_boot.img" )
+   bootconfig_image = projects_map["aosp"].dirs( ).product( "vendor-bootconfig.img" )
+   system_image = projects_map["aosp"].dirs( ).product( "system.img" )
+
+   super_image = projects_map["aosp"].dirs( ).product( "super.img" )
+   if "arm64" == projects_map["aosp"].config( ).arch( ):
+      super_image = projects_map["aosp"].dirs( ).experimental( "super.raw" )
+      projects_map["aosp"].simg_to_img( projects_map["aosp"].dirs( ).product( "super.img" ), super_image )
+
+   userdata_image = projects_map["aosp"].dirs( ).product( "userdata.img" )
+   if "arm64" == projects_map["aosp"].config( ).arch( ):
+      userdata_image = projects_map["aosp"].dirs( ).experimental( "userdata.raw" )
+      projects_map["aosp"].simg_to_img( projects_map["aosp"].dirs( ).product( "userdata.img" ), userdata_image )
+
+   vbmeta_image = projects_map["aosp"].dirs( ).product( "vbmeta.img" )
+   vbmeta_system_image = projects_map["aosp"].dirs( ).product( "vbmeta_system.img" )
+
+
+
+   device_0_partitions = [
+      pfw.linux.image.Partition.Description( clone_from = boot_image, label = "boot_a" ),
+      pfw.linux.image.Partition.Description( size = pfw.size.SizeMegabyte, label = "boot_b" ),
+      pfw.linux.image.Partition.Description( clone_from = vendor_boot_image, label = "vendor_boot_a" ),
+      pfw.linux.image.Partition.Description( size = pfw.size.SizeMegabyte, label = "vendor_boot_b" ),
+      # pfw.linux.image.Partition.Description( size = pfw.size.SizeMegabyte, label = "init_boot_a" ),
+      # pfw.linux.image.Partition.Description( size = pfw.size.SizeMegabyte, label = "init_boot_b" ),
+      pfw.linux.image.Partition.Description( clone_from = vbmeta_image, label = "vbmeta_a" ),
+      pfw.linux.image.Partition.Description( clone_from = vbmeta_system_image, label = "vbmeta_system_a" ),
+      # pfw.linux.image.Partition.Description( clone_from = bootconfig_image, label = "bootconfig" ),
+
+      pfw.linux.image.Partition.Description( clone_from = super_image, label = "super" ),
+
+      pfw.linux.image.Partition.Description( clone_from = system_image, label = "system_a" ),
+      pfw.linux.image.Partition.Description( clone_from = userdata_image, label = "userdata" ),
+      pfw.linux.image.Partition.Description( size = pfw.size.SizeGigabyte, label = "cache", fs = "ext4" ),
+      pfw.linux.image.Partition.Description( size = pfw.size.SizeGigabyte, label = "metadata", fs = "ext4" ),
+      pfw.linux.image.Partition.Description( size = pfw.size.SizeGigabyte, label = "misc", fs = "ext4" ),
+
+      pfw.linux.image.Partition.Description( size = pfw.size.SizeMegabyte, label = "dummy" ),
+   ]
+
+   device_0: pfw.linux.image.Drive = pfw.linux.image.Drive( configuration.value( "device_0_image" ) )
+   device_0.build( device_0_partitions, force = True )
+
+
+
+   device_1_partitions = [
+      pfw.linux.image.Partition.Description( clone_from = boot_image, label = "boot_a" ),
+      pfw.linux.image.Partition.Description( size = pfw.size.SizeMegabyte, label = "boot_b" ),
+      pfw.linux.image.Partition.Description( clone_from = vendor_boot_image, label = "vendor_boot_a" ),
+      pfw.linux.image.Partition.Description( size = pfw.size.SizeMegabyte, label = "vendor_boot_b" ),
+      # pfw.linux.image.Partition.Description( size = pfw.size.SizeMegabyte, label = "init_boot_a" ),
+      # pfw.linux.image.Partition.Description( size = pfw.size.SizeMegabyte, label = "init_boot_b" ),
+      pfw.linux.image.Partition.Description( clone_from = vbmeta_image, label = "vbmeta_a" ),
+      pfw.linux.image.Partition.Description( clone_from = vbmeta_system_image, label = "vbmeta_system_a" ),
+      # pfw.linux.image.Partition.Description( clone_from = bootconfig_image, label = "bootconfig" ),
+
+      pfw.linux.image.Partition.Description( clone_from = super_image, label = "super" ),
+
+      pfw.linux.image.Partition.Description( clone_from = system_image, label = "system_a" ),
+      pfw.linux.image.Partition.Description( clone_from = userdata_image, label = "userdata" ),
+      pfw.linux.image.Partition.Description( size = pfw.size.SizeGigabyte, label = "cache", fs = "ext4" ),
+      pfw.linux.image.Partition.Description( size = pfw.size.SizeGigabyte, label = "metadata", fs = "ext4" ),
+      pfw.linux.image.Partition.Description( size = pfw.size.SizeGigabyte, label = "misc", fs = "ext4" ),
+
+      pfw.linux.image.Partition.Description( size = pfw.size.SizeMegabyte, label = "dummy" ),
+   ]
+
+   device_1: pfw.linux.image.Drive = pfw.linux.image.Drive( configuration.value( "device_1_image" ) )
+   device_1.build( device_1_partitions, force = True )
+# def mkdrive_android
+
+def mkdrive( projects_map: dict ):
+   mkdrive_android( projects_map )
 # def mkdrive
 
 def debug( projects_map: dict, **kwargs ):
