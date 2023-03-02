@@ -178,6 +178,6 @@ project: uboot_android
    version: android;
    root_dir: "/mnt/dev/linux_from_scratch/";
    arch: arm64;
-   defconfig: qemu_arm64_defconfig;
+   defconfig: cf-arm64_defconfig;
 };
 
