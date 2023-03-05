@@ -1,6 +1,7 @@
 import os
 
-import pfw.base
+import pfw.base.struct
+import pfw.base.net
 import pfw.console
 import pfw.shell
 
@@ -36,7 +37,8 @@ class Repo:
    # def __setattr__
 
    def __str__( self ):
-      attr_list = [ i for i in Repo.__dict__.keys( ) if i[:2] != pfw.base.class_ignore_field ]
+      attr_list = [ i for i in Repo.__dict__.keys( ) if i[:2] != pfw.base.struct.ignore_field
+ ]
       vector = [ ]
       for attr in attr_list:
          vector.append( str( attr ) + " = " + str( self.__dict__.get( attr ) ) )
@@ -62,7 +64,7 @@ class Repo:
    # def info
 
    def install( self ):
-      pfw.base.download( self.__url, self.__source_dir )
+      pfw.base.net.download( self.__url, self.__source_dir )
       pfw.shell.execute( f"chmod a+x {self.__repo_tool}" )
    # def install
 

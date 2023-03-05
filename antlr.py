@@ -3,7 +3,6 @@
 import os
 import sys
 
-import pfw.base
 import pfw.console
 import pfw.shell
 

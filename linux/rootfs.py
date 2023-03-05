@@ -6,7 +6,8 @@ import subprocess
 import git
 from enum import Enum
 
-import pfw.base
+import pfw.base.struct
+import pfw.base.net
 import pfw.console
 import pfw.archive
 import pfw.shell
@@ -67,7 +68,8 @@ class Rootfs:
    # def __setattr__
 
    def __str__( self ):
-      attr_list = [ i for i in Rootfs.__dict__.keys( ) if i[:2] != pfw.base.class_ignore_field ]
+      attr_list = [ i for i in Rootfs.__dict__.keys( ) if i[:2] != pfw.base.struct.ignore_field
+ ]
       vector = [ ]
       for attr in attr_list:
          vector.append( str( attr ) + " = " + str( self.__dict__.get( attr ) ) )
@@ -90,7 +92,7 @@ class Rootfs:
    # def reset
 
    def download( self ):
-      pfw.base.download( self.__url, self.__directories.download( ) )
+      pfw.base.net.download( self.__url, self.__directories.download( ) )
    # def download
 
    def extract( self ):
