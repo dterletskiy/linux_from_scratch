@@ -272,8 +272,10 @@ def mkdrive_android( projects_map: dict ):
       # pfw.linux.image.Partition.Description( size = pfw.size.SizeMegabyte, label = "init_boot_a" ),
       # pfw.linux.image.Partition.Description( size = pfw.size.SizeMegabyte, label = "init_boot_b" ),
       pfw.linux.image.Partition.Description( clone_from = vbmeta_image, label = "vbmeta_a" ),
+      pfw.linux.image.Partition.Description( clone_from = vbmeta_image, label = "vbmeta_b" ),
       pfw.linux.image.Partition.Description( clone_from = vbmeta_system_image, label = "vbmeta_system_a" ),
-      # pfw.linux.image.Partition.Description( clone_from = bootconfig_image, label = "bootconfig" ),
+      pfw.linux.image.Partition.Description( clone_from = vbmeta_system_image, label = "vbmeta_system_b" ),
+      pfw.linux.image.Partition.Description( clone_from = bootconfig_image, label = "bootconfig" ),
 
       pfw.linux.image.Partition.Description( clone_from = super_image, label = "super" ),
 
@@ -292,23 +294,23 @@ def mkdrive_android( projects_map: dict ):
 
 
    device_1_partitions = [
-      pfw.linux.image.Partition.Description( clone_from = boot_image, label = "boot_a" ),
-      pfw.linux.image.Partition.Description( size = pfw.size.SizeMegabyte, label = "boot_b" ),
-      pfw.linux.image.Partition.Description( clone_from = vendor_boot_image, label = "vendor_boot_a" ),
-      pfw.linux.image.Partition.Description( size = pfw.size.SizeMegabyte, label = "vendor_boot_b" ),
+      # pfw.linux.image.Partition.Description( clone_from = boot_image, label = "boot" ),
+      # pfw.linux.image.Partition.Description( size = pfw.size.SizeMegabyte, label = "boot_b" ),
+      # pfw.linux.image.Partition.Description( clone_from = vendor_boot_image, label = "vendor_boot" ),
+      # pfw.linux.image.Partition.Description( size = pfw.size.SizeMegabyte, label = "vendor_boot_b" ),
       # pfw.linux.image.Partition.Description( size = pfw.size.SizeMegabyte, label = "init_boot_a" ),
       # pfw.linux.image.Partition.Description( size = pfw.size.SizeMegabyte, label = "init_boot_b" ),
-      pfw.linux.image.Partition.Description( clone_from = vbmeta_image, label = "vbmeta_a" ),
-      pfw.linux.image.Partition.Description( clone_from = vbmeta_system_image, label = "vbmeta_system_a" ),
+      # pfw.linux.image.Partition.Description( clone_from = vbmeta_image, label = "vbmeta" ),
+      # pfw.linux.image.Partition.Description( clone_from = vbmeta_system_image, label = "vbmeta_system" ),
       # pfw.linux.image.Partition.Description( clone_from = bootconfig_image, label = "bootconfig" ),
 
-      pfw.linux.image.Partition.Description( clone_from = super_image, label = "super" ),
+      # pfw.linux.image.Partition.Description( clone_from = super_image, label = "super" ),
 
-      pfw.linux.image.Partition.Description( clone_from = system_image, label = "system_a" ),
-      pfw.linux.image.Partition.Description( clone_from = userdata_image, label = "userdata" ),
-      pfw.linux.image.Partition.Description( size = pfw.size.SizeGigabyte, label = "cache", fs = "ext4" ),
-      pfw.linux.image.Partition.Description( size = pfw.size.SizeGigabyte, label = "metadata", fs = "ext4" ),
-      pfw.linux.image.Partition.Description( size = pfw.size.SizeGigabyte, label = "misc", fs = "ext4" ),
+      # pfw.linux.image.Partition.Description( clone_from = system_image, label = "system" ),
+      # pfw.linux.image.Partition.Description( clone_from = userdata_image, label = "userdata" ),
+      # pfw.linux.image.Partition.Description( size = pfw.size.SizeGigabyte, label = "cache", fs = "ext4" ),
+      # pfw.linux.image.Partition.Description( size = pfw.size.SizeGigabyte, label = "metadata", fs = "ext4" ),
+      # pfw.linux.image.Partition.Description( size = pfw.size.SizeGigabyte, label = "misc", fs = "ext4" ),
 
       pfw.linux.image.Partition.Description( size = pfw.size.SizeMegabyte, label = "dummy" ),
    ]

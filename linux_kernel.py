@@ -215,17 +215,23 @@ def main( ):
          #       destination = "/mnt/dev/android/build/android-12.1.0_r8/target/product/trout_arm64/experimental/tmp",
          #    )
 
-         # projects_map["aosp"].extract_android_boot_image(
-         #       boot_img = "/mnt/dev/android/build/android-12.1.0_r8/target/product/trout_arm64/vendor_boot.img",
-         #       out = "/mnt/dev/android/build/android-12.1.0_r8/target/product/trout_arm64/experimental/extracted/vendor_boot.img",
-         #       format = "mkbootimg"
-         #    )
-
-         pfw.linux.img.base.map(
-               "/mnt/img/tmp/device_0.img",
-               mount_point = "/mnt/img/tmp/loop/",
-               processor = lambda: pfw.console.debug.promt( )
+         projects_map["aosp"].extract_android_boot_image(
+               boot_img = "/mnt/dev/android/build/android-12.1.0_r8/target/product/trout_arm64/boot.img",
+               out = "/mnt/dev/android/build/android-12.1.0_r8/target/product/trout_arm64/experimental/extracted/boot.img",
+               format = "mkbootimg"
             )
+
+         projects_map["aosp"].extract_android_boot_image(
+               boot_img = "/mnt/dev/android/build/android-12.1.0_r8/target/product/trout_arm64/vendor_boot.img",
+               out = "/mnt/dev/android/build/android-12.1.0_r8/target/product/trout_arm64/experimental/extracted/vendor_boot.img",
+               format = "mkbootimg"
+            )
+
+         # pfw.linux.img.base.map(
+         #       "/mnt/img/tmp/device_0.img",
+         #       mount_point = "/mnt/img/tmp/loop/",
+         #       processor = lambda: pfw.console.debug.promt( )
+         #    )
 
 # def main
 
