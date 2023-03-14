@@ -189,7 +189,7 @@ class PdlListener( PdlParserListener ):
          f"kernel_{arch_alias}": "kernel",
          f"rootfs_{arch_alias}": "rootfs",
          f"xen_{arch_alias}": "xen",
-         f"qemu_{arch_alias}": "qemu",
+         f"qemu_x86_64": "qemu",
          f"aosp_trout_{arch_alias}": "aosp",
       }
       name = names_aliases.get( name, name )

@@ -19,6 +19,8 @@ import linux.git
 KERNEL_ARCHIVE_PATTERN = "linux-VERSION.tar.xz"
 KERNEL_LINK_PATTERN = "https://cdn.kernel.org/pub/linux/kernel/vEPOCH.x/" + KERNEL_ARCHIVE_PATTERN
 KERNEL_GIT_REPO = "git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git"
+KERNEL_GIT_REPO = "git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git"
+KERNEL_GITHUB_REPO = "https://github.com/torvalds/linux"
 
 
 

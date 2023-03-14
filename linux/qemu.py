@@ -89,7 +89,7 @@ class Qemu:
    def configure( self, **kwargs ):
       kw_prefix = kwargs.get( "prefix", self.__directories.deploy( ) )
       kw_options = kwargs.get( "options", [ "--enable-gtk" ] )
-      # kw_options = kwargs.get( "options", [ "--enable-gtk", "--static", "--disable-system", "--enable-linux-user" ] )
+      # kw_options = kwargs.get( "options", [ "--enable-gtk", "--enable-kvm", "--static", "--disable-system", "--enable-linux-user", " --enable-user" ] )
 
       command = self.__directories.source( "configure" )
       command += f" --prefix={kw_prefix}"

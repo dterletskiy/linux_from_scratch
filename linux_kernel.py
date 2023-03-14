@@ -59,7 +59,7 @@ import pfw.size
 import pfw.linux.image
 import pfw.linux.img.base
 import pfw.os.signal
-import signal
+import pfw.linux.ping
 
 import base
 import dt
@@ -69,6 +69,7 @@ import docker.container
 import qemu
 import antlr
 import ubuntu
+import signal
 import linux.base
 import linux.uboot
 import linux.buildroot
@@ -210,10 +211,6 @@ def main( ):
          elif "prune" == action_name:
             pfw.linux.docker.prune( )
       elif "dummy" == action_name:
-         # ramdisk.extract(
-         #       source = "/mnt/dev/android/build/android-12.1.0_r8/target/product/trout_arm64/experimental/ramdisk.img",
-         #       destination = "/mnt/dev/android/build/android-12.1.0_r8/target/product/trout_arm64/experimental/tmp",
-         #    )
 
          projects_map["aosp"].extract_android_boot_image(
                boot_img = "/mnt/dev/android/build/android-12.1.0_r8/target/product/trout_arm64/boot.img",
@@ -227,11 +224,23 @@ def main( ):
                format = "mkbootimg"
             )
 
+         ramdisk.extract(
+               source = "/mnt/dev/android/build/android-12.1.0_r8/target/product/trout_arm64/experimental/extracted/boot.img/ramdisk",
+               destination = "/mnt/dev/android/build/android-12.1.0_r8/target/product/trout_arm64/experimental/extracted/ramdisk",
+            )
+
+         ramdisk.extract(
+               source = "/mnt/dev/android/build/android-12.1.0_r8/target/product/trout_arm64/experimental/extracted/vendor_boot.img/vendor_ramdisk",
+               destination = "/mnt/dev/android/build/android-12.1.0_r8/target/product/trout_arm64/experimental/extracted/vendor_ramdisk",
+            )
+
          # pfw.linux.img.base.map(
          #       "/mnt/img/tmp/device_0.img",
          #       mount_point = "/mnt/img/tmp/loop/",
          #       processor = lambda: pfw.console.debug.promt( )
          #    )
+      elif "ping" == action_name:
+         pfw.linux.ping.ping( processor = pfw.linux.ping.processor )
 
 # def main
 

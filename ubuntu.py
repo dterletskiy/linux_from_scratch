@@ -123,6 +123,9 @@ packages_dev: list = [
    "patch",
 
    "ninja-build",
+
+   "binwalk",
+   "graphviz",
 ]
 
 packages_dev_libs: list = [

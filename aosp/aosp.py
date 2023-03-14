@@ -22,7 +22,13 @@ class AOSP:
       self.__directories = aosp.base.Directories( root_dir, self.__name, self.__config )
       self.__repo = aosp.repo.Repo( self.__directories.source( ) )
 
-      self.__config_cmd_line = f"export OUT_DIR_COMMON_BASE={self.__directories.build( '..' )};"
+      self.__config_cmd_line = ""
+
+      kernel_deploy_dir = "/mnt/dev/android/deploy/kernel/common-android14-6.1/virtual_device_aarch64/"
+      self.__config_cmd_line += f"export TARGET_PREBUILT_KERNEL={kernel_deploy_dir}/extracted/boot.img/kernel;"
+      self.__config_cmd_line += f"export TARGET_PREBUILT_MODULES_DIR={kernel_deploy_dir}/extracted/initramfs.img/;"
+
+      self.__config_cmd_line += f" export OUT_DIR_COMMON_BASE={self.__directories.build( '..' )};"
       self.__config_cmd_line += f" source build/envsetup.sh;"
       self.__config_cmd_line += f" lunch {self.__config.lunch( )};"
    # def __init__
