@@ -4,10 +4,10 @@ import time
 import pfw.base.struct
 import pfw.console
 import pfw.shell
+import pfw.linux.ramdisk
 
 import base
 import qemu
-import ramdisk
 import aosp.base
 import aosp.repo
 
@@ -27,6 +27,7 @@ class AOSP:
       kernel_deploy_dir = "/mnt/dev/android/deploy/kernel/common-android14-6.1/virtual_device_aarch64/"
       self.__config_cmd_line += f"export TARGET_PREBUILT_KERNEL={kernel_deploy_dir}/extracted/boot.img/kernel;"
       self.__config_cmd_line += f"export TARGET_PREBUILT_MODULES_DIR={kernel_deploy_dir}/extracted/initramfs.img/;"
+      # self.__config_cmd_line += f"export TARGET_PREBUILT_MODULES_DIR={kernel_deploy_dir}/extracted/empty/;"
 
       self.__config_cmd_line += f" export OUT_DIR_COMMON_BASE={self.__directories.build( '..' )};"
       self.__config_cmd_line += f" source build/envsetup.sh;"
@@ -46,8 +47,7 @@ class AOSP:
    # def __setattr__
 
    def __str__( self ):
-      attr_list = [ i for i in AOSP.__dict__.keys( ) if i[:2] != pfw.base.struct.ignore_field
- ]
+      attr_list = [ i for i in AOSP.__dict__.keys( ) if i[:2] != pfw.base.struct.ignore_field ]
       vector = [ ]
       for attr in attr_list:
          vector.append( str( attr ) + " = " + str( self.__dict__.get( attr ) ) )
@@ -176,7 +176,7 @@ class AOSP:
       # command += f" rm -r {EXPERIMENTAL_RAMDISK_DIR}/lib/modules/*; cp -R /mnt/dev/android/deploy/kernel/common-android14-6.1/virtual_device_aarch64/extracted/system_dlkm_staging_archive/lib/modules/6.1.8-maybe-dirty/* {EXPERIMENTAL_RAMDISK_DIR}/lib/modules;"
       self.__execute( command )
 
-      ramdisk.pack( source = EXPERIMENTAL_RAMDISK_DIR, destination = EXPERIMENTAL_RAMDISK_IMAGE, bootconfig = kw_bootconfig )
+      pfw.linux.ramdisk.pack( source = EXPERIMENTAL_RAMDISK_DIR, destination = EXPERIMENTAL_RAMDISK_IMAGE, bootconfig = kw_bootconfig )
    # def build_ramdisk
 
    def run( self, **kwargs ):

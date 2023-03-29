@@ -266,9 +266,9 @@ def mkdrive_android( projects_map: dict ):
 
    device_0_partitions = [
       pfw.linux.image.Partition.Description( clone_from = boot_image, label = "boot_a" ),
-      pfw.linux.image.Partition.Description( size = pfw.size.SizeMegabyte, label = "boot_b" ),
+      pfw.linux.image.Partition.Description( clone_from = boot_image, label = "boot_b" ),
       pfw.linux.image.Partition.Description( clone_from = vendor_boot_image, label = "vendor_boot_a" ),
-      pfw.linux.image.Partition.Description( size = pfw.size.SizeMegabyte, label = "vendor_boot_b" ),
+      pfw.linux.image.Partition.Description( clone_from = vendor_boot_image, label = "vendor_boot_b" ),
       # pfw.linux.image.Partition.Description( size = pfw.size.SizeMegabyte, label = "init_boot_a" ),
       # pfw.linux.image.Partition.Description( size = pfw.size.SizeMegabyte, label = "init_boot_b" ),
       pfw.linux.image.Partition.Description( clone_from = vbmeta_image, label = "vbmeta_a" ),
@@ -295,9 +295,9 @@ def mkdrive_android( projects_map: dict ):
 
    device_1_partitions = [
       # pfw.linux.image.Partition.Description( clone_from = boot_image, label = "boot" ),
-      # pfw.linux.image.Partition.Description( size = pfw.size.SizeMegabyte, label = "boot_b" ),
+      # pfw.linux.image.Partition.Description( clone_from = boot_image, label = "boot_b" ),
       # pfw.linux.image.Partition.Description( clone_from = vendor_boot_image, label = "vendor_boot" ),
-      # pfw.linux.image.Partition.Description( size = pfw.size.SizeMegabyte, label = "vendor_boot_b" ),
+      # pfw.linux.image.Partition.Description( clone_from = vendor_boot_image, label = "vendor_boot_b" ),
       # pfw.linux.image.Partition.Description( size = pfw.size.SizeMegabyte, label = "init_boot_a" ),
       # pfw.linux.image.Partition.Description( size = pfw.size.SizeMegabyte, label = "init_boot_b" ),
       # pfw.linux.image.Partition.Description( clone_from = vbmeta_image, label = "vbmeta" ),
@@ -329,26 +329,34 @@ def debug( projects_map: dict, **kwargs ):
    project = projects_map[ kw_project_name ]
 
    if "uboot" == kw_project_name:
+      file = projects_map[ "uboot" ].dirs( ).product( "u-boot" )
+      arch = projects_map[ "uboot" ].config( ).arch( )
+      lib_path = projects_map[ "uboot" ].config( ).compiler_path( "lib" )
+      src_path = projects_map[ "uboot" ].dirs( ).source( )
       gdb.run(
-            # arch = projects_map[ "uboot" ].config( ).arch( ),
-            file = projects_map[ "uboot" ].dirs( ).product( "u-boot" ),
-            # lib_path = projects_map[ "uboot" ].config( ).compiler_path( "lib" ),
-            # src_path = projects_map[ "uboot" ].dirs( ).source( ),
+            # arch = arch,
+            file = file,
+            # lib_path = lib_path,
+            # src_path = src_path,
             load_symbols = {
-               # projects_map[ "uboot" ].dirs( ).product( "u-boot" ): [ 0x000000000 ], # in case of "u-boot" "x0" register when enter to "relocate_code" function
-               # projects_map[ "uboot" ].dirs( ).product( "u-boot" ): [ 0x23ff03000 ], # u-boot v2021.10
-               projects_map[ "uboot" ].dirs( ).product( "u-boot" ): [ 0x23ff03000 ], # u-boot v2022.07
+               # file: [ 0x000000000 ], # in case of "u-boot" "x0" register when enter to "relocate_code" function
+               # file: [ 0x23ff03000 ], # u-boot v2021.10
+               file: [ 0x23ff03000 ], # u-boot v2022.07
                # projects_map[ "kernel" ].dirs( ).deploy( "vmlinux" ): [ 0x40410800 ], # kernel 5.15 loaded to 0x40410800
                # projects_map[ "kernel" ].dirs( ).deploy( "vmlinux" ): [ 0x53010000 ], # kernel 5.15 loaded to 0x40410800
             },
             break_names = [
                ### u-boot functions
+               # "relocate_code",
+               # "relocate_done",
                # "do_bootm",
                # "do_bootm_states",
                # "bootm_find_other",
                # "bootm_find_images",
                # "boot_get_ramdisk",
                # "select_ramdisk",
+               # "android_image_load",
+               # "android_bootloader_boot_kernel",
                "boot_jump_linux",
                "announce_and_cleanup",
                "armv8_switch_to_el2",

@@ -6,7 +6,7 @@ import datetime
 import pfw.console
 import pfw.shell
 
-import dt
+import pfw.linux.dt
 
 
 
@@ -64,7 +64,7 @@ def run( parameters, **kwargs ):
    result = pfw.shell.execute( command, cwd = kw_cwd, sudo = False, output = kw_output )
 
    if True == kw_dump_dtb:
-      dt.decompile( kw_dump_dtb_path, kw_dump_dtb_path + ".dts" )
+      pfw.linux.dt.decompile( kw_dump_dtb_path, kw_dump_dtb_path + ".dts" )
 
    return result["code"]
 # def run

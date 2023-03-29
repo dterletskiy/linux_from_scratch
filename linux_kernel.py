@@ -60,10 +60,9 @@ import pfw.linux.image
 import pfw.linux.img.base
 import pfw.os.signal
 import pfw.linux.ping
+import pfw.linux.ramdisk
 
 import base
-import dt
-import ramdisk
 import tools
 import docker.container
 import qemu
@@ -212,27 +211,58 @@ def main( ):
             pfw.linux.docker.prune( )
       elif "dummy" == action_name:
 
+         # projects_map["aosp"].extract_android_boot_image(
+         #       boot_img = "/mnt/dev/android/deploy/kernel/common-android14-6.1/virtual_device_aarch64/boot.img",
+         #       out = "/mnt/dev/android/deploy/kernel/common-android14-6.1/virtual_device_aarch64/extracted/boot.img",
+         #       format = "mkbootimg"
+         #    )
+
+         # pfw.linux.ramdisk.extract(
+         #       source = "/mnt/dev/android/deploy/kernel/common-android14-6.1/virtual_device_aarch64/initramfs.img",
+         #       destination = "/mnt/dev/android/deploy/kernel/common-android14-6.1/virtual_device_aarch64/extracted/initramfs.img",
+         #    )
+
          projects_map["aosp"].extract_android_boot_image(
-               boot_img = "/mnt/dev/android/build/android-12.1.0_r8/target/product/trout_arm64/boot.img",
-               out = "/mnt/dev/android/build/android-12.1.0_r8/target/product/trout_arm64/experimental/extracted/boot.img",
+               boot_img = projects_map["aosp"].dirs( ).product( "boot.img" ),
+               out = projects_map["aosp"].dirs( ).product( "experimental/extracted/boot.img" ),
                format = "mkbootimg"
             )
 
          projects_map["aosp"].extract_android_boot_image(
-               boot_img = "/mnt/dev/android/build/android-12.1.0_r8/target/product/trout_arm64/vendor_boot.img",
-               out = "/mnt/dev/android/build/android-12.1.0_r8/target/product/trout_arm64/experimental/extracted/vendor_boot.img",
+               boot_img = projects_map["aosp"].dirs( ).product( "vendor_boot.img" ),
+               out = projects_map["aosp"].dirs( ).product( "experimental/extracted/vendor_boot.img" ),
                format = "mkbootimg"
             )
 
-         ramdisk.extract(
-               source = "/mnt/dev/android/build/android-12.1.0_r8/target/product/trout_arm64/experimental/extracted/boot.img/ramdisk",
-               destination = "/mnt/dev/android/build/android-12.1.0_r8/target/product/trout_arm64/experimental/extracted/ramdisk",
+         pfw.linux.ramdisk.extract(
+               source = projects_map["aosp"].dirs( ).product( "experimental/extracted/boot.img/ramdisk" ),
+               destination = projects_map["aosp"].dirs( ).product( "experimental/extracted/ramdisk" ),
             )
 
-         ramdisk.extract(
-               source = "/mnt/dev/android/build/android-12.1.0_r8/target/product/trout_arm64/experimental/extracted/vendor_boot.img/vendor_ramdisk",
-               destination = "/mnt/dev/android/build/android-12.1.0_r8/target/product/trout_arm64/experimental/extracted/vendor_ramdisk",
+         pfw.linux.ramdisk.extract(
+               source = projects_map["aosp"].dirs( ).product( "experimental/extracted/vendor_boot.img/vendor_ramdisk" ),
+               destination = projects_map["aosp"].dirs( ).product( "experimental/extracted/vendor_ramdisk" ),
             )
+
+
+
+
+         # ANDROID_PRODUCT_RAMDISK_DIR = projects_map["aosp"].dirs( ).product( "ramdisk" )
+         # ANDROID_PRODUCT_VENDOR_RAMDISK_DIR = projects_map["aosp"].dirs( ).product( "vendor_ramdisk" )
+         # EXPERIMENTAL_RAMDISK_DIR = projects_map["aosp"].dirs( ).product( "experimental/ramdisk" )
+         # EXPERIMENTAL_RAMDISK_IMAGE = projects_map["aosp"].dirs( ).product( "experimental/ramdisk.img" )
+         # BOOTCONFIG = configuration.value( "android_bootconfig_arm64" )
+
+         # pfw.linux.ramdisk.pack(
+         #       source = ANDROID_PRODUCT_RAMDISK_DIR,
+         #       sources = [ ANDROID_PRODUCT_VENDOR_RAMDISK_DIR ],
+         #       destination = EXPERIMENTAL_RAMDISK_IMAGE,
+         #       bootconfig = BOOTCONFIG
+         #    )
+
+
+
+
 
          # pfw.linux.img.base.map(
          #       "/mnt/img/tmp/device_0.img",
