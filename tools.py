@@ -8,7 +8,7 @@ import pfw.console
 import pfw.shell
 
 import configuration
-import gdb
+import pfw.linux.gdb
 import qemu
 
 
@@ -315,7 +315,7 @@ def debug( projects_map: dict, **kwargs ):
       arch = projects_map[ "uboot" ].config( ).arch( )
       lib_path = projects_map[ "uboot" ].config( ).compiler_path( "lib" )
       src_path = projects_map[ "uboot" ].dirs( ).source( )
-      gdb.run(
+      pfw.linux.gdb.run(
             # arch = arch,
             file = file,
             # lib_path = lib_path,
@@ -360,7 +360,7 @@ def debug( projects_map: dict, **kwargs ):
             none = None
          )
    elif "kernel" == kw_project_name:
-      gdb.run(
+      pfw.linux.gdb.run(
             # arch = project.config( ).arch( ),
             file = project.dirs( ).deploy( "vmlinux" ),
             break_names = [
