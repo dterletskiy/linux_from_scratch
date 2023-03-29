@@ -13,7 +13,7 @@ import pfw.archive
 import pfw.shell
 import pfw.file
 import pfw.size
-import pfw.linux.image
+import pfw.linux.image2
 import pfw.os.signal
 
 import base
@@ -47,12 +47,12 @@ class Rootfs:
       self.__archive_name = UBUNTU_ARCHIVE_PATTERN.replace( "VERSION", self.__version ).replace( "ARCH", self.__config.arch( ) )
       self.__directories = linux.base.Directories( self.__config, root_dir, self.__name )
 
-      description = pfw.linux.image.Partition.Description(
+      description = pfw.linux.image2.Partition.Description(
            file = self.__directories.build( "rootfs.img" )
          , size = pfw.size.Size( 3, pfw.size.Size.eGran.G, align = pfw.size.Size.eGran.G )
          , fs = "ext4"
       )
-      self.__image = pfw.linux.image.Partition( description, build = True, force = False )
+      self.__image = pfw.linux.image2.Partition( description, build = True, force = False )
    # def __init__
 
    def __del__( self ):
@@ -315,7 +315,7 @@ class Rootfs:
    __name: str = None
    __url: str = None
    __archive_name: str = None
-   __image: pfw.linux.image.Partition = None
+   __image: pfw.linux.image2.Partition = None
    __directories: linux.base.Directories = None
    __config: linux.base.Configuration = None
 # class Rootfs

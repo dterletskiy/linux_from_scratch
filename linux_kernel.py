@@ -56,7 +56,7 @@ configuration.configure( sys.argv[1:] )
 import pfw.console
 import pfw.shell
 import pfw.size
-import pfw.linux.image
+import pfw.linux.image2
 import pfw.linux.img.base
 import pfw.os.signal
 import pfw.linux.ping
@@ -84,14 +84,14 @@ import aosp.aosp
 
 def extend_configuration( ):
    configuration.config.set_value( "boot_partition_image",
-      pfw.linux.image.Partition.Description(
+      pfw.linux.image2.Partition.Description(
            file = os.path.join( configuration.config.get_value( "tmp_path" ), "boot.img" )
          , size = pfw.size.Size( 512, pfw.size.Size.eGran.M )
          , fs = "ext2"
       )
    )
    configuration.config.set_value( "rootfs_partition_image",
-      pfw.linux.image.Partition.Description(
+      pfw.linux.image2.Partition.Description(
            file = os.path.join( configuration.config.get_value( "tmp_path" ), "rootfs.img" )
          , size = pfw.size.Size( 5, pfw.size.Size.eGran.G )
          , fs = "ext4"
