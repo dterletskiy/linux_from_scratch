@@ -13,11 +13,14 @@ Command line interface -> Android command support -> ab_select
 Command line interface -> Debug commands -> avd
 
 Command line interface -> Environment commands -> ask for env variable
-
 Command line interface -> Environment commands -> search env
-Library routines -> Enable regular expression support
-
 Command line interface -> Environment commands -> indirect
+Command line interface -> Environment commands -> env info
+Command line interface -> Environment commands -> env load
+Command line interface -> Environment commands -> env select
+Command line interface -> Boot commands -> bootmenu
+
+Library routines -> Enable regular expression support
 
 
 u-boot aosp:

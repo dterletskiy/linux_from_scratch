@@ -56,8 +56,8 @@ configuration.configure( sys.argv[1:] )
 import pfw.console
 import pfw.shell
 import pfw.size
+import pfw.linux.image
 import pfw.linux.image2
-import pfw.linux.img.base
 import pfw.os.signal
 import pfw.linux.ping
 import pfw.linux.ramdisk
@@ -264,7 +264,7 @@ def main( ):
 
 
 
-         # pfw.linux.img.base.map(
+         # pfw.linux.imgage.map(
          #       "/mnt/img/tmp/device_0.img",
          #       mount_point = "/mnt/img/tmp/loop/",
          #       processor = lambda: pfw.console.debug.promt( )
