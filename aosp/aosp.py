@@ -25,7 +25,7 @@ class AOSP:
       self.__config_cmd_line = ""
 
       kernel_deploy_dir = "/mnt/dev/android/deploy/kernel/common-android14-6.1/virtual_device_aarch64/"
-      self.__config_cmd_line += f"export TARGET_PREBUILT_KERNEL={kernel_deploy_dir}/extracted/boot.img/kernel;"
+      self.__config_cmd_line += f"export TARGET_PREBUILT_KERNEL={kernel_deploy_dir}/Image;"
       self.__config_cmd_line += f"export TARGET_PREBUILT_MODULES_DIR={kernel_deploy_dir}/extracted/initramfs.img/;"
       # self.__config_cmd_line += f"export TARGET_PREBUILT_MODULES_DIR={kernel_deploy_dir}/extracted/empty/;"
 
