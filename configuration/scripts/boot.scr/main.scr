@@ -1,9 +1,9 @@
 echo "@TDA: --------------- Boot script begin ---------------"
 
-import "const.scr"
-import "data.scr"
-import "commands.scr"
-import "helpers.scr"
+import "data/const.scr"
+import "data/data.scr"
+import "functions/commands.scr"
+import "functions/helpers.scr"
 
 
 
