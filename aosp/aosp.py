@@ -31,7 +31,7 @@ class AOSP:
 
       self.__config_cmd_line += f" export OUT_DIR_COMMON_BASE={self.__directories.build( '..' )};"
       self.__config_cmd_line += f" source build/envsetup.sh;"
-      self.__config_cmd_line += f" lunch {self.__config.lunch( )};"
+      self.__config_cmd_line += f" lunch {self.__config.lunch( )}-{self.__config.variant( )};"
    # def __init__
 
    def __del__( self ):
