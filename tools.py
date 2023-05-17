@@ -72,7 +72,6 @@ def mkbootimg( projects_map: dict ):
    mkbootimg_tool(
          header_version = 2,
          kernel = projects_map["aosp"].dirs( ).product( "kernel"),
-         # kernel = "/mnt/dev/android/deploy/kernel/common-android14-6.1/virtual_device_aarch64/extracted/boot.img/kernel",
          ramdisk = projects_map["aosp"].dirs( ).experimental( "ramdisk.img"),
          dtb = configuration.value( "dtb_export_path" ),
          cmdline = cmdline,

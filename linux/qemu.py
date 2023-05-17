@@ -41,8 +41,7 @@ class Qemu:
    # def __setattr__
 
    def __str__( self ):
-      attr_list = [ i for i in Qemu.__dict__.keys( ) if i[:2] != pfw.base.struct.ignore_field
- ]
+      attr_list = [ i for i in Qemu.__dict__.keys( ) if i[:2] != pfw.base.struct.ignore_field ]
       vector = [ ]
       for attr in attr_list:
          vector.append( str( attr ) + " = " + str( self.__dict__.get( attr ) ) )
