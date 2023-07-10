@@ -19,6 +19,9 @@ RUN for PACKAGE in ${ARG_PACKAGES}; do \
       apt update && apt install -y ${PACKAGE} || true; \
    done
 
+# Cleaning
+RUN apt autoremove -y && apt clean all
+
 
 # Define user credentials and data
 ARG ARG_USER_NAME=guest

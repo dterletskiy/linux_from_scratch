@@ -208,7 +208,7 @@ def main( ):
                )
             # docker.container.commit( container, image = "ubuntu/arm64v8:20.04" )
          elif "prune" == action_name:
-            pfw.linux.docker.prune( )
+            pfw.linux.docker2.prune( )
       elif "dummy" == action_name:
 
          # projects_map["aosp"].extract_android_boot_image(
